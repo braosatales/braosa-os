@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #0D0D0F;
+  --color-bg2: #111117;
+  --color-bg3: #161620;
+  --color-border: #1E1E2A;
+  --color-t1: #F0F0F5;
+  --color-t2: #A0A0B5;
+  --color-t3: #505065;
+  --color-finances: #D4A84B;
+  --color-tasks: #7B5EA7;
+  --color-email: #4B8FD4;
+  --color-health: #C4614A;
+  --color-braosa: #3DBCAA;
+  --color-verum: #B85C8A;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0D0D0F;
+  color: #F0F0F5;
+}
+
+.os-card {
+  background: #161620;
+  border: 1px solid #1E1E2A;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.os-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #505065;
+}
+
+.sidebar-pill {
+  background: #2D1F5E;
+  color: #F0F0F5;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.category-pill {
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.priority-p1 {
+  background: rgba(196, 97, 74, 0.2);
+  color: #C4614A;
+}
+
+.priority-p2 {
+  background: rgba(212, 168, 75, 0.2);
+  color: #D4A84B;
+}
+
+.priority-p3 {
+  background: rgba(123, 94, 167, 0.2);
+  color: #7B5EA7;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease;
+}
