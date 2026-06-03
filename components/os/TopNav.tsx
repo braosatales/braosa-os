@@ -55,7 +55,10 @@ export default function TopNav() {
             <span className="text-[10px] text-[#505065]">LIFE SCORE</span>
           </div>
         </div>
-        <button onClick={handleLock} className="text-[#505065] hover:text-[#F0F0F5] transition-colors">
+        <button
+          onClick={handleLock}
+          className="text-[#505065] hover:text-[#F0F0F5] transition-colors"
+        >
           <Lock size={16} />
         </button>
       </div>

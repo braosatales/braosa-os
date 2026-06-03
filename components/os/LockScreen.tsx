@@ -33,7 +33,11 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-xl bg-black/60">
-      <div className={`max-w-xs w-full bg-[#111117] border border-[#1E1E2A] rounded-2xl p-8 shadow-2xl${shaking ? ' animate-shake' : ''}`}>
+      <div
+        className={`max-w-xs w-full bg-[#111117] border border-[#1E1E2A] rounded-2xl p-8 shadow-2xl${
+          shaking ? ' animate-shake' : ''
+        }`}
+      >
         <p className="font-semibold text-xl text-[#F0F0F5] text-center mb-6">Braosa OS</p>
         <input
           ref={inputRef}
