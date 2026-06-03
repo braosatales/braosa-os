@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 const IDLE_MS = 10 * 60 * 1000
 
 export function useLockTimer() {
-  const [locked, setLocked] = useState(false)
+  const [locked, setLocked] = useState(true)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const resetTimer = useCallback(() => {

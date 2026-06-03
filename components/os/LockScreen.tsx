@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Icon from './Icon'
 
 interface LockScreenProps {
   onUnlock: () => void
@@ -9,12 +10,22 @@ interface LockScreenProps {
 export default function LockScreen({ onUnlock }: LockScreenProps) {
   const [password, setPassword] = useState('')
   const [shaking, setShaking] = useState(false)
-  const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [time, setTime] = useState('')
+  const [date, setDate] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    setIsMobile(window.matchMedia('(max-width: 720px)').matches)
     inputRef.current?.focus()
+    function tick() {
+      const now = new Date()
+      setTime(now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', hour12: false }))
+      setDate(now.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' }))
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
   }, [])
 
   function attempt() {
@@ -23,7 +34,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
     } else {
       setShaking(true)
       setPassword('')
-      setTimeout(() => setShaking(false), 300)
+      setTimeout(() => setShaking(false), 420)
     }
   }
 
@@ -32,13 +43,55 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-xl bg-black/60">
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'oklch(0 0 0 / 0.55)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+    }}>
       <div
-        className={`max-w-xs w-full bg-[#111117] border border-[#1E1E2A] rounded-2xl p-8 shadow-2xl${
-          shaking ? ' animate-shake' : ''
-        }`}
+        className={shaking ? 'lock-shake' : ''}
+        style={{
+          width: `min(420px, 90vw)`,
+          background: 'var(--bg-raised)',
+          border: '1px solid var(--edge)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 48,
+          boxShadow: 'var(--shadow-pop)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+          animation: 'pop-in 0.28s cubic-bezier(.2,.8,.2,1) both',
+        }}
       >
-        <p className="font-semibold text-xl text-[#F0F0F5] text-center mb-6">Braosa OS</p>
+        <div style={{
+          width: 52, height: 52, borderRadius: '50%',
+          background: 'oklch(0.30 0.007 72)',
+          border: '1px solid var(--edge)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--ink-faint)',
+        }}>
+          <Icon name="lock" size={22} stroke={1.5} />
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontFamily: 'var(--display)', fontSize: 26, fontWeight: 700,
+            color: 'var(--ink)', letterSpacing: '-0.01em',
+          }}>
+            Braosa OS
+          </div>
+          <div style={{
+            fontFamily: 'var(--mono)', fontSize: 38, fontWeight: 700,
+            color: 'var(--ink)', letterSpacing: '-0.02em', marginTop: 8,
+            lineHeight: 1,
+          }}>
+            {time}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--ink-dim)', marginTop: 6 }}>
+            {date}
+          </div>
+        </div>
+
         <input
           ref={inputRef}
           type="password"
@@ -46,16 +99,39 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
           onChange={e => setPassword(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="············"
-          className="bg-transparent border-b border-[#1E1E2A] text-[#F0F0F5] text-center focus:outline-none focus:border-[#A0A0B5] w-full py-2"
+          className="glow-focus"
+          style={{
+            width: '100%',
+            background: 'var(--bg-inset)',
+            border: '1px solid var(--edge)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--ink)',
+            fontSize: 16,
+            padding: '11px 16px',
+            textAlign: 'center',
+            letterSpacing: '0.12em',
+            fontFamily: 'var(--mono)',
+            '--accent': 'var(--c-fin)',
+          } as React.CSSProperties}
         />
-        {isTouchDevice && (
+
+        {isMobile && (
           <button
             onClick={attempt}
-            className="bg-[#7B5EA7] text-white rounded-lg px-6 py-2 mt-4 w-full"
+            className="btn btn-accent"
+            style={{ width: '100%', justifyContent: 'center', '--accent': 'var(--c-fin)' } as React.CSSProperties}
           >
             Unlock
           </button>
         )}
+
+        <div style={{
+          fontSize: 11, color: 'var(--ink-faint)',
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          marginTop: 4,
+        }}>
+          {isMobile ? 'Tap unlock to enter' : 'Press enter to enter'}
+        </div>
       </div>
     </div>
   )
