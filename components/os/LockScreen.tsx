@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
+import { createClient } from '@/lib/supabase/client'
 
 interface LockScreenProps {
   onUnlock: () => void
 }
 
 export default function LockScreen({ onUnlock }: LockScreenProps) {
+  const [hasSession, setHasSession] = useState<boolean | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
   const [password, setPassword] = useState('')
   const [shaking, setShaking] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -17,7 +21,6 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
 
   useEffect(() => {
     setIsMobile(window.matchMedia('(max-width: 720px)').matches)
-    inputRef.current?.focus()
     function tick() {
       const now = new Date()
       setTime(now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', hour12: false }))
@@ -28,8 +31,25 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
     return () => clearInterval(id)
   }, [])
 
-  function attempt() {
-    if (password === 'admin') {
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (hasSession !== null) inputRef.current?.focus()
+  }, [hasSession])
+
+  async function attemptPassword() {
+    const res = await fetch('/api/user/lock-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    const data = await res.json()
+    if (data.ok) {
       onUnlock()
     } else {
       setShaking(true)
@@ -38,8 +58,33 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
     }
   }
 
+  async function sendMagicLink() {
+    const supabase = createClient()
+    await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/api/auth/callback' },
+    })
+    setEmailSent(true)
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') attempt()
+    if (e.key === 'Enter') {
+      if (hasSession) attemptPassword()
+      else sendMagicLink()
+    }
+  }
+
+  const inputBaseStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bg-inset)',
+    border: '1px solid var(--edge)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--ink)',
+    fontSize: 16,
+    padding: '11px 16px',
+    textAlign: 'center',
+    fontFamily: 'var(--mono)',
+    ['--accent' as string]: 'var(--c-fin)',
   }
 
   return (
@@ -53,7 +98,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
       <div
         className={shaking ? 'lock-shake' : ''}
         style={{
-          width: `min(420px, 90vw)`,
+          width: 'min(420px, 90vw)',
           background: 'var(--bg-raised)',
           border: '1px solid var(--edge)',
           borderRadius: 'var(--radius-lg)',
@@ -63,6 +108,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
           animation: 'pop-in 0.28s cubic-bezier(.2,.8,.2,1) both',
         }}
       >
+        {/* Avatar / lock icon */}
         <div style={{
           width: 52, height: 52, borderRadius: '50%',
           background: 'oklch(0.30 0.007 72)',
@@ -73,6 +119,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
           <Icon name="lock" size={22} stroke={1.5} />
         </div>
 
+        {/* Clock */}
         <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: 'var(--display)', fontSize: 26, fontWeight: 700,
@@ -92,46 +139,81 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
           </div>
         </div>
 
-        <input
-          ref={inputRef}
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="············"
-          className="glow-focus"
-          style={{
-            width: '100%',
-            background: 'var(--bg-inset)',
-            border: '1px solid var(--edge)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--ink)',
-            fontSize: 16,
-            padding: '11px 16px',
-            textAlign: 'center',
-            letterSpacing: '0.12em',
-            fontFamily: 'var(--mono)',
-            '--accent': 'var(--c-fin)',
-          } as React.CSSProperties}
-        />
-
-        {isMobile && (
-          <button
-            onClick={attempt}
-            className="btn btn-accent"
-            style={{ width: '100%', justifyContent: 'center', '--accent': 'var(--c-fin)' } as React.CSSProperties}
-          >
-            Unlock
-          </button>
+        {/* Mode A — no session */}
+        {hasSession === false && !emailSent && (
+          <>
+            <input
+              ref={inputRef}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="your@email.com"
+              className="glow-focus"
+              style={inputBaseStyle}
+            />
+            <button
+              onClick={sendMagicLink}
+              style={{
+                width: '100%',
+                background: 'var(--accent, oklch(0.78 0.16 95))',
+                color: 'oklch(0.15 0 0)',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                padding: '11px 16px',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Send magic link
+            </button>
+            <div style={{
+              fontSize: 11, color: 'var(--ink-faint)',
+              letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4,
+            }}>
+              Enter your email to login
+            </div>
+          </>
         )}
 
-        <div style={{
-          fontSize: 11, color: 'var(--ink-faint)',
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          marginTop: 4,
-        }}>
-          {isMobile ? 'Tap unlock to enter' : 'Press enter to enter'}
-        </div>
+        {/* Mode A — link sent */}
+        {hasSession === false && emailSent && (
+          <div style={{ fontSize: 14, color: 'var(--ink-dim)', textAlign: 'center' }}>
+            Check your email for the login link.
+          </div>
+        )}
+
+        {/* Mode B — session exists, idle lock */}
+        {hasSession === true && (
+          <>
+            <input
+              ref={inputRef}
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="············"
+              className="glow-focus"
+              style={{ ...inputBaseStyle, letterSpacing: '0.12em' }}
+            />
+            {isMobile && (
+              <button
+                onClick={attemptPassword}
+                className="btn btn-accent"
+                style={{ width: '100%', justifyContent: 'center', ['--accent' as string]: 'var(--c-fin)' }}
+              >
+                Unlock
+              </button>
+            )}
+            <div style={{
+              fontSize: 11, color: 'var(--ink-faint)',
+              letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 4,
+            }}>
+              {isMobile ? 'Tap unlock to enter' : 'Press enter to enter'}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

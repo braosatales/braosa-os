@@ -5,7 +5,8 @@ import Widget from '@/components/os/Widget'
 import Icon from '@/components/os/Icon'
 import Sparkline from '@/components/os/Sparkline'
 import Ring from '@/components/os/Ring'
-import { PLACEHOLDER_TASKS, PLACEHOLDER_FINANCES, USER } from '@/lib/data'
+import { PLACEHOLDER_TASKS, PLACEHOLDER_FINANCES } from '@/lib/data'
+import { useUser } from '@/lib/UserContext'
 
 const GRID_COLS = 5
 const GRID_ROW_H = 118
@@ -36,11 +37,11 @@ const DEFAULT_LAYOUT: WidgetDef[] = [
   { id: 'habits',  col: 4, row: 5, w: 2, h: 1, title: 'Habits',      color: 'var(--c-cal)',    glyph: 'refresh' },
 ]
 
-function getGreeting() {
+function getGreeting(firstName: string) {
   const h = new Date().getHours()
-  if (h < 12) return `Good morning, ${USER.name}.`
-  if (h < 18) return `Good afternoon, ${USER.name}.`
-  return `Good evening, ${USER.name}.`
+  if (h < 12) return `Good morning, ${firstName}.`
+  if (h < 18) return `Good afternoon, ${firstName}.`
+  return `Good evening, ${firstName}.`
 }
 
 function resolveCollisions(layout: WidgetDef[]): WidgetDef[] {
@@ -80,6 +81,7 @@ function widgetStyle(w: WidgetDef, cellW: number): React.CSSProperties {
 }
 
 export default function DashboardPage() {
+  const { user } = useUser()
   const [layout, setLayout] = useState<WidgetDef[]>(DEFAULT_LAYOUT)
   const [narrow, setNarrow] = useState(false)
   const [aiInput, setAiInput] = useState('')
@@ -194,10 +196,10 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <h1 style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.01em' }}>
-              {getGreeting()}
+              {getGreeting(user?.full_name?.split(' ')[0] ?? 'there')}
             </h1>
             <p style={{ fontSize: 13, color: 'var(--ink-dim)', marginTop: 3 }}>
-              Level {USER.level} · {Math.round(USER.xpToNext * 100)}% to next · 6 systems online.
+              Level {user?.level ?? '—'} · {user ? Math.round((user.xp_to_next ?? 0) * 100) : '—'}% to next · 6 systems online.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>

@@ -12,8 +12,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     setLocked(true)
   }
 
-  function handleUnlock() {
+  async function handleUnlock() {
     setLocked(false)
+    await fetch('/api/user/upsert', { method: 'POST' })
   }
 
   return (

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Icon from './Icon'
 import Ring from './Ring'
-import { SYSTEMS, COMPANIES, USER } from '@/lib/data'
+import { SYSTEMS, COMPANIES } from '@/lib/data'
+import { useUser } from '@/lib/UserContext'
 
 interface TopNavProps {
   onLock: () => void
@@ -12,6 +13,7 @@ interface TopNavProps {
 
 export default function TopNav({ onLock }: TopNavProps) {
   const pathname = usePathname()
+  const { user, loading } = useUser()
 
   return (
     <header style={{
@@ -100,7 +102,7 @@ export default function TopNav({ onLock }: TopNavProps) {
         {/* Streak */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <Icon name="flame" size={14} style={{ color: 'var(--c-health)' }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{USER.streak}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{loading ? '—' : (user?.streak ?? 0)}</span>
         </div>
 
         {/* Divider */}
@@ -108,13 +110,13 @@ export default function TopNav({ onLock }: TopNavProps) {
 
         {/* Level ring + life score */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Ring value={USER.xpToNext} color="var(--c-fin)" size={34} stroke={3.5} label={`L${USER.level}`} />
+          <Ring value={user?.xp_to_next ?? 0} color="var(--c-fin)" size={34} stroke={3.5} label={loading ? 'L—' : `L${user?.level ?? 1}`} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
             <span style={{ fontSize: 10, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Life Score
             </span>
             <span className="lifescore-num" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--mono)' }}>
-              {USER.lifeScore.toLocaleString()}
+              {loading ? '—' : (user?.life_score ?? 0).toLocaleString()}
             </span>
           </div>
         </div>

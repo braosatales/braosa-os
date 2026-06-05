@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Outfit, DM_Sans, Space_Mono } from 'next/font/google'
 import './globals.css'
 import ClientLayout from './client-layout'
+import { UserProvider } from '@/lib/UserContext'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -30,9 +31,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt" className={`${outfit.variable} ${dmSans.variable} ${spaceMono.variable}`}>
       <body>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <UserProvider>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </UserProvider>
       </body>
     </html>
   )
