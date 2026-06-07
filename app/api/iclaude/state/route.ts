@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     { data: budgets },
     { data: debts },
     { data: investments },
+    { data: unreadNotes },
   ] = await Promise.all([
     supabase.from('tasks').select('id,external_id,title,priority,system,status,due_date,source')
       .eq('user_id', userId).eq('status', 'todo').eq('due_date', today),
@@ -37,6 +38,9 @@ export async function GET(request: NextRequest) {
     supabase.from('finance_budgets').select('category,month_limit').eq('user_id', userId).eq('is_active', true),
     supabase.from('finance_debts').select('name,balance,interest_rate').eq('user_id', userId).eq('is_active', true),
     supabase.from('finance_investments').select('name,current_value,investment_type').eq('user_id', userId).eq('is_active', true),
+    supabase.from('notes').select('id,content,world,created_at,status')
+      .eq('user_id', userId).eq('status', 'unread')
+      .order('created_at', { ascending: false }).limit(50),
   ])
 
   const totalDebt = (debts ?? []).reduce((s, d) => s + Number(d.balance), 0)
@@ -59,6 +63,7 @@ export async function GET(request: NextRequest) {
       alerts: [],
     },
     habits: habits ?? [],
+    notes: unreadNotes ?? [],
     family: { notes: null },
   })
 }

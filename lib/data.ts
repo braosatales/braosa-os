@@ -5,6 +5,7 @@ export const SYSTEMS = [
   { id: "email",     label: "Email",     color: "var(--c-mail)", dim: "var(--c-mail-dim)", glyph: "mail" },
   { id: "calendar",  label: "Calendar",  color: "var(--c-cal)",  dim: "var(--c-cal-dim)",  glyph: "cal" },
   { id: "health",    label: "Health",    color: "var(--c-health)", dim: "var(--c-health-dim)", glyph: "pulse" },
+  { id: "notes",     label: "Notes",     color: "var(--c-dash)",   dim: "var(--c-dash-dim)",   glyph: "edit" },
 ] as const;
 
 export const COMPANIES = [
