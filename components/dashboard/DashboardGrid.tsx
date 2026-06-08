@@ -7,6 +7,13 @@ import NetWorthWidget from "./widgets/NetWorthWidget"
 import AssetsWidget from "./widgets/AssetsWidget"
 import DebtWidget from "./widgets/DebtWidget"
 import BudgetWidget from "./widgets/BudgetWidget"
+import TopTasksWidget from "./widgets/TopTasksWidget"
+import FocusWidget from "./widgets/FocusWidget"
+import HabitsWidget from "./widgets/HabitsWidget"
+import AIWidget from "./widgets/AIWidget"
+import WeatherWidget from "./widgets/WeatherWidget"
+import HealthWidget from "./widgets/HealthWidget"
+import NotesWidget from "./widgets/NotesWidget"
 import {
   getLayout,
   saveLayout,
@@ -197,12 +204,19 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     return { x: 0, y: 12 }
   }
 
-  function renderWidget(id: WidgetId, shellProps: ShellProps) {
+  function renderWidget(id: WidgetId, shellProps: ShellProps, nav: (page: string) => void) {
     switch (id) {
-      case "net":    return <NetWorthWidget {...shellProps} />
-      case "assets": return <AssetsWidget {...shellProps} />
-      case "debt":   return <DebtWidget {...shellProps} />
-      case "budget": return <BudgetWidget {...shellProps} />
+      case "net":     return <NetWorthWidget {...shellProps} />
+      case "assets":  return <AssetsWidget {...shellProps} />
+      case "debt":    return <DebtWidget {...shellProps} />
+      case "budget":  return <BudgetWidget {...shellProps} />
+      case "tasks":   return <TopTasksWidget {...shellProps} onNavigate={nav} />
+      case "focus":   return <FocusWidget {...shellProps} onNavigate={nav} />
+      case "habits":  return <HabitsWidget {...shellProps} />
+      case "ai":      return <AIWidget {...shellProps} onNavigate={nav} />
+      case "weather": return <WeatherWidget {...shellProps} />
+      case "health":  return <HealthWidget {...shellProps} />
+      case "notes":   return <NotesWidget {...shellProps} onNavigate={nav} />
       default: {
         const meta = ALL_WIDGETS.find((w) => w.id === id)!
         return (
@@ -305,7 +319,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
               position: "relative",
             }}
           >
-            {renderWidget(id, shellProps)}
+            {renderWidget(id, shellProps, onNavigate)}
           </div>
         )
       })}
