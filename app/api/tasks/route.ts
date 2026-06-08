@@ -1,0 +1,57 @@
+import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { NextRequest, NextResponse } from 'next/server'
+
+async function resolveUser() {
+  const serverClient = await createClient()
+  const { data: { user } } = await serverClient.auth.getUser()
+  if (!user) return { user: null, userRow: null, supabase: null }
+  const supabase = createServiceClient()
+  const { data: userRow } = await supabase.from('users').select('id').eq('supabase_uid', user.id).single()
+  return { user, userRow: userRow ?? null, supabase }
+}
+
+export async function GET() {
+  const { userRow, supabase } = await resolveUser()
+  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', userRow.id)
+    .neq('status', 'cancelled')
+    .order('fav', { ascending: false })
+    .order('priority', { ascending: true })
+    .order('due', { ascending: true, nullsFirst: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ tasks: data ?? [] })
+}
+
+export async function POST(request: NextRequest) {
+  const { userRow, supabase } = await resolveUser()
+  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json()
+  const { title, description, priority, due, system, project_id, tags, fav } = body
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      user_id: userRow.id,
+      title,
+      description: description ?? null,
+      priority: priority ?? 3,
+      due: due ?? null,
+      system: system ?? null,
+      project_id: project_id ?? null,
+      tags: tags ?? [],
+      fav: fav ?? false,
+      status: 'todo',
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true, task: data }, { status: 201 })
+}

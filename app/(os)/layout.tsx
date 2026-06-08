@@ -17,6 +17,7 @@ import { getTweaks, saveTweaks } from "@/lib/tweaks"
 import { SYSTEMS } from "@/lib/constants"
 import { Icon } from "@/components/ui"
 import FinancesShell from "@/components/finances/FinancesShell"
+import TasksShell from "@/components/tasks/TasksShell"
 
 export { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
 
@@ -147,6 +148,10 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
             {active === "dashboard" ? children : active === "finances" ? (
               <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <FinancesShell />
+              </div>
+            ) : active === "tasks" ? (
+              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', height: '100%' }}>
+                <TasksShell />
               </div>
             ) : <ComingOnline id={active} />}
           </div>

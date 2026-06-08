@@ -11,25 +11,6 @@ async function resolveUser() {
   return { user, userRow: userRow ?? null, supabase }
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params
-  const { userRow, supabase } = await resolveUser()
-  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', userRow.id)
-    .single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 })
-  return NextResponse.json({ task: data })
-}
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -39,14 +20,14 @@ export async function PATCH(
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const allowed = ['title', 'description', 'status', 'priority', 'fav', 'due', 'system', 'project_id', 'tags', 'external_id', 'source']
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const allowed = ['name', 'color', 'icon']
+  const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
   }
 
   const { data, error } = await supabase
-    .from('tasks')
+    .from('projects')
     .update(updates)
     .eq('id', id)
     .eq('user_id', userRow.id)
@@ -54,7 +35,7 @@ export async function PATCH(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true, task: data })
+  return NextResponse.json({ ok: true, project: data })
 }
 
 export async function DELETE(
@@ -65,8 +46,14 @@ export async function DELETE(
   const { userRow, supabase } = await resolveUser()
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { error } = await supabase
+  await supabase
     .from('tasks')
+    .update({ project_id: null })
+    .eq('project_id', id)
+    .eq('user_id', userRow.id)
+
+  const { error } = await supabase
+    .from('projects')
     .delete()
     .eq('id', id)
     .eq('user_id', userRow.id)
