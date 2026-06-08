@@ -1,42 +1,43 @@
 import type { Metadata } from 'next'
 import { Outfit, DM_Sans, Space_Mono } from 'next/font/google'
 import './globals.css'
-import ClientLayout from './client-layout'
-import { UserProvider } from '@/lib/UserContext'
 
-const outfit = Outfit({
+const displayFont = Outfit({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
   variable: '--font-display',
+  display: 'swap',
 })
 
-const dmSans = DM_Sans({
+const bodyFont = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-body',
+  display: 'swap',
 })
 
-const spaceMono = Space_Mono({
+const monoFont = Space_Mono({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-mono',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Braosa OS',
-  description: 'Personal life operating system',
+  title: 'BraosaOS',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="pt" className={`${outfit.variable} ${dmSans.variable} ${spaceMono.variable}`}>
-      <body>
-        <UserProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </UserProvider>
-      </body>
+    <html
+      lang="en"
+      className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
+    >
+      <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
     </html>
   )
 }
