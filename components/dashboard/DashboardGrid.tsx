@@ -3,6 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Icon } from "@/components/ui"
 import WidgetShell from "./WidgetShell"
+import NetWorthWidget from "./widgets/NetWorthWidget"
+import AssetsWidget from "./widgets/AssetsWidget"
+import DebtWidget from "./widgets/DebtWidget"
+import BudgetWidget from "./widgets/BudgetWidget"
 import {
   getLayout,
   saveLayout,
@@ -14,10 +18,20 @@ import {
   type Layout,
 } from "@/lib/dashboard"
 import { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
+import type { IconName } from "@/lib/icons"
 
 const GRID_COLS = 5
 const GRID_ROW_H = 118
 const GRID_GAP = 16
+
+type ShellProps = {
+  dragging?: boolean
+  lifted?: boolean
+  sizeBadge?: string
+  onHandleDown?: (e: React.PointerEvent) => void
+  onResizeDown?: (e: React.PointerEvent, corner: "se") => void
+  onRemove?: () => void
+}
 
 type DragState = { id: WidgetId; ox: number; oy: number } | null
 type ResizeState = {
@@ -183,6 +197,33 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     return { x: 0, y: 12 }
   }
 
+  function renderWidget(id: WidgetId, shellProps: ShellProps) {
+    switch (id) {
+      case "net":    return <NetWorthWidget {...shellProps} />
+      case "assets": return <AssetsWidget {...shellProps} />
+      case "debt":   return <DebtWidget {...shellProps} />
+      case "budget": return <BudgetWidget {...shellProps} />
+      default: {
+        const meta = ALL_WIDGETS.find((w) => w.id === id)!
+        return (
+          <WidgetShell title={meta.label} color={meta.color} glyph={meta.glyph} {...shellProps}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "var(--ink-faint)",
+              }}
+            >
+              <Icon name={meta.glyph as IconName} size={24} />
+            </div>
+          </WidgetShell>
+        )
+      }
+    }
+  }
+
   const addPos = getNextAvailableCell()
   const hidden = ALL_WIDGETS.filter((w) => !visible.includes(w.id))
   const active = dragging !== null || resizing !== null
@@ -235,10 +276,22 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       {/* Widget items */}
       {visible.map((id) => {
         const item = layout[id]
-        const meta = ALL_WIDGETS.find((w) => w.id === id)!
         const isDragging = dragging?.id === id
         const isResizing = resizing?.id === id
         const showBadge = isDragging || isResizing
+
+        const shellProps: ShellProps = {
+          dragging: isDragging,
+          lifted: previewDrag && lifted === id,
+          sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
+          onHandleDown: (e) => handleDragStart(e, id),
+          onResizeDown: (e) => handleResizeStart(e, id),
+          onRemove: () => {
+            const next = visible.filter((v) => v !== id)
+            setVisible(next)
+            saveVisibleWidgets(next)
+          },
+        }
 
         return (
           <div
@@ -252,23 +305,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
               position: "relative",
             }}
           >
-            <WidgetShell
-              title={meta.label}
-              color={meta.color}
-              glyph={meta.glyph}
-              dragging={isDragging}
-              lifted={previewDrag && lifted === id}
-              sizeBadge={showBadge ? `${item.w}×${item.h}` : undefined}
-              onHandleDown={(e) => handleDragStart(e, id)}
-              onResizeDown={(e) => handleResizeStart(e, id)}
-              onRemove={() => {
-                const next = visible.filter((v) => v !== id)
-                setVisible(next)
-                saveVisibleWidgets(next)
-              }}
-            >
-              {null}
-            </WidgetShell>
+            {renderWidget(id, shellProps)}
           </div>
         )
       })}
