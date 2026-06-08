@@ -6,7 +6,9 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react"
+import dynamic from "next/dynamic"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
 import SettingsModal from "@/components/settings/SettingsModal"
@@ -14,54 +16,62 @@ import TweaksPanel from "@/components/tweaks/TweaksPanel"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
-import { SYSTEMS } from "@/lib/constants"
+import { SYSTEMS, COMPANIES } from "@/lib/constants"
 import { Icon } from "@/components/ui"
-import FinancesShell from "@/components/finances/FinancesShell"
-import TasksShell from "@/components/tasks/TasksShell"
-import NotesPage from "./notes/page"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { TaskStore } from "@/lib/task-store"
+import { NoteStore } from "@/lib/note-store"
+import { FinanceStore } from "@/lib/finance-store"
 
 export { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
 
-// ─── ComingOnline ─────────────────────────────────────────────────────────────
+const DashboardPage = dynamic(() => import("./dashboard/page"), { ssr: false })
+const FinancesPage  = dynamic(() => import("./finances/page"),  { ssr: false })
+const TasksPage     = dynamic(() => import("./tasks/page"),     { ssr: false })
+const NotesPage     = dynamic(() => import("./notes/page"),     { ssr: false })
+const AIPage        = dynamic(() => import("./ai/page"),        { ssr: false })
 
-function ComingOnline({ id }: { id: string }) {
-  const sys = SYSTEMS.find((s) => s.id === id)
+// ─── ComingOnlinePage ────────────────────────────────────────────────────────
+
+function ComingOnlinePage({ id }: { id: string }) {
+  const allSystems = [...SYSTEMS, ...COMPANIES]
+  const sys = allSystems.find(s => s.id === id)
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-      }}
-    >
-      <span style={{ color: sys?.color ?? "var(--ink-dim)", display: "flex" }}>
-        <Icon name={(sys?.icon as any) ?? "grid"} size={32} />
-      </span>
-      <div
-        style={{
-          fontFamily: "var(--font-display)",
-          fontSize: 20,
-          fontWeight: 600,
-          color: "var(--ink)",
-        }}
-      >
-        Coming online
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 18,
+        background: `color-mix(in oklch, ${sys?.color ?? "var(--c-dash)"} 15%, var(--bg-raised))`,
+        border: `1px solid color-mix(in oklch, ${sys?.color ?? "var(--c-dash)"} 30%, transparent)`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: `0 0 calc(30px * var(--glow)) -8px ${sys?.color ?? "var(--c-dash)"}`,
+      }}>
+        <span style={{ color: sys?.color ?? "var(--c-dash)" }}>
+          <Icon name={(sys?.icon ?? "grid") as any} size={26} />
+        </span>
       </div>
-      <div
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          letterSpacing: "0.18em",
-          color: "var(--ink-faint)",
-        }}
-      >
-        STATUS · STANDING BY
+      <div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--ink)", textAlign: "center" }}>
+          {sys?.label ?? id}
+        </div>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", color: "var(--ink-faint)", textAlign: "center", marginTop: 6 }}>
+          STATUS · STANDING BY
+        </div>
       </div>
     </div>
   )
+}
+
+// ─── renderActive ────────────────────────────────────────────────────────────
+
+function renderActive(active: string) {
+  switch (active) {
+    case "dashboard": return <DashboardPage />
+    case "finances":  return <FinancesPage />
+    case "tasks":     return <TasksPage />
+    case "notes":     return <NotesPage />
+    case "ai":        return <AIPage />
+    default:          return <ComingOnlinePage id={active} />
+  }
 }
 
 // ─── LockContext ─────────────────────────────────────────────────────────────
@@ -94,17 +104,25 @@ export function useNavigation(): NavigationContextValue {
 
 // ─── Shell ───────────────────────────────────────────────────────────────────
 
-export default function OsLayout({ children }: { children: React.ReactNode }) {
+export default function OsLayout({ children: _children }: { children: React.ReactNode }) {
   const [locked, setLocked] = useState(false)
   const [active, setActive] = useState("dashboard")
   const [user, setUser] = useState<OSUser | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setLocked(isLocked())
     getUser().then(setUser)
     saveTweaks(getTweaks())
+    TaskStore.fetch()
+    NoteStore.fetch()
+    FinanceStore.fetch()
   }, [])
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0
+  }, [active])
 
   const handleUnlock = useCallback(() => {
     setLocked(false)
@@ -145,20 +163,13 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
             onSettings={() => setSettingsOpen(true)}
             user={user}
           />
-          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {active === "dashboard" ? children : active === "finances" ? (
-              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <FinancesShell />
-              </div>
-            ) : active === "tasks" ? (
-              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', height: '100%' }}>
-                <TasksShell />
-              </div>
-            ) : active === "notes" ? (
-              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <NotesPage />
-              </div>
-            ) : <ComingOnline id={active} />}
+          <div
+            ref={contentRef}
+            style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
+          >
+            <ErrorBoundary>
+              {renderActive(active)}
+            </ErrorBoundary>
           </div>
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
