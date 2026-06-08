@@ -114,3 +114,5 @@ body { overflow: hidden; }
 [data-anim="pop-in"] { animation: pop-in 0.3s cubic-bezier(.2,.8,.2,1) both; }
 [data-anim="rise"]   { animation: rise 0.4s cubic-bezier(.2,.8,.2,1) both; }
 [data-anim="fade"]   { animation: fade-in 0.25s ease both; }
+
+@media (max-width: 720px) { .hide-below-720 { display: none !important; } }
