@@ -1,18 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import WidgetShell from "../WidgetShell"
 import { Icon, EmptyState } from "@/components/ui"
 import { relativeTime } from "@/lib/date"
 import { L } from "@/lib/i18n"
-
-type Note = {
-  id: string
-  title: string | null
-  content: string
-  pinned: boolean
-  updated_at: string
-}
+import { useNoteStore } from "@/lib/note-store"
+import type { Note } from "@/lib/notes"
 
 type ShellProps = {
   dragging?: boolean
@@ -26,17 +19,8 @@ type ShellProps = {
 type Props = ShellProps & { onNavigate: (id: string) => void }
 
 export default function NotesWidget({ onNavigate, ...shellProps }: Props) {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch("/api/notes")
-      .then((r) => r.json())
-      .then((d) => { if (!cancelled) { setNotes((d.notes ?? []).slice(0, 5)); setLoading(false) } })
-      .catch(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [])
+  const { notes: allNotes, loading } = useNoteStore()
+  const notes = [...allNotes].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, 5)
 
   function displayTitle(note: Note): string {
     if (note.title) return note.title
