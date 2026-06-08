@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, title, priority, fav, due_date, system, status')
+    .select('id, title, priority, fav, due, system, status')
     .eq('user_id', userRow.id)
     .not('status', 'in', '("done","cancelled")')
 
@@ -30,7 +30,7 @@ export async function GET() {
     title: t.title as string,
     priority: (t.priority as number) ?? 3,
     fav: (t.fav as boolean) ?? false,
-    due: (t.due_date as string | null) ?? null,
+    due: (t.due as string | null) ?? null,
     system: (t.system as string | null) ?? null,
     status: (t.status as string) ?? 'todo',
   }))
