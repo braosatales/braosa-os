@@ -9,8 +9,10 @@ import {
 } from "react"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
+import SettingsModal from "@/components/settings/SettingsModal"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
+import { getTweaks, saveTweaks } from "@/lib/tweaks"
 
 // ─── LockContext ─────────────────────────────────────────────────────────────
 
@@ -46,10 +48,12 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
   const [locked, setLocked] = useState(false)
   const [active, setActive] = useState("dashboard")
   const [user, setUser] = useState<OSUser | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     setLocked(isLocked())
     getUser().then(setUser)
+    saveTweaks(getTweaks())
   }, [])
 
   const handleUnlock = useCallback(() => {
@@ -88,12 +92,17 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
             active={active}
             onNavigate={navigate}
             onLock={doLock}
-            onSettings={() => {}}
+            onSettings={() => setSettingsOpen(true)}
             user={user}
           />
           {children}
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onLock={doLock}
+        />
       </NavigationContext.Provider>
     </LockContext.Provider>
   )

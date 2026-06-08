@@ -116,3 +116,7 @@ body { overflow: hidden; }
 [data-anim="fade"]   { animation: fade-in 0.25s ease both; }
 
 @media (max-width: 720px) { .hide-below-720 { display: none !important; } }
+
+.brange { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--accent, var(--c-fin)) var(--pct, 50%), var(--edge) var(--pct, 50%)); outline: none; cursor: pointer; }
+.brange::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent, var(--c-fin)); border: 2px solid var(--bg-raised); box-shadow: 0 0 0 0 var(--accent, var(--c-fin)); transition: box-shadow .15s; cursor: grab; }
+.brange::-webkit-slider-thumb:active { cursor: grabbing; box-shadow: 0 0 0 4px oklch(from var(--accent, var(--c-fin)) l c h / 0.25); }
