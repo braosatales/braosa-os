@@ -5,6 +5,7 @@ import Widget from '@/components/os/Widget'
 import Icon from '@/components/os/Icon'
 import Sparkline from '@/components/os/Sparkline'
 import Ring from '@/components/os/Ring'
+import NotesWidget from '@/components/widgets/NotesWidget'
 import { PLACEHOLDER_TASKS, PLACEHOLDER_FINANCES } from '@/lib/data'
 import { useUser } from '@/lib/UserContext'
 
@@ -35,6 +36,7 @@ const DEFAULT_LAYOUT: WidgetDef[] = [
   { id: 'health',  col: 5, row: 4, w: 1, h: 1, title: 'Health',      color: 'var(--c-health)', glyph: 'pulse'   },
   { id: 'focus',   col: 1, row: 5, w: 3, h: 1, title: 'Today Focus', color: 'var(--c-task)',   glyph: 'target'  },
   { id: 'habits',  col: 4, row: 5, w: 2, h: 1, title: 'Habits',      color: 'var(--c-cal)',    glyph: 'refresh' },
+  { id: 'notes',   col: 1, row: 6, w: 3, h: 2, title: 'Notes',       color: 'var(--c-dash)',   glyph: 'note'    },
 ]
 
 function getGreeting(firstName: string) {
@@ -434,6 +436,8 @@ function WidgetBody({ id, aiInput, setAiInput }: { id: string; aiInput: string; 
         ))}
       </div>
     )
+
+    case 'notes': return <NotesWidget />
 
     default: return null
   }
