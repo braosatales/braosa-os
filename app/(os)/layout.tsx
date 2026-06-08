@@ -14,8 +14,52 @@ import TweaksPanel from "@/components/tweaks/TweaksPanel"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
+import { SYSTEMS } from "@/lib/constants"
+import { Icon } from "@/components/ui"
 
 export { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
+
+// ─── ComingOnline ─────────────────────────────────────────────────────────────
+
+function ComingOnline({ id }: { id: string }) {
+  const sys = SYSTEMS.find((s) => s.id === id)
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 16,
+      }}
+    >
+      <span style={{ color: sys?.color ?? "var(--ink-dim)", display: "flex" }}>
+        <Icon name={(sys?.icon as any) ?? "grid"} size={32} />
+      </span>
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: 20,
+          fontWeight: 600,
+          color: "var(--ink)",
+        }}
+      >
+        Coming online
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          letterSpacing: "0.18em",
+          color: "var(--ink-faint)",
+        }}
+      >
+        STATUS · STANDING BY
+      </div>
+    </div>
+  )
+}
 
 // ─── LockContext ─────────────────────────────────────────────────────────────
 
@@ -98,7 +142,9 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
             onSettings={() => setSettingsOpen(true)}
             user={user}
           />
-          {children}
+          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            {active === "dashboard" ? children : <ComingOnline id={active} />}
+          </div>
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
         <SettingsModal
