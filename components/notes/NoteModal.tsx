@@ -5,13 +5,22 @@ import Icon from '@/components/os/Icon'
 import type { Note } from '@/lib/types'
 
 const COLORS = [
-  { id: 'default', bg: 'transparent',                      border: 'var(--edge)',           dot: 'var(--ink-faint)' },
-  { id: 'yellow',  bg: 'oklch(0.74 0.13 85 / 0.12)',       border: 'oklch(0.74 0.13 85)',   dot: 'oklch(0.74 0.13 85)' },
-  { id: 'green',   bg: 'oklch(0.76 0.085 152 / 0.12)',     border: 'oklch(0.76 0.085 152)', dot: 'oklch(0.76 0.085 152)' },
-  { id: 'blue',    bg: 'oklch(0.72 0.095 242 / 0.12)',     border: 'oklch(0.72 0.095 242)', dot: 'oklch(0.72 0.095 242)' },
-  { id: 'purple',  bg: 'oklch(0.70 0.125 292 / 0.12)',     border: 'oklch(0.70 0.125 292)', dot: 'oklch(0.70 0.125 292)' },
-  { id: 'pink',    bg: 'oklch(0.71 0.12 350 / 0.12)',      border: 'oklch(0.71 0.12 350)',  dot: 'oklch(0.71 0.12 350)' },
+  { id: 'default', dot: 'var(--ink-faint)' },
+  { id: 'yellow',  dot: 'oklch(0.74 0.13 85)' },
+  { id: 'green',   dot: 'oklch(0.76 0.085 152)' },
+  { id: 'blue',    dot: 'oklch(0.72 0.095 242)' },
+  { id: 'purple',  dot: 'oklch(0.70 0.125 292)' },
+  { id: 'pink',    dot: 'oklch(0.71 0.12 350)' },
 ]
+
+const COLOR_BG: Record<string, string> = {
+  default: 'var(--bg-raised)',
+  yellow:  'color-mix(in oklch, var(--bg-raised) 88%, oklch(0.74 0.13 85))',
+  green:   'color-mix(in oklch, var(--bg-raised) 88%, oklch(0.76 0.085 152))',
+  blue:    'color-mix(in oklch, var(--bg-raised) 88%, oklch(0.72 0.095 242))',
+  purple:  'color-mix(in oklch, var(--bg-raised) 88%, oklch(0.70 0.125 292))',
+  pink:    'color-mix(in oklch, var(--bg-raised) 88%, oklch(0.71 0.12 350))',
+}
 
 interface Props {
   note?: Note | null
@@ -27,6 +36,12 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
   const [pinned, setPinned] = useState(initialNote?.pinned ?? false)
   const [tags, setTags] = useState<string[]>(initialNote?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  // Ref to latest field values so the debounced save always gets fresh data
+  const latestRef = useRef({ title, content, color, pinned, tags })
+  useEffect(() => { latestRef.current = { title, content, color, pinned, tags } }, [title, content, color, pinned, tags])
 
   const noteIdRef = useRef<string | null>(initialNote?.id ?? null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -40,55 +55,78 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
     ta.style.height = ta.scrollHeight + 'px'
   }, [content])
 
-  // escape to close
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { flushSave(); onClose() } }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose]) // eslint-disable-line react-hooks/exhaustive-deps
+  const doSave = useCallback(async () => {
+    const { title: t, content: c, color: col, pinned: p, tags: tgs } = latestRef.current
+    if (!t?.trim() && !c?.trim()) return
+    const payload = { title: t?.trim() || null, content: c, color: col, pinned: p, tags: tgs }
+    setSaving(true)
+    setSaveError(null)
 
-  const doSave = useCallback(async (
-    t = title, c = content, col = color, p = pinned, tgs = tags
-  ) => {
-    if (!t && !c) return
-    const payload = { title: t || null, content: c, color: col, pinned: p, tags: tgs }
-
-    if (!noteIdRef.current) {
-      const res = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (res.ok) {
+    try {
+      if (!noteIdRef.current) {
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.error('[NoteModal] POST failed', res.status, err)
+          setSaveError(`Could not save (${res.status})`)
+          return
+        }
         const data = await res.json()
         noteIdRef.current = data.note.id
         onSaved(data.note)
-      }
-    } else {
-      const res = await fetch(`/api/notes/${noteIdRef.current}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (res.ok) {
+      } else {
+        const res = await fetch(`/api/notes/${noteIdRef.current}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.error('[NoteModal] PATCH failed', res.status, err)
+          setSaveError(`Could not save (${res.status})`)
+          return
+        }
         const data = await res.json()
         onSaved(data.note)
       }
+    } finally {
+      setSaving(false)
     }
-  }, [title, content, color, pinned, tags, onSaved])
+  }, [onSaved])
+
+  // Keep a ref to doSave so the timer callback is always current
+  const doSaveRef = useRef(doSave)
+  useEffect(() => { doSaveRef.current = doSave }, [doSave])
 
   const scheduleSave = useCallback(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => doSave(), 1000)
-  }, [doSave])
+    clearTimeout(saveTimerRef.current ?? undefined)
+    saveTimerRef.current = setTimeout(() => doSaveRef.current(), 1000)
+  }, [])
 
   const flushSave = useCallback(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    doSave()
-  }, [doSave])
+    clearTimeout(saveTimerRef.current ?? undefined)
+    doSaveRef.current()
+  }, [])
 
-  // trigger debounced save on any field change
-  useEffect(() => { scheduleSave() }, [title, content, color, pinned, tags]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Trigger debounced save on any field change (skip initial mount)
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return }
+    scheduleSave()
+  }, [title, content, color, pinned, tags, scheduleSave])
+
+  // Escape to close (flush save first)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { flushSave(); onClose() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [flushSave, onClose])
 
   const addTag = () => {
     const t = tagInput.trim()
@@ -128,7 +166,7 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
     }
   }
 
-  const colorInfo = COLORS.find(c => c.id === color) ?? COLORS[0]
+  const colorDot = COLORS.find(c => c.id === color)?.dot ?? 'var(--ink-faint)'
 
   return (
     <div
@@ -142,14 +180,11 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
       }}
     >
       <div style={{
-        width: '100%', maxWidth: 680,
-        maxHeight: '88vh',
-        background: colorInfo.bg !== 'transparent'
-          ? `color-mix(in oklch, var(--bg-raised) 88%, ${colorInfo.dot})`
-          : 'var(--bg-raised)',
-        border: `1px solid ${colorInfo.border}`,
+        width: '100%', maxWidth: 680, maxHeight: '88vh',
+        background: COLOR_BG[color] ?? COLOR_BG.default,
+        border: `1px solid ${color === 'default' ? 'var(--edge)' : colorDot}`,
         borderRadius: 'var(--radius)',
-        boxShadow: 'var(--shadow-pop, 0 20px 60px oklch(0 0 0 / 0.5))',
+        boxShadow: '0 20px 60px oklch(0 0 0 / 0.5)',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
       }}>
@@ -166,17 +201,24 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
               fontFamily: 'var(--display)',
             }}
           />
-          <button
-            onClick={() => { flushSave(); onClose() }}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--ink-faint)', padding: 4, borderRadius: 6,
-              display: 'flex', alignItems: 'center',
-              transition: 'color .12s',
-            }}
-          >
-            <Icon name="close" size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {saving && (
+              <span style={{ fontSize: 11, color: 'var(--ink-faint)' }}>Saving…</span>
+            )}
+            {saveError && (
+              <span style={{ fontSize: 11, color: 'oklch(0.70 0.13 38)', maxWidth: 160, textAlign: 'right' }}>{saveError}</span>
+            )}
+            <button
+              onClick={() => { flushSave(); onClose() }}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--ink-faint)', padding: 4, borderRadius: 6,
+                display: 'flex', alignItems: 'center', transition: 'color .12s',
+              }}
+            >
+              <Icon name="close" size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Textarea */}
@@ -196,22 +238,19 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
           />
         </div>
 
-        {/* Tags row */}
-        {(tags.length > 0 || tagInput !== '') && (
+        {/* Tags */}
+        {tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 20px 10px' }}>
             {tags.map(tag => (
-              <span
-                key={tag}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  background: 'var(--bg-raised-2)', border: '1px solid var(--edge)',
-                  borderRadius: 20, padding: '2px 8px', fontSize: 11, color: 'var(--ink-dim)',
-                }}
-              >
+              <span key={tag} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'var(--bg-raised-2)', border: '1px solid var(--edge)',
+                borderRadius: 20, padding: '2px 8px', fontSize: 11, color: 'var(--ink-dim)',
+              }}>
                 {tag}
                 <button
                   onClick={() => removeTag(tag)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: 0, lineHeight: 1 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: 0 }}
                 >×</button>
               </span>
             ))}
@@ -221,8 +260,7 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
         {/* Toolbar */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '12px 20px',
-          borderTop: '1px solid var(--edge-soft)',
+          padding: '12px 20px', borderTop: '1px solid var(--edge-soft)',
           flexWrap: 'wrap',
         }}>
           {/* Color picker */}
@@ -235,9 +273,8 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
                 style={{
                   width: 18, height: 18, borderRadius: '50%', border: 'none', cursor: 'pointer',
                   background: c.id === 'default' ? 'var(--bg-raised-2)' : c.dot,
-                  outline: color === c.id ? `2px solid ${c.dot === 'var(--ink-faint)' ? 'var(--edge-strong)' : c.dot}` : 'none',
-                  outlineOffset: 2,
-                  transition: 'outline .12s',
+                  outline: color === c.id ? `2px solid ${c.dot}` : 'none',
+                  outlineOffset: 2, transition: 'outline .12s',
                 }}
               />
             ))}
@@ -259,7 +296,6 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
           />
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-            {/* Pin */}
             <button
               onClick={handlePinToggle}
               title={pinned ? 'Unpin' : 'Pin'}
@@ -273,8 +309,6 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
             >
               <Icon name="star" size={14} />
             </button>
-
-            {/* Archive */}
             <button
               onClick={handleArchive}
               title="Archive"
@@ -282,17 +316,14 @@ export default function NoteModal({ note: initialNote, onClose, onSaved, onDelet
                 background: 'none', border: '1px solid transparent', borderRadius: 6,
                 cursor: 'pointer', padding: '5px 6px',
                 color: 'var(--ink-faint)', display: 'flex', alignItems: 'center',
-                transition: 'all .12s',
               }}
             >
               <Icon name="arrow" size={14} />
             </button>
-
-            {/* Delete */}
             {noteIdRef.current && (
               <button
                 onClick={handleDelete}
-                title="Delete"
+                title="Delete permanently"
                 style={{
                   background: 'none', border: '1px solid transparent', borderRadius: 6,
                   cursor: 'pointer', padding: '5px 6px',

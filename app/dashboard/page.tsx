@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Widget from '@/components/os/Widget'
 import Icon from '@/components/os/Icon'
-import Sparkline from '@/components/os/Sparkline'
-import Ring from '@/components/os/Ring'
 import NotesWidget from '@/components/widgets/NotesWidget'
-import { PLACEHOLDER_TASKS, PLACEHOLDER_FINANCES } from '@/lib/data'
+import TasksWidget from '@/components/widgets/TasksWidget'
+import HabitsWidget from '@/components/widgets/HabitsWidget'
+import { NetWorthWidget, AssetsWidget, DebtWidget } from '@/components/widgets/FinanceWidget'
+import BudgetWidget from '@/components/widgets/BudgetWidget'
 import { useUser } from '@/lib/UserContext'
 
 const GRID_COLS = 5
@@ -284,74 +285,19 @@ export default function DashboardPage() {
 
 function WidgetBody({ id, aiInput, setAiInput }: { id: string; aiInput: string; setAiInput: (v: string) => void }) {
   switch (id) {
-    case 'net': return (
-      <div style={{ paddingTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 34, fontWeight: 700, color: 'var(--c-fin)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-          €-16,719
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <Sparkline data={[60,61,59,63,64,62,66,67,65,69,71,70]} color="var(--c-fin)" height={36} width={120} />
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--pos)', marginTop: 6 }}>+1.2% this week</div>
-      </div>
-    )
-
-    case 'tasks': return (
-      <div style={{ overflow: 'hidden auto', maxHeight: '100%' }}>
-        {PLACEHOLDER_TASKS.map(task => (
-          <div key={task.id} className="task-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderRadius: 6 }}>
-            <div className="task-check" style={{ width: 16, height: 16, border: '1.5px solid var(--edge-strong)', borderRadius: 4, flexShrink: 0, cursor: 'pointer', transition: 'border-color .15s' }} />
-            <span style={{ flex: 1, fontSize: 12, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.title}</span>
-            {task.fav && <Icon name="star" size={12} style={{ color: 'var(--c-fin)', flexShrink: 0 }} />}
-            <span style={{
-              fontSize: 10, padding: '2px 6px', borderRadius: 4, flexShrink: 0,
-              background: task.p === 1 ? 'oklch(0.66 0.15 30 / 0.18)' : task.p === 2 ? 'oklch(0.74 0.13 60 / 0.18)' : 'oklch(0.80 0.11 95 / 0.18)',
-              color: task.p === 1 ? 'var(--p1)' : task.p === 2 ? 'var(--p2)' : 'var(--p3)',
-            }}>P{task.p}</span>
-          </div>
-        ))}
-      </div>
-    )
-
-    case 'assets': return (
-      <div style={{ paddingTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 26, fontWeight: 700, color: 'var(--c-fin)' }}>€141,681</div>
-        <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>Cash + investments</div>
-        <div style={{ fontSize: 12, color: 'var(--pos)', marginTop: 8 }}>+€2,140 MTD</div>
-      </div>
-    )
-
-    case 'debt': return (
-      <div style={{ paddingTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 26, fontWeight: 700, color: 'var(--c-health)' }}>€158,400</div>
-        <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>4 active loans</div>
-        <div style={{ fontSize: 12, color: 'var(--pos)', marginTop: 8 }}>−€420 MTD</div>
-      </div>
-    )
-
-    case 'budget': return (
-      <div style={{ paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {[
-          { label: 'Dining', spent: 490, budget: 300 },
-          { label: 'Shopping', spent: 280, budget: 200 },
-        ].map(b => (
-          <div key={b.label}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 6 }}>
-              <span>{b.label}</span>
-              <span style={{ fontFamily: 'var(--mono)', color: 'var(--neg)' }}>€{b.spent}/€{b.budget}</span>
-            </div>
-            <div style={{ height: 5, background: 'var(--bg-inset)', borderRadius: 99, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min(100, (b.spent / b.budget) * 100)}%`, background: 'var(--neg)', borderRadius: 99 }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
+    case 'net':    return <NetWorthWidget />
+    case 'assets': return <AssetsWidget />
+    case 'debt':   return <DebtWidget />
+    case 'budget': return <BudgetWidget />
+    case 'tasks':  return <TasksWidget />
+    case 'focus':  return <TasksWidget showBoth />
+    case 'habits': return <HabitsWidget />
+    case 'notes':  return <NotesWidget />
 
     case 'ai': return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5, flex: 1 }}>
-          Good morning, João. You have 2 tasks overdue. Want me to plan your day?
+          Ask me anything about your tasks, finances, or habits.
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
@@ -371,73 +317,18 @@ function WidgetBody({ id, aiInput, setAiInput }: { id: string; aiInput: string; 
     )
 
     case 'weather': return (
-      <div style={{ paddingTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 36, fontWeight: 700, color: 'var(--ink)' }}>14°</div>
-        <div style={{ fontSize: 12, color: 'var(--ink-dim)' }}>Overcast · Lisboa</div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11, color: 'var(--ink-faint)' }}>
-          <span>H: 17°</span><span>L: 11°</span>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 4 }}>
+        <Icon name="cloud" size={28} stroke={1.2} style={{ color: 'var(--c-dash)', opacity: 0.5 }} />
+        <span style={{ fontSize: 11, color: 'var(--ink-faint)' }}>Weather — coming soon</span>
       </div>
     )
 
     case 'health': return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4 }}>
-        <Ring value={0.62} color="var(--c-health)" size={54} stroke={5} />
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>23-day streak</div>
-          <div style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 4 }}>8,240 steps · 6.5h sleep</div>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 4 }}>
+        <Icon name="pulse" size={28} stroke={1.2} style={{ color: 'var(--c-health)', opacity: 0.5 }} />
+        <span style={{ fontSize: 11, color: 'var(--ink-faint)' }}>Health — coming soon</span>
       </div>
     )
-
-    case 'focus': return (
-      <div style={{ display: 'flex', gap: 10 }}>
-        {PLACEHOLDER_TASKS.slice(0, 3).map(t => (
-          <div key={t.id} style={{
-            flex: 1, background: 'var(--bg-raised-2)', borderRadius: 'var(--radius-sm)',
-            padding: '8px 10px', border: '1px solid var(--edge)',
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--ink-soft)', lineHeight: 1.3 }}>{t.title}</div>
-            <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 4 }}>{t.due}</div>
-          </div>
-        ))}
-      </div>
-    )
-
-    case 'habits': return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {[
-          { name: 'Água 2L', streak: 6, glyph: 'cloud' },
-          { name: 'Ler 20min', streak: 9, glyph: 'gem' },
-          { name: 'Inbox zero', streak: 4, glyph: 'mail' },
-          { name: 'Exercício', streak: 12, glyph: 'pulse' },
-        ].map(h => (
-          <div key={h.name} style={{
-            background: 'var(--bg-raised-2)', borderRadius: 'var(--radius-sm)',
-            padding: '7px 9px', border: '1px solid var(--edge)',
-            display: 'flex', flexDirection: 'column', gap: 4,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Icon name={h.glyph} size={13} style={{ color: 'var(--c-cal)' }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)' }}>{h.name}</span>
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--ink-faint)' }}>{h.streak}d streak</div>
-            <div style={{ display: 'flex', gap: 3 }}>
-              {['M','T','W','T','F','S','S'].map((d, i) => (
-                <div key={i} style={{
-                  width: 12, height: 12, borderRadius: 3,
-                  background: i < h.streak % 7 ? 'var(--c-cal)' : 'var(--bg-inset)',
-                  fontSize: 7, color: 'var(--ink-faint)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>{d}</div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-
-    case 'notes': return <NotesWidget />
 
     default: return null
   }

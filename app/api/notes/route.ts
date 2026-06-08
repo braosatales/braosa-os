@@ -1,14 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+async function resolveUser() {
+  const serverClient = await createClient()
+  const { data: { user } } = await serverClient.auth.getUser()
+  if (!user) return { user: null, userRow: null, supabase: null }
+  const supabase = createServiceClient()
+  const { data: userRow } = await supabase.from('users').select('id').eq('supabase_uid', user.id).single()
+  return { user, userRow: userRow ?? null, supabase }
+}
 
-  const { data: userRow } = await supabase
-    .from('users').select('id').eq('supabase_uid', user.id).single()
-  if (!userRow) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+export async function GET() {
+  const { userRow, supabase } = await resolveUser()
+  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data, error } = await supabase
     .from('notes')
@@ -23,13 +28,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: userRow } = await supabase
-    .from('users').select('id').eq('supabase_uid', user.id).single()
-  if (!userRow) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  const { userRow, supabase } = await resolveUser()
+  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
   const { title, content = '', color = 'default', pinned = false, tags = [] } = body
