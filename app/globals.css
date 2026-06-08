@@ -138,3 +138,9 @@ body { overflow: hidden; }
 .resize-grip { position: absolute; bottom: 6px; right: 6px; width: 14px; height: 14px; cursor: se-resize; opacity: 0; transition: opacity .15s; }
 .widget:hover .resize-grip { opacity: 0.5; }
 .addw-item:hover { background: var(--bg-raised); }
+
+@media (max-width: 720px) {
+  .fin-sidebar { width: 64px !important; }
+  .fin-sidebar .subnav-label { display: none; }
+  .fin-sidebar .subnav-item { justify-content: center; padding: 9px; }
+}

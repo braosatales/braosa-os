@@ -16,6 +16,7 @@ import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
 import { SYSTEMS } from "@/lib/constants"
 import { Icon } from "@/components/ui"
+import FinancesShell from "@/components/finances/FinancesShell"
 
 export { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
 
@@ -143,7 +144,11 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
             user={user}
           />
           <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {active === "dashboard" ? children : <ComingOnline id={active} />}
+            {active === "dashboard" ? children : active === "finances" ? (
+              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <FinancesShell />
+              </div>
+            ) : <ComingOnline id={active} />}
           </div>
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
