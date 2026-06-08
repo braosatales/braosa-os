@@ -10,9 +10,12 @@ import {
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
 import SettingsModal from "@/components/settings/SettingsModal"
+import TweaksPanel from "@/components/tweaks/TweaksPanel"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
+
+export { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
 
 // ─── LockContext ─────────────────────────────────────────────────────────────
 
@@ -103,6 +106,7 @@ export default function OsLayout({ children }: { children: React.ReactNode }) {
           onClose={() => setSettingsOpen(false)}
           onLock={doLock}
         />
+        <TweaksPanel />
       </NavigationContext.Provider>
     </LockContext.Provider>
   )
