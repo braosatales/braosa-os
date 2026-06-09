@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   // Public routes — always allow
   if (
     pathname.startsWith('/login') ||
-    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/auth/verify') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/_next/') ||
     pathname.includes('/favicon') ||
@@ -34,19 +34,18 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
 
-  if (!user) {
+  if (!session) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // User is authenticated — check device trust
-  const trusted = getDeviceTrust(request)
-  if (!trusted && !pathname.startsWith('/api/')) {
-    return NextResponse.redirect(new URL('/auth/verify', request.url))
+  if (getDeviceTrust(request)) {
+    await supabase.auth.getUser()
+    return response
   }
 
-  return response
+  return NextResponse.redirect(new URL('/auth/verify', request.url))
 }
 
 export const config = {

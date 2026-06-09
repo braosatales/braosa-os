@@ -11,33 +11,29 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
-    const supabase = createClient()
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
     try {
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) { setError(signInError.message); return }
+
       const r = await fetch('/api/auth/check-mfa')
-      const { hasMfa } = await r.json()
-      if (hasMfa) {
-        router.push('/auth/verify')
+      const { hasMfa, factorId } = await r.json()
+
+      if (hasMfa && factorId) {
+        router.push(`/auth/verify?factorId=${factorId}`)
       } else {
         await fetch('/api/auth/set-trust', { method: 'POST' })
         router.push('/dashboard')
       }
     } catch {
-      router.push('/dashboard')
+      setError('Erro inesperado. Tenta novamente.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -165,7 +161,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="email"
             placeholder="email@exemplo.com"

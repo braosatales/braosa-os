@@ -1,21 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function VerifyPage() {
   const router = useRouter()
+  const factorId = useSearchParams().get('factorId') ?? ''
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [shake, setShake] = useState(false)
-  const [factorId, setFactorId] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch('/api/auth/check-mfa')
-      .then((r) => r.json())
-      .then(({ factorId: fid }) => setFactorId(fid))
-      .catch(() => {})
-  }, [])
 
   const handleVerify = async (overrideCode?: string) => {
     const c = overrideCode ?? code
@@ -33,6 +27,7 @@ export default function VerifyPage() {
       } else {
         setShake(true)
         setCode('')
+        setError('Código inválido. Tenta novamente.')
         setTimeout(() => setShake(false), 600)
       }
     } finally {
@@ -199,7 +194,7 @@ export default function VerifyPage() {
         </div>
 
         {/* Error */}
-        {shake && (
+        {error && (
           <div
             style={{
               fontSize: 12.5,
@@ -208,7 +203,7 @@ export default function VerifyPage() {
               marginBottom: 12,
             }}
           >
-            Código inválido
+            {error}
           </div>
         )}
 

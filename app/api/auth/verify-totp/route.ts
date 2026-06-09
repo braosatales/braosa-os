@@ -8,10 +8,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing code or factorId' }, { status: 400 })
   }
   const supabase = await createClient()
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code })
-  if (error) {
-    return NextResponse.json({ error: 'Invalid code' }, { status: 400 })
-  }
+
+  const { data: challenge, error: ce } = await supabase.auth.mfa.challenge({ factorId })
+  if (ce) return NextResponse.json({ error: ce.message }, { status: 400 })
+
+  const { error: ve } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code })
+  if (ve) return NextResponse.json({ error: 'Código inválido.' }, { status: 400 })
+
   const response = NextResponse.json({ success: true })
   setDeviceTrust(response)
   return response

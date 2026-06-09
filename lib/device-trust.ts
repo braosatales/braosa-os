@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest, NextResponse } from 'next/server'
 
 export const DEVICE_TRUST_COOKIE = 'braosa-device-trust'
 export const DEVICE_TRUST_DAYS = 30
