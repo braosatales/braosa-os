@@ -11,45 +11,43 @@ async function resolveUser() {
   return { user, userRow: userRow ?? null, supabase }
 }
 
-type Params = { params: Promise<{ id: string }> }
-
-export async function GET(_request: NextRequest, { params }: Params) {
-  const { id } = await params
-  const { userRow, supabase } = await resolveUser()
-  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data, error } = await supabase
-    .from('workout_sessions')
-    .select('*, session_sets(*)')
-    .eq('id', id)
-    .eq('user_id', userRow.id)
-    .single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ session: data })
-}
+type Params = { params: Promise<{ id: string; setId: string }> }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  const { id } = await params
+  const { setId } = await params
   const { userRow, supabase } = await resolveUser()
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
   const updates: Record<string, unknown> = {}
-  if (body.ended_at !== undefined) updates.ended_at = body.ended_at
-  if (body.duration_seconds !== undefined) updates.duration_seconds = body.duration_seconds
+  if (body.reps !== undefined) updates.reps = body.reps
+  if (body.weight_kg !== undefined) updates.weight_kg = body.weight_kg
+  if (body.completed !== undefined) updates.completed = body.completed
   if (body.notes !== undefined) updates.notes = body.notes
-  if (body.feedback !== undefined) updates.feedback = body.feedback
-  if (body.spotify_playlist_id !== undefined) updates.spotify_playlist_id = body.spotify_playlist_id
 
   const { data, error } = await supabase
-    .from('workout_sessions')
+    .from('session_sets')
     .update(updates)
-    .eq('id', id)
+    .eq('id', setId)
     .eq('user_id', userRow.id)
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true, session: data })
+  return NextResponse.json({ ok: true, set: data })
+}
+
+export async function DELETE(_request: NextRequest, { params }: Params) {
+  const { setId } = await params
+  const { userRow, supabase } = await resolveUser()
+  if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { error } = await supabase
+    .from('session_sets')
+    .delete()
+    .eq('id', setId)
+    .eq('user_id', userRow.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
 }

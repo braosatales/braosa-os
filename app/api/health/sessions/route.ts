@@ -11,45 +11,41 @@ async function resolveUser() {
   return { user, userRow: userRow ?? null, supabase }
 }
 
-type Params = { params: Promise<{ id: string }> }
-
-export async function GET(_request: NextRequest, { params }: Params) {
-  const { id } = await params
+export async function GET() {
   const { userRow, supabase } = await resolveUser()
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data, error } = await supabase
     .from('workout_sessions')
-    .select('*, session_sets(*)')
-    .eq('id', id)
+    .select('*, session_sets(id,exercise_id,completed)')
     .eq('user_id', userRow.id)
-    .single()
+    .order('started_at', { ascending: false })
+    .limit(20)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ session: data })
+  return NextResponse.json({ sessions: data ?? [] })
 }
 
-export async function PATCH(request: NextRequest, { params }: Params) {
-  const { id } = await params
+export async function POST(request: NextRequest) {
   const { userRow, supabase } = await resolveUser()
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const updates: Record<string, unknown> = {}
-  if (body.ended_at !== undefined) updates.ended_at = body.ended_at
-  if (body.duration_seconds !== undefined) updates.duration_seconds = body.duration_seconds
-  if (body.notes !== undefined) updates.notes = body.notes
-  if (body.feedback !== undefined) updates.feedback = body.feedback
-  if (body.spotify_playlist_id !== undefined) updates.spotify_playlist_id = body.spotify_playlist_id
+  const { name, session_type, planned_session_id, routine_id } = body
 
   const { data, error } = await supabase
     .from('workout_sessions')
-    .update(updates)
-    .eq('id', id)
-    .eq('user_id', userRow.id)
+    .insert({
+      user_id: userRow.id,
+      name,
+      session_type,
+      planned_session_id: planned_session_id ?? null,
+      routine_id: routine_id ?? null,
+      started_at: new Date().toISOString(),
+    })
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true, session: data })
+  return NextResponse.json({ ok: true, session: data }, { status: 201 })
 }

@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, createContext, useContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { PlannedSession } from '@/lib/journey'
 import OverviewView from './views/OverviewView'
 import JourneyView from './views/JourneyView'
 import WorkoutView from './views/WorkoutView'
@@ -11,6 +12,24 @@ import HistoryView from './views/HistoryView'
 import ProfileView from './views/ProfileView'
 
 type HealthTab = 'overview' | 'journey' | 'workout' | 'routines' | 'history' | 'profile'
+
+export type HealthContextValue = {
+  navigateTo: (tab: string) => void
+  startWorkout: (session: PlannedSession | null, routineId?: string) => void
+  pendingSession: PlannedSession | null
+  pendingRoutineId: string | null
+  clearPending: () => void
+}
+
+export const HealthContext = createContext<HealthContextValue>({
+  navigateTo: () => {},
+  startWorkout: () => {},
+  pendingSession: null,
+  pendingRoutineId: null,
+  clearPending: () => {},
+})
+
+export function useHealth() { return useContext(HealthContext) }
 
 const HEALTH_TABS = [
   { id: 'overview',  label: () => L('Visão Geral', 'Overview'),  glyph: 'activity'   },
@@ -36,119 +55,134 @@ export default function HealthShell() {
   useLang()
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<HealthTab>('overview')
+  const [pendingSession, setPendingSession] = useState<PlannedSession | null>(null)
+  const [pendingRoutineId, setPendingRoutineId] = useState<string | null>(null)
 
   const onNavigate = (tab: string) => setActiveTab(tab as HealthTab)
 
-  return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-      {/* Mobile tab bar */}
-      {isMobile && (
-        <div
-          className="hide-scrollbar"
-          style={{
-            display: 'flex',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            borderBottom: '1px solid var(--edge-soft)',
-            flexShrink: 0,
-            height: 48,
-          }}
-        >
-          {HEALTH_TABS.map((item) => {
-            const isActive = activeTab === item.id
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id as HealthTab)}
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 13,
-                  whiteSpace: 'nowrap',
-                  color: isActive ? 'var(--c-health)' : 'var(--ink-dim)',
-                  borderBottom: isActive ? '2px solid var(--c-health)' : '2px solid transparent',
-                }}
-              >
-                <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={14} />
-                {item.label()}
-              </button>
-            )
-          })}
-        </div>
-      )}
+  const startWorkout = (session: PlannedSession | null, routineId?: string) => {
+    setPendingSession(session)
+    setPendingRoutineId(routineId ?? null)
+    setActiveTab('workout')
+  }
 
-      {/* Desktop left sidebar */}
-      {!isMobile && (
-        <div
-          className="fin-sidebar"
-          style={{
-            width: 200,
-            flexShrink: 0,
-            background: 'linear-gradient(180deg, var(--bg-raised), transparent)',
-            borderRight: '1px solid var(--edge-soft)',
-            padding: '18px 10px',
-          }}
-        >
+  const clearPending = () => {
+    setPendingSession(null)
+    setPendingRoutineId(null)
+  }
+
+  return (
+    <HealthContext.Provider value={{ navigateTo: onNavigate, startWorkout, pendingSession, pendingRoutineId, clearPending }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
+        {/* Mobile tab bar */}
+        {isMobile && (
           <div
-            className="subnav-label"
+            className="hide-scrollbar"
             style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 9,
-              color: 'var(--ink-faint)',
-              letterSpacing: '0.18em',
-              padding: '0 8px',
-              marginBottom: 12,
+              display: 'flex',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              borderBottom: '1px solid var(--edge-soft)',
+              flexShrink: 0,
+              height: 48,
             }}
           >
-            {L('SAÚDE', 'HEALTH')}
-          </div>
-
-          {HEALTH_TABS.map((item) => {
-            const isActive = activeTab === item.id
-            return (
-              <button
-                key={item.id}
-                className="subnav-item"
-                onClick={() => setActiveTab(item.id as HealthTab)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: isActive ? '9px 10px 9px 8px' : '9px 10px',
-                  borderRadius: 9,
-                  width: '100%',
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: isActive
-                    ? 'color-mix(in oklch, var(--c-health) 14%, transparent)'
-                    : 'transparent',
-                  color: isActive ? 'var(--c-health)' : 'var(--ink-dim)',
-                  borderLeft: isActive ? '2px solid var(--c-health)' : '2px solid transparent',
-                  transition: 'all .15s',
-                }}
-              >
-                <span style={{ display: 'flex', color: 'inherit' }}>
-                  <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={15} />
-                </span>
-                <span className="subnav-label" style={{ fontSize: 13, fontWeight: 500 }}>
+            {HEALTH_TABS.map((item) => {
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as HealthTab)}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: 13,
+                    whiteSpace: 'nowrap',
+                    color: isActive ? 'var(--c-health)' : 'var(--ink-dim)',
+                    borderBottom: isActive ? '2px solid var(--c-health)' : '2px solid transparent',
+                  }}
+                >
+                  <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={14} />
                   {item.label()}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
-      {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        {renderView(activeTab, onNavigate)}
+        {/* Desktop left sidebar */}
+        {!isMobile && (
+          <div
+            className="fin-sidebar"
+            style={{
+              width: 200,
+              flexShrink: 0,
+              background: 'linear-gradient(180deg, var(--bg-raised), transparent)',
+              borderRight: '1px solid var(--edge-soft)',
+              padding: '18px 10px',
+            }}
+          >
+            <div
+              className="subnav-label"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9,
+                color: 'var(--ink-faint)',
+                letterSpacing: '0.18em',
+                padding: '0 8px',
+                marginBottom: 12,
+              }}
+            >
+              {L('SAÚDE', 'HEALTH')}
+            </div>
+
+            {HEALTH_TABS.map((item) => {
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  className="subnav-item"
+                  onClick={() => setActiveTab(item.id as HealthTab)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: isActive ? '9px 10px 9px 8px' : '9px 10px',
+                    borderRadius: 9,
+                    width: '100%',
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: isActive
+                      ? 'color-mix(in oklch, var(--c-health) 14%, transparent)'
+                      : 'transparent',
+                    color: isActive ? 'var(--c-health)' : 'var(--ink-dim)',
+                    borderLeft: isActive ? '2px solid var(--c-health)' : '2px solid transparent',
+                    transition: 'all .15s',
+                  }}
+                >
+                  <span style={{ display: 'flex', color: 'inherit' }}>
+                    <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={15} />
+                  </span>
+                  <span className="subnav-label" style={{ fontSize: 13, fontWeight: 500 }}>
+                    {item.label()}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {renderView(activeTab, onNavigate)}
+        </div>
       </div>
-    </div>
+    </HealthContext.Provider>
   )
 }

@@ -132,7 +132,9 @@ export default function JourneyView({ onNavigate }: Props) {
 
   async function handleSessionStatus(sessionId: string, status: 'completed' | 'skipped') {
     setSessionSaving(sessionId)
-    await fetch(`/api/health/sessions/${sessionId}`, {
+    const session = sessions.find(s => s.id === sessionId)
+    const planId = session?.plan_id ?? activePlan?.id ?? ''
+    await fetch(`/api/health/plans/${planId}/sessions/${sessionId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

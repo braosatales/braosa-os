@@ -4,6 +4,7 @@ import { Modal, Icon, Chip } from '@/components/ui'
 import { useLang, L } from '@/lib/i18n'
 import { PlannedSession, PlannedExercise, SESSION_TYPE_META } from '@/lib/journey'
 import { MUSCLE_GROUP_META } from '@/lib/exercise'
+import { useHealth } from '@/components/health/HealthShell'
 
 type Props = {
   session: PlannedSession
@@ -12,15 +13,16 @@ type Props = {
   onNavigate?: (tab: string) => void
 }
 
-export default function SessionDetailModal({ session, onClose, onStatusChange, onNavigate }: Props) {
+export default function SessionDetailModal({ session, onClose, onStatusChange }: Props) {
   const lang = useLang()
   const [saving, setSaving] = useState(false)
+  const { startWorkout } = useHealth()
 
   const meta = SESSION_TYPE_META[session.session_type]
 
   async function handleStatus(status: 'completed' | 'skipped') {
     setSaving(true)
-    await fetch(`/api/health/sessions/${session.id}`, {
+    await fetch(`/api/health/plans/${session.plan_id}/sessions/${session.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
@@ -32,7 +34,7 @@ export default function SessionDetailModal({ session, onClose, onStatusChange, o
 
   function handleStartWorkout() {
     onClose()
-    onNavigate?.('workout')
+    startWorkout(session)
   }
 
   return (
