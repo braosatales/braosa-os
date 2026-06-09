@@ -28,6 +28,7 @@ const FinancesPage  = dynamic(() => import("./finances/page"),  { ssr: false })
 const TasksPage     = dynamic(() => import("./tasks/page"),     { ssr: false })
 const NotesPage     = dynamic(() => import("./notes/page"),     { ssr: false })
 const AIPage        = dynamic(() => import("./ai/page"),        { ssr: false })
+const HealthPage    = dynamic(() => import("./health/page"),    { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ function renderActive(active: string) {
     case "tasks":     return <TasksPage />
     case "notes":     return <NotesPage />
     case "ai":        return <AIPage />
+    case "health":    return <HealthPage />
     default:          return <ComingOnlinePage id={active} />
   }
 }
