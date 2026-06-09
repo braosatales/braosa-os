@@ -118,6 +118,26 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     TaskStore.fetch()
     NoteStore.fetch()
     FinanceStore.fetch()
+
+    // Background bank sync if any connection is stale (> 4 hours)
+    fetch('/api/bank/connections')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.connections) return
+        const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000
+        const hasStale = d.connections.some((c: { status: string; last_synced_at: string | null }) =>
+          c.status === 'linked' &&
+          (!c.last_synced_at || new Date(c.last_synced_at).getTime() < fourHoursAgo)
+        )
+        if (hasStale) {
+          fetch('/api/bank/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          }).then(() => FinanceStore.invalidate()).catch(() => {})
+        }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {

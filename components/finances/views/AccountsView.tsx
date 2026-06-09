@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLang, L } from '@/lib/i18n'
 import { fmt } from '@/lib/fmt'
 import { relativeTime } from '@/lib/date'
@@ -10,12 +10,49 @@ import AddAccountModal from '../modals/AddAccountModal'
 import EditAccountModal from '../modals/EditAccountModal'
 import AddTransactionModal from '../modals/AddTransactionModal'
 import EditTransactionModal from '../modals/EditTransactionModal'
+import ConnectBankModal from '../modals/ConnectBankModal'
+
+type BankLink = {
+  id: string
+  gocardless_account_id: string
+  finance_account_id: string | null
+  account_name: string | null
+  iban: string | null
+  currency: string
+}
+
+type BankConnection = {
+  id: string
+  institution_id: string
+  institution_name: string
+  institution_logo: string | null
+  requisition_id: string
+  status: 'pending' | 'linked' | 'expired' | 'error'
+  account_ids: string[]
+  created_at: string
+  last_synced_at: string | null
+  bank_account_links: BankLink[]
+}
+
+function StatusDot({ status }: { status: BankConnection['status'] }) {
+  const color =
+    status === 'linked' ? 'var(--pos)' :
+    status === 'pending' ? 'oklch(0.80 0.13 65)' :
+    'var(--neg)'
+  return (
+    <span style={{
+      display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+      background: color, flexShrink: 0,
+    }} />
+  )
+}
 
 export default function AccountsView() {
   useLang()
   const { data } = useFinanceStore()
 
   const [showAddAccount, setShowAddAccount] = useState(false)
+  const [showConnectBank, setShowConnectBank] = useState(false)
   const [editAccount, setEditAccount] = useState<Account | null>(null)
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
   const [showAddTx, setShowAddTx] = useState(false)
@@ -24,6 +61,11 @@ export default function AccountsView() {
   const [txs, setTxs] = useState<Transaction[] | null>(null)
   const [txLoading, setTxLoading] = useState(false)
   const [txOffset, setTxOffset] = useState(0)
+
+  const [connections, setConnections] = useState<BankConnection[]>([])
+  const [syncingId, setSyncingId] = useState<string | null>(null)
+  const [syncAllLoading, setSyncAllLoading] = useState(false)
+  const [syncToast, setSyncToast] = useState<string | null>(null)
 
   const accounts = data?.accounts ?? []
   const totals = data?.totals ?? { totalCash: 0, totalInvest: 0, totalDebt: 0, totalAssets: 0, netWorth: 0 }
@@ -42,6 +84,16 @@ export default function AccountsView() {
       combinedTrend.push(vals.reduce((a, b) => a + b, 0) / vals.length)
     }
   }
+
+  const loadConnections = useCallback(async () => {
+    const r = await fetch('/api/bank/connections')
+    if (r.ok) {
+      const d = await r.json()
+      setConnections(d.connections ?? [])
+    }
+  }, [])
+
+  useEffect(() => { loadConnections() }, [loadConnections])
 
   async function loadTxs(accountId: string, offset = 0, append = false) {
     setTxLoading(true)
@@ -73,22 +125,181 @@ export default function AccountsView() {
     if (selectedAccountId === id) setSelectedAccountId(null)
   }
 
+  async function syncConnection(connectionId: string) {
+    setSyncingId(connectionId)
+    try {
+      const r = await fetch('/api/bank/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectionId }),
+      })
+      const d = await r.json()
+      FinanceStore.invalidate()
+      loadConnections()
+      const msg = d.newTransactions > 0
+        ? L(`${d.newTransactions} novas transações`, `${d.newTransactions} new transactions`)
+        : L('Sincronizado', 'Synced')
+      setSyncToast(msg)
+      setTimeout(() => setSyncToast(null), 3000)
+    } finally {
+      setSyncingId(null)
+    }
+  }
+
+  async function syncAll() {
+    setSyncAllLoading(true)
+    try {
+      const r = await fetch('/api/bank/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const d = await r.json()
+      FinanceStore.invalidate()
+      loadConnections()
+      const msg = d.newTransactions > 0
+        ? L(`${d.newTransactions} novas transações`, `${d.newTransactions} new transactions`)
+        : L('Tudo sincronizado', 'All synced')
+      setSyncToast(msg)
+      setTimeout(() => setSyncToast(null), 3000)
+    } finally {
+      setSyncAllLoading(false)
+    }
+  }
+
+  async function removeConnection(connectionId: string) {
+    if (!confirm(L('Remover ligação bancária?', 'Remove bank connection?'))) return
+    await fetch(`/api/bank/connections/${connectionId}`, { method: 'DELETE' })
+    loadConnections()
+    FinanceStore.invalidate()
+  }
+
+  const linkedConnections = connections.filter(c => c.status === 'linked' || c.status === 'pending')
+
   return (
     <div className="ov-split">
       {/* Left: Accounts */}
       <div>
+        {/* Toast */}
+        {syncToast && (
+          <div style={{
+            marginBottom: 12, padding: '8px 14px', borderRadius: 'var(--radius-sm)',
+            background: 'var(--c-fin-dim)', border: '1px solid var(--c-fin)',
+            fontSize: 12, color: 'var(--c-fin)', display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <Icon name="check-circle" size={13} />
+            {syncToast}
+          </div>
+        )}
+
+        {/* Connected banks section */}
+        {linkedConnections.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.15em', color: 'var(--ink-faint)' }}>
+                {L('BANCOS LIGADOS', 'CONNECTED BANKS')}
+              </span>
+              <button
+                className="btn"
+                style={{ fontSize: 11, padding: '5px 10px' }}
+                onClick={syncAll}
+                disabled={syncAllLoading}
+              >
+                <Icon name="refresh" size={12} />
+                {syncAllLoading ? L('A sincronizar...', 'Syncing...') : L('Sincronizar Tudo', 'Sync All')}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {linkedConnections.map(conn => (
+                <div
+                  key={conn.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg-raised)', border: '1px solid var(--edge)',
+                  }}
+                >
+                  {conn.institution_logo ? (
+                    <img
+                      src={conn.institution_logo}
+                      alt={conn.institution_name}
+                      width={28}
+                      height={28}
+                      style={{ borderRadius: 6, objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 6,
+                      background: 'var(--bg-raised-2)', border: '1px solid var(--edge)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700, color: 'var(--c-fin)',
+                    }}>
+                      {conn.institution_name.charAt(0)}
+                    </div>
+                  )}
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <StatusDot status={conn.status} />
+                      {conn.institution_name}
+                    </div>
+                    {conn.last_synced_at && (
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', marginTop: 1 }}>
+                        {L('Sincronizado', 'Synced')} {relativeTime(conn.last_synced_at)}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    className="btn"
+                    style={{ fontSize: 11, padding: '4px 10px' }}
+                    onClick={() => syncConnection(conn.id)}
+                    disabled={syncingId === conn.id}
+                  >
+                    <Icon name="refresh" size={11} />
+                    {syncingId === conn.id ? '...' : L('Sincronizar', 'Sync')}
+                  </button>
+
+                  <button
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 11, color: 'var(--ink-faint)', padding: '4px 8px',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--neg)' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-faint)' }}
+                    onClick={() => removeConnection(conn.id)}
+                  >
+                    {L('Remover', 'Remove')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
             {L('Contas', 'Accounts')}
           </span>
-          <button
-            className="btn"
-            style={{ '--accent': 'var(--c-fin)' } as React.CSSProperties}
-            onClick={() => setShowAddAccount(true)}
-          >
-            <Icon name="plus" size={14} />
-            {L('Adicionar', 'Add Account')}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className="btn btn-accent"
+              style={{ '--accent': 'var(--c-fin)' } as React.CSSProperties}
+              onClick={() => setShowConnectBank(true)}
+            >
+              <Icon name="link" size={14} />
+              {L('Ligar Banco', 'Connect Bank')}
+            </button>
+            <button
+              className="btn"
+              onClick={() => setShowAddAccount(true)}
+            >
+              <Icon name="plus" size={14} />
+              {L('Adicionar Manual', 'Add Manual')}
+            </button>
+          </div>
         </div>
 
         {accounts.length === 0 ? (
@@ -275,6 +486,7 @@ export default function AccountsView() {
       </div>
 
       <AddAccountModal open={showAddAccount} onClose={() => setShowAddAccount(false)} />
+      <ConnectBankModal open={showConnectBank} onClose={() => setShowConnectBank(false)} />
       <EditAccountModal account={editAccount} onClose={() => setEditAccount(null)} />
       <AddTransactionModal
         open={showAddTx}
