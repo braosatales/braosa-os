@@ -8,21 +8,36 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setLoading(true)
+    setError('')
+
     const supabase = createClient()
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-    if (signInError) {
-      setError(signInError.message)
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setError(error.message)
       setLoading(false)
       return
     }
-    router.push('/dashboard')
+
+    try {
+      const r = await fetch('/api/auth/check-mfa')
+      const { hasMfa } = await r.json()
+      if (hasMfa) {
+        router.push('/auth/verify')
+      } else {
+        await fetch('/api/auth/set-trust', { method: 'POST' })
+        router.push('/dashboard')
+      }
+    } catch {
+      router.push('/dashboard')
+    }
+    setLoading(false)
   }
 
   return (
