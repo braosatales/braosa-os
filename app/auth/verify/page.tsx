@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function VerifyPage() {
+function VerifyContent() {
   const router = useRouter()
   const factorId = useSearchParams().get('factorId') ?? ''
   const [code, setCode] = useState('')
@@ -249,5 +249,19 @@ export default function VerifyPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ height: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg-void)' }}>
+        <div style={{ color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.16em' }}>
+          A carregar…
+        </div>
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   )
 }
