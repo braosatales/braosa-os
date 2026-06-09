@@ -1,18 +1,20 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { Icon } from '@/components/ui'
+import { Icon, Chip } from '@/components/ui'
 import { useLang, L } from '@/lib/i18n'
 import { TrainingPlan, PlannedSession, SESSION_TYPE_META } from '@/lib/journey'
+import { WorkoutProfile, WorkoutGoal, GOAL_META } from '@/lib/health'
 import SessionDetailModal from '../modals/SessionDetailModal'
 
 type PlanWithSessions = TrainingPlan & { planned_sessions: PlannedSession[] }
+
+type Props = { onNavigate: (tab: string) => void }
 
 function getMondayOfWeek(date: Date = new Date()): string {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  d.setDate(diff)
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1))
   return d.toISOString().split('T')[0]
 }
 
@@ -44,15 +46,26 @@ const DAYS = [
   { code: 'SU', label_pt: 'Dom', label_en: 'Sun' },
 ]
 
-export default function JourneyView() {
+const EXP_LABEL: Record<string, { pt: string; en: string }> = {
+  beginner:     { pt: 'Iniciante',  en: 'Beginner'     },
+  intermediate: { pt: 'Intermédio', en: 'Intermediate' },
+  advanced:     { pt: 'Avançado',   en: 'Advanced'     },
+}
+
+const DAY_ORDER: Record<string, number> = { MO: 0, TU: 1, WE: 2, TH: 3, FR: 4, SA: 5, SU: 6 }
+
+export default function JourneyView({ onNavigate }: Props) {
   const lang = useLang()
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek())
   const [plans, setPlans] = useState<PlanWithSessions[]>([])
+  const [profile, setProfile] = useState<WorkoutProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [customRequest, setCustomRequest] = useState('')
   const [selectedSession, setSelectedSession] = useState<PlannedSession | null>(null)
+  const [reasoningExpanded, setReasoningExpanded] = useState(false)
   const [feedbackSaving, setFeedbackSaving] = useState(false)
+  const [sessionSaving, setSessionSaving] = useState<string | null>(null)
 
   const todayStr = new Date().toISOString().split('T')[0]
 
@@ -67,11 +80,13 @@ export default function JourneyView() {
     }
   }, [])
 
-  useEffect(() => { fetchPlans() }, [fetchPlans])
+  useEffect(() => {
+    fetchPlans()
+    fetch('/api/health/profile').then(r => r.json()).then(j => setProfile(j.profile ?? null))
+  }, [fetchPlans])
 
   const activePlan = plans.find(p => p.week_start === weekStart) ?? null
-  const prevWeekStart = addWeeks(weekStart, -1)
-  const prevPlan = plans.find(p => p.week_start === prevWeekStart) ?? null
+  const prevPlan = plans.find(p => p.week_start === addWeeks(weekStart, -1)) ?? null
 
   async function handleGenerate() {
     setGenerating(true)
@@ -86,6 +101,7 @@ export default function JourneyView() {
         }),
       })
       setCustomRequest('')
+      setReasoningExpanded(false)
       await fetchPlans()
     } finally {
       setGenerating(false)
@@ -104,28 +120,43 @@ export default function JourneyView() {
     setFeedbackSaving(false)
   }
 
-  function handleSessionStatusChange(sessionId: string, status: string) {
+  function patchSessionLocal(sessionId: string, status: PlannedSession['status']) {
     setPlans(prev => prev.map(p => ({
       ...p,
       planned_sessions: p.planned_sessions.map(s =>
-        s.id === sessionId ? { ...s, status: status as PlannedSession['status'] } : s
+        s.id === sessionId ? { ...s, status } : s
       ),
     })))
-    if (selectedSession?.id === sessionId) {
-      setSelectedSession(prev => prev ? { ...prev, status: status as PlannedSession['status'] } : prev)
-    }
+    setSelectedSession(prev => prev?.id === sessionId ? { ...prev, status } : prev)
+  }
+
+  async function handleSessionStatus(sessionId: string, status: 'completed' | 'skipped') {
+    setSessionSaving(sessionId)
+    await fetch(`/api/health/sessions/${sessionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    patchSessionLocal(sessionId, status)
+    setSessionSaving(null)
   }
 
   const sessions = activePlan?.planned_sessions ?? []
   const sessionsByDay = Object.fromEntries(sessions.map(s => [s.day_of_week, s]))
-  const allDone = sessions.length > 0 && sessions.every(s => s.status === 'completed' || s.status === 'skipped')
+  const trainingSessions = [...sessions]
+    .filter(s => s.session_type !== 'rest')
+    .sort((a, b) => (DAY_ORDER[a.day_of_week] ?? 0) - (DAY_ORDER[b.day_of_week] ?? 0))
+
+  const anyDone = sessions.some(s => s.status === 'completed')
+  const reasoning = activePlan?.ai_reasoning ?? ''
+  const reasoningShort = reasoning.length > 100 ? reasoning.slice(0, 100) + '…' : reasoning
 
   return (
     <div style={{ padding: 24, maxWidth: 900, margin: '0 auto', width: '100%' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 600 }}>
             {L('A tua Jornada', 'Your Journey')}
           </div>
           <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginTop: 3 }}>
@@ -160,10 +191,10 @@ export default function JourneyView() {
 
       {loading ? (
         <div style={{ textAlign: 'center', color: 'var(--ink-faint)', padding: 60, fontSize: 14 }}>
-          {L('A carregar...', 'Loading...')}
+          {L('A carregar…', 'Loading…')}
         </div>
       ) : !activePlan ? (
-        /* No plan for this week */
+        /* ── No plan ─────────────────────────────────────────────── */
         <div style={{
           background: 'var(--bg-raised)',
           border: '1px solid var(--edge)',
@@ -177,32 +208,48 @@ export default function JourneyView() {
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
             {L('Sem plano para esta semana', 'No plan for this week')}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--ink-dim)', marginBottom: 24, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: 'var(--ink-dim)', marginBottom: 20, lineHeight: 1.6 }}>
             {L(
               'O teu assistente de treino vai gerar um plano personalizado baseado no teu perfil.',
               'Your training assistant will generate a personalised plan based on your profile.'
             )}
           </div>
-          {prevPlan?.feedback && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '4px 10px',
-              borderRadius: 99,
-              background: 'var(--c-health-dim)',
-              color: 'var(--c-health)',
-              fontSize: 12,
-              marginBottom: 20,
-            }}>
-              {L('Semana anterior:', 'Previous week:')} {prevPlan.feedback.replace('_', ' ')}
+
+          {/* Profile summary chips */}
+          {profile && (
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+              <Chip
+                label={lang === 'pt' ? GOAL_META[profile.goal as WorkoutGoal].label_pt : GOAL_META[profile.goal as WorkoutGoal].label_en}
+                color="var(--c-health)"
+              />
+              <Chip
+                label={lang === 'pt' ? (EXP_LABEL[profile.experience_level]?.pt ?? profile.experience_level) : (EXP_LABEL[profile.experience_level]?.en ?? profile.experience_level)}
+                color="var(--c-fin)"
+              />
+              <Chip
+                label={`${profile.sessions_per_week}×/${lang === 'pt' ? 'semana' : 'week'}`}
+                color="var(--c-task)"
+              />
             </div>
           )}
-          <div style={{ maxWidth: 400, margin: '0 auto 20px' }}>
-            <input
+
+          {prevPlan?.feedback && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px', borderRadius: 99,
+              background: 'var(--c-health-dim)', color: 'var(--c-health)',
+              fontSize: 12, marginBottom: 20,
+            }}>
+              {L('Semana anterior:', 'Previous week:')} {prevPlan.feedback.replace(/_/g, ' ')}
+            </div>
+          )}
+
+          <div style={{ maxWidth: 440, margin: '0 auto 20px' }}>
+            <textarea
               value={customRequest}
               onChange={e => setCustomRequest(e.target.value)}
-              placeholder={L('Pedido especial (opcional)...', 'Special request (optional)...')}
+              rows={3}
+              placeholder={L('Pedido especial (opcional)… ex: "foco em pernas" ou "treino mais curto"', 'Special request (optional)… e.g. "focus on legs" or "shorter sessions"')}
               style={{
                 width: '100%',
                 padding: '10px 14px',
@@ -211,15 +258,19 @@ export default function JourneyView() {
                 borderRadius: 'var(--radius-sm)',
                 color: 'var(--ink)',
                 fontSize: 13,
+                resize: 'vertical',
                 outline: 'none',
+                lineHeight: 1.5,
+                fontFamily: 'inherit',
               }}
               onFocus={e => { e.target.style.borderColor = 'var(--c-health)'; e.target.style.boxShadow = `0 0 0 2px color-mix(in oklch, var(--c-health) 20%, transparent)` }}
               onBlur={e => { e.target.style.borderColor = 'var(--edge)'; e.target.style.boxShadow = 'none' }}
             />
           </div>
+
           <button
             className="btn btn-accent"
-            style={{ '--accent': 'var(--c-health)', width: '100%', maxWidth: 400, justifyContent: 'center', padding: '12px 20px', fontSize: 14 } as React.CSSProperties}
+            style={{ '--accent': 'var(--c-health)', width: '100%', maxWidth: 440, justifyContent: 'center', padding: '12px 20px', fontSize: 14 } as React.CSSProperties}
             onClick={handleGenerate}
             disabled={generating}
           >
@@ -227,47 +278,50 @@ export default function JourneyView() {
               <>
                 <span style={{ display: 'inline-flex', gap: 3 }}>
                   {[0, 1, 2].map(i => (
-                    <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor', animation: `pulse 1.2s ${i * 0.2}s infinite` }} />
+                    <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor', animation: `jdot 1.2s ${i * 0.2}s infinite` }} />
                   ))}
                 </span>
-                {L('A criar o teu plano personalizado...', 'Creating your personalised plan...')}
+                {L('A criar o teu plano personalizado…', 'Creating your personalised plan…')}
               </>
             ) : (
-              <>{L('Gerar Plano com IA 🤖', 'Generate AI Plan 🤖')}</>
+              <>{L('Gerar Plano da Semana 🤖', 'Generate Week Plan 🤖')}</>
             )}
           </button>
         </div>
       ) : (
-        /* Active plan */
+        /* ── Active plan ─────────────────────────────────────────── */
         <>
-          {/* AI Reasoning */}
-          {activePlan.ai_reasoning && (
+          {/* AI Reasoning — collapsed by default */}
+          {reasoning && (
             <div style={{
-              background: 'var(--bg-raised)',
-              border: '1px solid var(--c-health)',
+              background: 'var(--bg-inset)',
+              border: '1px solid var(--edge-soft)',
               borderRadius: 'var(--radius)',
-              padding: '16px 20px',
+              padding: '14px 18px',
               marginBottom: 24,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <Icon name="wand" size={14} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <span style={{ color: 'var(--c-health)' }}><Icon name="wand" size={13} /></span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-health)', letterSpacing: '0.14em' }}>
                   {L('RACIOCÍNIO DA IA', 'AI REASONING')}
                 </span>
               </div>
               <p style={{ fontSize: 13, color: 'var(--ink-dim)', lineHeight: 1.6, margin: 0 }}>
-                {activePlan.ai_reasoning}
+                {reasoningExpanded ? reasoning : reasoningShort}
+                {reasoning.length > 100 && (
+                  <button
+                    onClick={() => setReasoningExpanded(p => !p)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-health)', fontSize: 12, padding: '0 0 0 6px', fontWeight: 600 }}
+                  >
+                    {reasoningExpanded ? L('ver menos', 'see less') : L('ver mais', 'see more')}
+                  </button>
+                )}
               </p>
             </div>
           )}
 
-          {/* Week Calendar */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: 8,
-            marginBottom: 28,
-          }}>
+          {/* Week calendar strip */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 28 }}>
             {DAYS.map(day => {
               const dayDate = getDayDate(weekStart, day.code)
               const dayNum = dayDate.split('-')[2]
@@ -277,28 +331,15 @@ export default function JourneyView() {
 
               return (
                 <div key={day.code}>
-                  {/* Day header */}
-                  <div style={{
-                    textAlign: 'center',
-                    marginBottom: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}>
-                    <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
+                  <div style={{ textAlign: 'center', marginBottom: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.12em' }}>
                       {lang === 'pt' ? day.label_pt : day.label_en}
                     </span>
                     <span style={{
-                      fontSize: 13,
-                      fontWeight: 600,
+                      fontSize: 12, fontWeight: 600,
                       color: isToday ? 'var(--c-health)' : 'var(--ink)',
-                      width: 26,
-                      height: 26,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      width: 24, height: 24, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: isToday ? 'var(--c-health-dim)' : 'transparent',
                     }}>
                       {dayNum}
@@ -313,55 +354,50 @@ export default function JourneyView() {
                         background: 'var(--bg-raised)',
                         border: '1px solid var(--edge)',
                         borderRadius: 'var(--radius-sm)',
-                        padding: 10,
+                        padding: 0,
                         cursor: 'pointer',
                         textAlign: 'left',
-                        transition: 'border-color .15s, box-shadow .15s',
-                        minHeight: 90,
+                        overflow: 'hidden',
+                        minHeight: 86,
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 4,
+                        transition: 'border-color .15s',
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = meta?.color ?? 'var(--edge-strong)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--edge)' }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta?.color ?? 'var(--ink-faint)', flexShrink: 0 }} />
-                        <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {/* Top accent line */}
+                      <div style={{ height: 3, background: meta?.color ?? 'var(--edge)', flexShrink: 0 }} />
+                      <div style={{ padding: '8px 8px 8px', flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                           {session.session_name}
                         </span>
-                      </div>
-                      {session.estimated_duration && (
-                        <span style={{ fontSize: 10, color: 'var(--ink-faint)' }}>
-                          {session.estimated_duration}min
+                        {session.estimated_duration && (
+                          <span style={{ fontSize: 9.5, color: 'var(--ink-faint)' }}>{session.estimated_duration}min</span>
+                        )}
+                        <span style={{ fontSize: 9.5, color: 'var(--ink-faint)' }}>
+                          {session.exercises.length} {L('ex.', 'ex.')}
                         </span>
-                      )}
-                      <span style={{ fontSize: 10, color: 'var(--ink-faint)' }}>
-                        {session.exercises.length} {L('exercícios', 'exercises')}
-                      </span>
-                      <div style={{ marginTop: 'auto' }}>
-                        <span style={{
-                          fontSize: 9,
-                          fontFamily: 'var(--font-mono)',
-                          letterSpacing: '0.08em',
-                          color: session.status === 'completed' ? 'var(--pos)' : session.status === 'skipped' ? 'var(--neg)' : 'var(--ink-faint)',
-                        }}>
-                          {session.status === 'completed' ? L('✓ FEITO', '✓ DONE') : session.status === 'skipped' ? L('SALTADO', 'SKIPPED') : L('PENDENTE', 'PENDING')}
-                        </span>
+                        <div style={{ marginTop: 'auto' }}>
+                          <span style={{
+                            fontSize: 8.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.07em',
+                            color: session.status === 'completed' ? 'var(--pos)' : session.status === 'skipped' ? 'var(--neg)' : 'var(--ink-faint)',
+                          }}>
+                            {session.status === 'completed' ? '✓' : session.status === 'skipped' ? L('SKIP', 'SKIP') : '·'}
+                          </span>
+                        </div>
                       </div>
                     </button>
                   ) : (
                     <div style={{
-                      width: '100%',
                       border: '1px dashed var(--edge-soft)',
                       borderRadius: 'var(--radius-sm)',
-                      padding: 10,
-                      minHeight: 90,
+                      minHeight: 86,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}>
-                      <span style={{ fontSize: 11, color: 'var(--ink-faint)' }}>
+                      <span style={{ fontSize: 10, color: 'var(--ink-faint)' }}>
                         {L('Descanso', 'Rest')}
                       </span>
                     </div>
@@ -371,20 +407,127 @@ export default function JourneyView() {
             })}
           </div>
 
-          {/* Week feedback */}
-          {allDone && (
+          {/* Session list cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+            {trainingSessions.map(session => {
+              const meta = SESSION_TYPE_META[session.session_type]
+              const dayLabel = DAYS.find(d => d.code === session.day_of_week)
+              const isSaving = sessionSaving === session.id
+              return (
+                <div
+                  key={session.id}
+                  style={{
+                    background: 'var(--bg-raised)',
+                    border: '1px solid var(--edge)',
+                    borderRadius: 'var(--radius)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={{ height: 3, background: meta?.color ?? 'var(--edge)' }} />
+                  <div style={{ padding: '16px 20px' }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
+                            {lang === 'pt' ? dayLabel?.label_pt : dayLabel?.label_en}
+                          </span>
+                          <span style={{ fontSize: 10, color: meta?.color ?? 'var(--ink-faint)' }}>
+                            {lang === 'pt' ? meta?.label_pt : meta?.label_en}
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
+                          {session.session_name}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        {session.estimated_duration && (
+                          <span style={{
+                            fontSize: 11, color: 'var(--ink-faint)',
+                            background: 'var(--bg-raised-2)', border: '1px solid var(--edge-soft)',
+                            borderRadius: 99, padding: '2px 8px',
+                          }}>
+                            {session.estimated_duration}min
+                          </span>
+                        )}
+                        <span style={{
+                          fontSize: 11, color: 'var(--ink-faint)',
+                          background: 'var(--bg-raised-2)', border: '1px solid var(--edge-soft)',
+                          borderRadius: 99, padding: '2px 8px',
+                        }}>
+                          {session.exercises.length} {L('exercícios', 'exercises')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {session.ai_notes && (
+                      <p style={{ fontSize: 12.5, color: 'var(--ink-dim)', fontStyle: 'italic', lineHeight: 1.55, margin: '0 0 12px' }}>
+                        {session.ai_notes}
+                      </p>
+                    )}
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <button
+                        className="btn btn-accent"
+                        style={{ '--accent': 'var(--c-health)', fontSize: 12.5 } as React.CSSProperties}
+                        onClick={() => { setSelectedSession(session); }}
+                      >
+                        <Icon name="flame" size={13} />
+                        {L('Iniciar Treino', 'Start Workout')}
+                      </button>
+
+                      {session.status === 'completed' ? (
+                        <span style={{ fontSize: 12, color: 'var(--pos)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Icon name="check-circle" size={13} />
+                          {L('Concluído', 'Completed')}
+                        </span>
+                      ) : session.status === 'skipped' ? (
+                        <span style={{ fontSize: 12, color: 'var(--neg)' }}>
+                          {L('Saltado', 'Skipped')}
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            className="btn"
+                            style={{ fontSize: 12.5, opacity: isSaving ? 0.5 : 1 }}
+                            disabled={isSaving}
+                            onClick={() => handleSessionStatus(session.id, 'completed')}
+                          >
+                            <Icon name="check-circle" size={13} />
+                            {L('Concluído', 'Completed')}
+                          </button>
+                          <button
+                            className="btn"
+                            style={{ fontSize: 12, color: 'var(--ink-faint)', opacity: isSaving ? 0.5 : 1 }}
+                            disabled={isSaving}
+                            onClick={() => handleSessionStatus(session.id, 'skipped')}
+                          >
+                            {L('Saltar', 'Skip')}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Feedback */}
+          {anyDone && (
             <div style={{
               background: 'var(--bg-raised)',
               border: '1px solid var(--edge)',
               borderRadius: 'var(--radius)',
-              padding: '20px 24px',
+              padding: '18px 22px',
             }}>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>
-                {L('Como correu esta semana?', 'How was this week?')}
+                {L('Como foi esta semana?', 'How was this week?')}
               </div>
               {activePlan.feedback ? (
                 <div style={{ fontSize: 13, color: 'var(--c-health)' }}>
-                  {L('Feedback registado:', 'Feedback recorded:')} {activePlan.feedback.replace('_', ' ')}
+                  {L('Feedback registado:', 'Feedback recorded:')} {activePlan.feedback.replace(/_/g, ' ')}
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -393,13 +536,8 @@ export default function JourneyView() {
                     { key: 'just_right', label: L('💪 Perfeito', '💪 Just Right') },
                     { key: 'too_hard', label: L('🔥 Difícil demais', '🔥 Too Hard') },
                   ].map(opt => (
-                    <button
-                      key={opt.key}
-                      className="btn"
-                      onClick={() => handleFeedback(opt.key)}
-                      disabled={feedbackSaving}
-                      style={{ fontSize: 13 }}
-                    >
+                    <button key={opt.key} className="btn" style={{ fontSize: 13 }}
+                      onClick={() => handleFeedback(opt.key)} disabled={feedbackSaving}>
                       {opt.label}
                     </button>
                   ))}
@@ -410,17 +548,17 @@ export default function JourneyView() {
         </>
       )}
 
-      {/* Session detail modal */}
       {selectedSession && (
         <SessionDetailModal
           session={selectedSession}
           onClose={() => setSelectedSession(null)}
-          onStatusChange={(status) => handleSessionStatusChange(selectedSession.id, status)}
+          onStatusChange={(status) => patchSessionLocal(selectedSession.id, status as PlannedSession['status'])}
+          onNavigate={onNavigate}
         />
       )}
 
       <style>{`
-        @keyframes pulse {
+        @keyframes jdot {
           0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
           40% { opacity: 1; transform: scale(1); }
         }

@@ -23,8 +23,8 @@ const HEALTH_TABS = [
 
 function renderView(tab: HealthTab, onNavigate: (t: string) => void) {
   switch (tab) {
-    case 'overview':  return <OverviewView />
-    case 'journey':   return <JourneyView />
+    case 'overview':  return <OverviewView onNavigate={onNavigate} />
+    case 'journey':   return <JourneyView onNavigate={onNavigate} />
     case 'workout':   return <WorkoutView />
     case 'routines':  return <RoutinesView />
     case 'history':   return <HistoryView />

@@ -1,7 +1,7 @@
 export type PlannedExercise = {
   exercise_id: string; name: string; name_pt: string | null
   sets: number; reps: number | null; duration_seconds: number | null
-  rest_seconds: number; notes: string | null
+  rest_seconds: number; notes: string | null; muscle_groups?: string[]
 }
 
 export type PlannedSession = {
