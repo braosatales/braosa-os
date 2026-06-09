@@ -36,11 +36,11 @@ const MAX_CELL_SIZE = 160
 const MIN_CELL_SIZE = 100
 const GRID_GAP = 16
 const GRID_PADDING = 20
+const MAX_GRID_WIDTH = MAX_CELL_SIZE * GRID_COLS + GRID_GAP * (GRID_COLS - 1) + GRID_PADDING * 2
 
 type ShellProps = {
   dragging?: boolean
   lifted?: boolean
-  sizeBadge?: string
   onHandleDown?: (e: React.PointerEvent) => void
   onResizeDown?: (e: React.PointerEvent, corner: "se") => void
   onRemove?: () => void
@@ -69,8 +69,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const [showAddWidget, setShowAddWidget] = useState(false)
   const [cellSize, setCellSize] = useState(118)
 
-  // outerRef: centering wrapper, observed by ResizeObserver, captures pointer events
-  // gridRef: inner CSS grid, used for drag/resize coordinate calculations
+  // outerRef: pointer-capture target; gridRef: CSS grid (measured for column width)
   const outerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const cellSizeRef = useRef(118)
@@ -94,12 +93,13 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   useEffect(() => { cellSizeRef.current = cellSize }, [cellSize])
   useEffect(() => { visibleRef.current = visible }, [visible])
 
+  // Observe the inner grid (after maxWidth cap) so cellSize matches actual column width
   useEffect(() => {
-    const el = outerRef.current
+    const el = gridRef.current
     if (!el) return
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width
-      const cs = Math.min(MAX_CELL_SIZE, Math.max(MIN_CELL_SIZE,
+      const cs = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE,
         Math.floor((w - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS)
       ))
       setCellSize(cs)
@@ -276,7 +276,6 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     }
   }
 
-  const active = dragging !== null || resizing !== null
   const displayWidgets = isMobile ? MOBILE_WIDGETS : visible
 
   if (isMobile) {
@@ -309,46 +308,32 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     )
   }
 
-  const gridWidth = cellSize * GRID_COLS + GRID_GAP * (GRID_COLS - 1) + GRID_PADDING * 2
-
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       {/* Scroll container */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-        {/* Centering wrapper — outerRef measured by ResizeObserver, captures pointer events */}
+        {/* Pointer-capture wrapper */}
         <div
           ref={outerRef}
-          style={{ display: "flex", justifyContent: "center", overflowX: "auto" }}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* Inner CSS grid — gridRef used for drag/resize rect calculations */}
+          {/* CSS grid — fills available width, caps at MAX_GRID_WIDTH, centers itself */}
           <div
             ref={gridRef}
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${GRID_COLS}, ${cellSize}px)`,
+              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
               gridAutoRows: `${cellSize}px`,
               gap: GRID_GAP,
               padding: GRID_PADDING,
-              width: gridWidth,
+              width: "100%",
+              maxWidth: MAX_GRID_WIDTH,
+              margin: "0 auto",
               position: "relative",
             }}
           >
-            {/* Grid guides — shown during drag/resize */}
-            {active && Array.from({ length: GRID_COLS * 5 }, (_, i) => {
-              const col = (i % GRID_COLS) + 1
-              const row = Math.floor(i / GRID_COLS) + 1
-              return (
-                <div
-                  key={`guide-${i}`}
-                  className="grid-guide"
-                  style={{ gridColumn: col, gridRow: row, zIndex: 0, pointerEvents: "none" }}
-                />
-              )
-            })}
-
-            {/* Ghost drop target */}
+            {/* Ghost drop target — shown only during active drag */}
             {ghost && (
               <div
                 className="grid-ghost"
@@ -368,12 +353,10 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
               const item = layout[id]
               const isDragging = dragging?.id === id
               const isResizing = resizing?.id === id
-              const showBadge = isDragging || isResizing
 
               const shellProps: ShellProps = {
                 dragging: isDragging,
                 lifted: lifted === id,
-                sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
                 onHandleDown: (e) => handleDragStart(e, id),
                 onResizeDown: (e) => handleResizeStart(e, id),
                 onRemove: () => {
@@ -395,6 +378,9 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
                   }}
                 >
                   {renderWidget(id, shellProps, onNavigate)}
+                  {(isDragging || isResizing) && (
+                    <div className="size-badge">{item.w}×{item.h}</div>
+                  )}
                 </div>
               )
             })}
