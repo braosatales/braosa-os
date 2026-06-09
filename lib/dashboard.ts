@@ -23,9 +23,9 @@ export const DEFAULT_LAYOUT: Layout = {
   ai:      { x: 2, y: 2, w: 2, h: 2 },
   weather: { x: 4, y: 2, w: 1, h: 1 },
   health:  { x: 4, y: 3, w: 1, h: 1 },
-  focus:   { x: 0, y: 4, w: 2, h: 2 },
-  habits:  { x: 2, y: 4, w: 2, h: 2 },
-  notes:   { x: 4, y: 4, w: 1, h: 2 },
+  focus:   { x: 0, y: 4, w: 3, h: 2 },
+  habits:  { x: 3, y: 4, w: 2, h: 2 },
+  notes:   { x: 0, y: 6, w: 2, h: 2 },
 }
 
 export const ALL_WIDGETS: { id: WidgetId; label: string; color: string; glyph: string }[] = [

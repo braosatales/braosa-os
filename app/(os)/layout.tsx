@@ -166,7 +166,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
           <div
             ref={contentRef}
             className="mobile-bottom-pad"
-            style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
+            style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}
           >
             <ErrorBoundary>
               {renderActive(active)}
