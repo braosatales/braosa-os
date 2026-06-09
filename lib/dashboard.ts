@@ -14,6 +14,8 @@ export type GridItem = {
 
 export type Layout = Record<WidgetId, Omit<GridItem, "id">>
 
+export const GRID_COLS = 5
+
 export const DEFAULT_LAYOUT: Layout = {
   net:     { x: 0, y: 0, w: 2, h: 2 },
   tasks:   { x: 2, y: 0, w: 2, h: 2 },
@@ -26,6 +28,51 @@ export const DEFAULT_LAYOUT: Layout = {
   focus:   { x: 0, y: 4, w: 3, h: 2 },
   habits:  { x: 3, y: 4, w: 2, h: 2 },
   notes:   { x: 0, y: 6, w: 2, h: 2 },
+}
+
+export function hasCollision(
+  layout: Layout,
+  visible: WidgetId[],
+  moving: WidgetId,
+  newPos: { x: number; y: number; w: number; h: number }
+): boolean {
+  for (const id of visible) {
+    if (id === moving) continue
+    const b = layout[id]
+    if (!b) continue
+    const overlaps =
+      newPos.x < b.x + b.w &&
+      newPos.x + newPos.w > b.x &&
+      newPos.y < b.y + b.h &&
+      newPos.y + newPos.h > b.y
+    if (overlaps) return true
+  }
+  return false
+}
+
+export function findFreePosition(
+  layout: Layout,
+  visible: WidgetId[],
+  w: number,
+  h: number
+): { x: number; y: number } {
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x <= GRID_COLS - w; x++) {
+      const candidate = { x, y, w, h }
+      const collision = visible.some(id => {
+        const b = layout[id]
+        if (!b) return false
+        return (
+          candidate.x < b.x + b.w &&
+          candidate.x + candidate.w > b.x &&
+          candidate.y < b.y + b.h &&
+          candidate.y + candidate.h > b.y
+        )
+      })
+      if (!collision) return { x, y }
+    }
+  }
+  return { x: 0, y: 0 }
 }
 
 export const ALL_WIDGETS: { id: WidgetId; label: string; color: string; glyph: string }[] = [

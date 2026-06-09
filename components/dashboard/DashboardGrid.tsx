@@ -17,19 +17,23 @@ import HealthWidget from "./widgets/HealthWidget"
 import NotesWidget from "./widgets/NotesWidget"
 import AddWidgetModal from "./AddWidgetModal"
 import {
+  GRID_COLS,
   getLayout,
   saveLayout,
   getVisibleWidgets,
   saveVisibleWidgets,
   ALL_WIDGETS,
   DEFAULT_LAYOUT,
+  hasCollision,
+  findFreePosition,
   type WidgetId,
   type Layout,
 } from "@/lib/dashboard"
 import type { IconName } from "@/lib/icons"
 import { L } from "@/lib/i18n"
 
-const GRID_COLS = 5
+const MAX_CELL_SIZE = 160
+const MIN_CELL_SIZE = 100
 const GRID_GAP = 16
 const GRID_PADDING = 20
 
@@ -65,6 +69,9 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const [showAddWidget, setShowAddWidget] = useState(false)
   const [cellSize, setCellSize] = useState(118)
 
+  // outerRef: centering wrapper, observed by ResizeObserver, captures pointer events
+  // gridRef: inner CSS grid, used for drag/resize coordinate calculations
+  const outerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const cellSizeRef = useRef(118)
 
@@ -73,23 +80,28 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const resizingRef = useRef<ResizeState>(null)
   const ghostRef = useRef<GhostState>(null)
   const layoutRef = useRef<Layout>(DEFAULT_LAYOUT)
+  const visibleRef = useRef<WidgetId[]>([])
 
   useEffect(() => {
     const l = getLayout()
     const v = getVisibleWidgets()
     layoutRef.current = l
+    visibleRef.current = v
     setLayout(l)
     setVisible(v)
   }, [])
 
   useEffect(() => { cellSizeRef.current = cellSize }, [cellSize])
+  useEffect(() => { visibleRef.current = visible }, [visible])
 
   useEffect(() => {
-    const el = gridRef.current
+    const el = outerRef.current
     if (!el) return
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width
-      const cs = Math.floor((w - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS)
+      const cs = Math.min(MAX_CELL_SIZE, Math.max(MIN_CELL_SIZE,
+        Math.floor((w - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS)
+      ))
       setCellSize(cs)
     })
     ro.observe(el)
@@ -104,7 +116,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
 
   function handleDragStart(e: React.PointerEvent, id: WidgetId) {
     e.preventDefault()
-    if (!gridRef.current) return
+    if (!outerRef.current || !gridRef.current) return
     const rect = gridRef.current.getBoundingClientRect()
     const colW = getColWidth()
     const rowH = cellSizeRef.current + GRID_GAP
@@ -120,13 +132,13 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     const g: GhostState = { x: item.x, y: item.y, w: item.w, h: item.h }
     ghostRef.current = g
     setGhost(g)
-    gridRef.current.setPointerCapture(e.pointerId)
+    outerRef.current.setPointerCapture(e.pointerId)
   }
 
   function handleResizeStart(e: React.PointerEvent, id: WidgetId) {
     e.preventDefault()
     e.stopPropagation()
-    if (!gridRef.current) return
+    if (!outerRef.current) return
     const item = layoutRef.current[id]
     const state: ResizeState = {
       id,
@@ -137,7 +149,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     }
     resizingRef.current = state
     setResizing(state)
-    gridRef.current.setPointerCapture(e.pointerId)
+    outerRef.current.setPointerCapture(e.pointerId)
   }
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -152,11 +164,35 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       const item = layoutRef.current[drag.id]
       const gx = Math.round((e.clientX - rect.left - GRID_PADDING - drag.ox) / (colW + GRID_GAP))
       const gy = Math.round((e.clientY - rect.top - GRID_PADDING - drag.oy) / rowH)
-      const clampedX = Math.max(0, Math.min(GRID_COLS - item.w, gx))
-      const clampedY = Math.max(0, gy)
-      const g: GhostState = { x: clampedX, y: clampedY, w: item.w, h: item.h }
-      ghostRef.current = g
-      setGhost(g)
+      const snappedX = Math.max(0, Math.min(GRID_COLS - item.w, gx))
+      const snappedY = Math.max(0, gy)
+      const candidate = { x: snappedX, y: snappedY, w: item.w, h: item.h }
+      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, candidate)) {
+        ghostRef.current = candidate
+        setGhost(candidate)
+      } else {
+        let found = false
+        outer: for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const alt = {
+              x: Math.max(0, Math.min(GRID_COLS - item.w, snappedX + dx)),
+              y: Math.max(0, snappedY + dy),
+              w: item.w,
+              h: item.h,
+            }
+            if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, alt)) {
+              ghostRef.current = alt
+              setGhost(alt)
+              found = true
+              break outer
+            }
+          }
+        }
+        if (!found) {
+          ghostRef.current = null
+          setGhost(null)
+        }
+      }
     }
 
     if (resize) {
@@ -166,13 +202,12 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       const item = layoutRef.current[resize.id]
       const newW = Math.max(1, Math.min(GRID_COLS - item.x, Math.round(resize.startW + dx / (colW + GRID_GAP))))
       const newH = Math.max(1, Math.min(5, Math.round(resize.startH + dy / (cellSizeRef.current + GRID_GAP))))
-      if (newW !== item.w || newH !== item.h) {
-        const newLayout = {
-          ...layoutRef.current,
-          [resize.id]: { ...layoutRef.current[resize.id], w: newW, h: newH },
-        }
-        layoutRef.current = newLayout
+      const candidate = { x: item.x, y: item.y, w: newW, h: newH }
+      if (!hasCollision(layoutRef.current, visibleRef.current, resize.id, candidate)) {
+        const newLayout = { ...layoutRef.current, [resize.id]: candidate }
         setLayout(newLayout)
+        layoutRef.current = newLayout
+        saveLayout(newLayout)
       }
     }
   }, [])
@@ -183,13 +218,16 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     const resize = resizingRef.current
 
     if (drag && g) {
-      const newLayout = {
-        ...layoutRef.current,
-        [drag.id]: { ...layoutRef.current[drag.id], x: g.x, y: g.y },
+      const item = layoutRef.current[drag.id]
+      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, g)) {
+        const newLayout = {
+          ...layoutRef.current,
+          [drag.id]: { x: g.x, y: g.y, w: item.w, h: item.h },
+        }
+        setLayout(newLayout)
+        layoutRef.current = newLayout
+        saveLayout(newLayout)
       }
-      layoutRef.current = newLayout
-      setLayout(newLayout)
-      saveLayout(newLayout)
     }
     if (resize) {
       saveLayout(layoutRef.current)
@@ -244,7 +282,6 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   if (isMobile) {
     return (
       <div
-        ref={gridRef}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -272,96 +309,115 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     )
   }
 
+  const gridWidth = cellSize * GRID_COLS + GRID_GAP * (GRID_COLS - 1) + GRID_PADDING * 2
+
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      {/* Scroll container — gridRef measures its full width for cell-size calculation */}
-      <div
-        ref={gridRef}
-        style={{ flex: 1, minHeight: 0, overflowY: "auto" }}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
+      {/* Scroll container */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        {/* Centering wrapper — outerRef measured by ResizeObserver, captures pointer events */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-            gridAutoRows: `${cellSize}px`,
-            gap: GRID_GAP,
-            padding: GRID_PADDING,
-            position: "relative",
-          }}
+          ref={outerRef}
+          style={{ display: "flex", justifyContent: "center", overflowX: "auto" }}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
         >
-          {/* Grid guides — shown during drag/resize */}
-          {active && Array.from({ length: GRID_COLS * 5 }, (_, i) => {
-            const col = (i % GRID_COLS) + 1
-            const row = Math.floor(i / GRID_COLS) + 1
-            return (
+          {/* Inner CSS grid — gridRef used for drag/resize rect calculations */}
+          <div
+            ref={gridRef}
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${GRID_COLS}, ${cellSize}px)`,
+              gridAutoRows: `${cellSize}px`,
+              gap: GRID_GAP,
+              padding: GRID_PADDING,
+              width: gridWidth,
+              position: "relative",
+            }}
+          >
+            {/* Grid guides — shown during drag/resize */}
+            {active && Array.from({ length: GRID_COLS * 5 }, (_, i) => {
+              const col = (i % GRID_COLS) + 1
+              const row = Math.floor(i / GRID_COLS) + 1
+              return (
+                <div
+                  key={`guide-${i}`}
+                  className="grid-guide"
+                  style={{ gridColumn: col, gridRow: row, zIndex: 0, pointerEvents: "none" }}
+                />
+              )
+            })}
+
+            {/* Ghost drop target */}
+            {ghost && (
               <div
-                key={`guide-${i}`}
-                className="grid-guide"
-                style={{ gridColumn: col, gridRow: row, zIndex: 0, pointerEvents: "none" }}
-              />
-            )
-          })}
-
-          {/* Ghost drop target */}
-          {ghost && (
-            <div
-              className="grid-ghost"
-              style={{
-                gridColumn: `${ghost.x + 1} / span ${ghost.w}`,
-                gridRow: `${ghost.y + 1} / span ${ghost.h}`,
-                background: "var(--edge-soft)",
-                borderRadius: "var(--radius)",
-                border: "1.5px dashed var(--edge-strong)",
-                zIndex: 0,
-              }}
-            />
-          )}
-
-          {/* Widget items */}
-          {displayWidgets.map((id) => {
-            const item = layout[id]
-            const isDragging = dragging?.id === id
-            const isResizing = resizing?.id === id
-            const showBadge = isDragging || isResizing
-
-            const shellProps: ShellProps = {
-              dragging: isDragging,
-              lifted: lifted === id,
-              sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
-              onHandleDown: (e) => handleDragStart(e, id),
-              onResizeDown: (e) => handleResizeStart(e, id),
-              onRemove: () => {
-                const next = visible.filter((v) => v !== id)
-                setVisible(next)
-                saveVisibleWidgets(next)
-              },
-            }
-
-            return (
-              <div
-                key={id}
+                className="grid-ghost"
                 style={{
-                  gridColumn: `${item.x + 1} / span ${item.w}`,
-                  gridRow: `${item.y + 1} / span ${item.h}`,
-                  zIndex: isDragging ? 20 : 1,
-                  transition: isDragging ? "none" : "grid-column .15s, grid-row .15s",
-                  position: "relative",
+                  gridColumn: `${ghost.x + 1} / span ${ghost.w}`,
+                  gridRow: `${ghost.y + 1} / span ${ghost.h}`,
+                  background: "var(--edge-soft)",
+                  borderRadius: "var(--radius)",
+                  border: "1.5px dashed var(--edge-strong)",
+                  zIndex: 0,
                 }}
-              >
-                {renderWidget(id, shellProps, onNavigate)}
-              </div>
-            )
-          })}
+              />
+            )}
+
+            {/* Widget items */}
+            {displayWidgets.map((id) => {
+              const item = layout[id]
+              const isDragging = dragging?.id === id
+              const isResizing = resizing?.id === id
+              const showBadge = isDragging || isResizing
+
+              const shellProps: ShellProps = {
+                dragging: isDragging,
+                lifted: lifted === id,
+                sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
+                onHandleDown: (e) => handleDragStart(e, id),
+                onResizeDown: (e) => handleResizeStart(e, id),
+                onRemove: () => {
+                  const next = visible.filter((v) => v !== id)
+                  setVisible(next)
+                  saveVisibleWidgets(next)
+                },
+              }
+
+              return (
+                <div
+                  key={id}
+                  style={{
+                    gridColumn: `${item.x + 1} / span ${item.w}`,
+                    gridRow: `${item.y + 1} / span ${item.h}`,
+                    zIndex: isDragging ? 20 : 1,
+                    transition: isDragging ? "none" : "grid-column .15s, grid-row .15s",
+                    position: "relative",
+                  }}
+                >
+                  {renderWidget(id, shellProps, onNavigate)}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Add Widget button — below the scrollable grid */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "16px 20px 24px" }}>
+      {/* Add Widget + Reset buttons */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "16px 20px 24px" }}>
         <button className="btn" onClick={() => setShowAddWidget(true)} style={{ gap: 8 }}>
           <span style={{ display: "flex" }}><Icon name="plus" size={14} /></span>
           {L("Adicionar Widget", "Add Widget")}
+        </button>
+        <button className="btn" onClick={() => {
+          setLayout(DEFAULT_LAYOUT)
+          layoutRef.current = DEFAULT_LAYOUT
+          saveLayout(DEFAULT_LAYOUT)
+          const defaultVisible: WidgetId[] = ['net', 'tasks', 'assets', 'debt', 'budget', 'ai', 'weather', 'health']
+          setVisible(defaultVisible)
+          saveVisibleWidgets(defaultVisible)
+        }} style={{ gap: 8 }}>
+          <span style={{ display: "flex" }}><Icon name="refresh" size={14} /></span>
+          {L("Repor", "Reset")}
         </button>
       </div>
 
@@ -370,11 +426,21 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         onClose={() => setShowAddWidget(false)}
         visible={visible}
         onToggle={(id) => {
-          const newVisible = visible.includes(id)
-            ? visible.filter(v => v !== id)
-            : [...visible, id]
-          setVisible(newVisible)
-          saveVisibleWidgets(newVisible)
+          if (visible.includes(id)) {
+            const newVisible = visible.filter(v => v !== id)
+            setVisible(newVisible)
+            saveVisibleWidgets(newVisible)
+          } else {
+            const defaultSize = DEFAULT_LAYOUT[id]
+            const pos = findFreePosition(layout, visible, defaultSize.w, defaultSize.h)
+            const newLayout = { ...layout, [id]: { ...defaultSize, ...pos } }
+            setLayout(newLayout)
+            layoutRef.current = newLayout
+            saveLayout(newLayout)
+            const newVisible = [...visible, id]
+            setVisible(newVisible)
+            saveVisibleWidgets(newVisible)
+          }
         }}
       />
     </div>
