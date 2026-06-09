@@ -61,6 +61,47 @@ function getNextSession(plans: PlanWithSessions[], todayStr: string): PlannedSes
   return null
 }
 
+function WhoopCard() {
+  useLang()
+  return (
+    <div style={{
+      background: 'var(--bg-raised)', border: '1px solid var(--edge)',
+      borderRadius: 'var(--radius)', padding: '20px 22px', marginBottom: 18,
+      display: 'flex', alignItems: 'center', gap: 16,
+    }}>
+      <div style={{
+        width: 48, height: 48, flexShrink: 0,
+        borderRadius: 10,
+        background: 'color-mix(in oklch, var(--c-health) 15%, transparent)',
+        border: '1px solid var(--c-health)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700,
+        color: 'var(--c-health)',
+      }}>
+        W
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>
+          Whoop
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--ink-dim)', lineHeight: 1.5, marginBottom: 6 }}>
+          {L('Liga o teu Whoop para recuperação, sono e strain automáticos.', 'Connect your Whoop for automatic recovery, sleep and strain data.')}
+        </div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', marginBottom: 8 }}>
+          {L('Em breve — aplica em developer.whoop.com', 'Coming soon — apply at developer.whoop.com')}
+        </div>
+        <button
+          className="btn"
+          style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={() => window.open('https://developer.whoop.com', '_blank')}
+        >
+          {L('Saber Mais', 'Learn More')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function OverviewView({ onNavigate }: Props) {
   const lang = useLang()
   const [plans, setPlans] = useState<PlanWithSessions[]>([])
@@ -217,6 +258,9 @@ export default function OverviewView({ onNavigate }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Whoop coming-soon card */}
+          <WhoopCard />
 
           {/* Quick stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
