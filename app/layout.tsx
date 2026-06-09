@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Outfit, DM_Sans, Space_Mono } from 'next/font/google'
 import './globals.css'
 
@@ -25,6 +25,12 @@ const monoFont = Space_Mono({
 
 export const metadata: Metadata = {
   title: 'BraosaOS',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({

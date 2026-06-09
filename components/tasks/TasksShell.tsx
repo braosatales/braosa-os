@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Icon, FavStar } from '@/components/ui'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { L, useLang } from '@/lib/i18n'
 import { useTaskStore, TaskStore } from '@/lib/task-store'
 import type { Task, TaskView } from '@/lib/tasks'
@@ -74,6 +75,7 @@ function AddProjectForm({ onSave, onCancel }: { onSave: () => void; onCancel: ()
 
 export default function TasksShell() {
   useLang()
+  const isMobile = useIsMobile()
   const { tasks, projects, loading } = useTaskStore()
 
   const [activeView, setActiveView] = useState<TaskView>('today')
@@ -104,137 +106,218 @@ export default function TasksShell() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      {/* Left sidebar */}
-      <div
-        className="fin-sidebar"
-        style={{
-          width: 200,
-          flexShrink: 0,
-          background: 'linear-gradient(180deg, var(--bg-raised), transparent)',
-          borderRight: '1px solid var(--edge-soft)',
-          padding: '18px 10px',
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
-        }}
-      >
-        {/* Section label */}
-        <div
-          className="subnav-label"
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-faint)', letterSpacing: '0.18em', padding: '0 8px', marginBottom: 12 }}
-        >
-          {L("TAREFAS", "TASKS")}
-        </div>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
 
-        {/* View buttons */}
-        {VIEWS.map(v => {
-          const isActive = activeView === v.id
-          return (
-            <button
-              key={v.id}
-              className="subnav-item"
-              onClick={() => { setActiveView(v.id); setSelectedProjectId(null) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: isActive ? '9px 10px 9px 8px' : '9px 10px',
-                borderRadius: 9, width: '100%', cursor: 'pointer', border: 'none',
-                background: isActive ? 'color-mix(in oklch, var(--c-task) 14%, transparent)' : 'transparent',
-                color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
-                borderLeft: isActive ? '2px solid var(--c-task)' : '2px solid transparent',
-                transition: 'all .15s',
-              }}
-            >
-              <span style={{ display: 'flex', color: 'inherit' }}>
-                <Icon name={v.glyph as any} size={15} />
-              </span>
-              <span className="subnav-label" style={{ fontSize: 13, fontWeight: 500 }}>
-                {L(v.labelPt, v.labelEn)}
-              </span>
-            </button>
-          )
-        })}
+      {/* Mobile: views tab bar + project chips */}
+      {isMobile && (
+        <>
+          <div
+            className="hide-scrollbar"
+            style={{
+              display: 'flex',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              borderBottom: '1px solid var(--edge-soft)',
+              flexShrink: 0,
+              height: 48,
+            }}
+          >
+            {VIEWS.map(v => {
+              const isActive = activeView === v.id
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => { setActiveView(v.id); setSelectedProjectId(null) }}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: 13,
+                    whiteSpace: 'nowrap',
+                    color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
+                    borderBottom: isActive ? '2px solid var(--c-task)' : '2px solid transparent',
+                  }}
+                >
+                  <Icon name={v.glyph as any} size={14} />
+                  {L(v.labelPt, v.labelEn)}
+                </button>
+              )
+            })}
+          </div>
 
-        {/* Add task button */}
-        <button
-          type="button"
-          onClick={() => setShowAddTask(true)}
-          style={{
-            width: '100%', background: 'var(--c-task-dim)', border: '1px solid var(--c-task)',
-            color: 'var(--c-task)', borderRadius: 'var(--radius-sm)', padding: '9px 13px',
-            marginTop: 12, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            transition: 'opacity .15s',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.8' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
-        >
-          <Icon name="plus" size={14} />
-          {L("+ Nova Tarefa", "+ New Task")}
-        </button>
-
-        {/* Divider */}
-        <div style={{ borderTop: '1px solid var(--edge-soft)', margin: '16px 0' }} />
-
-        {/* Projects section label */}
-        <div
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-faint)', letterSpacing: '0.18em', padding: '0 8px', marginBottom: 8 }}
-        >
-          {L("PROJETOS", "PROJECTS")}
-        </div>
-
-        {/* Projects list */}
-        {projects.map(proj => {
-          const isActive = selectedProjectId === proj.id
-          const count = projectTaskCount(proj.id)
-          return (
+          {projects.length > 0 && (
             <div
-              key={proj.id}
-              onClick={() => setSelectedProjectId(isActive ? null : proj.id)}
+              className="hide-scrollbar"
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '7px 8px', borderRadius: 8, cursor: 'pointer',
-                background: isActive ? 'var(--bg-raised-2)' : 'transparent',
-                transition: 'background .12s',
+                display: 'flex',
+                gap: 8,
+                padding: '8px 16px',
+                overflowX: 'auto',
+                scrollbarWidth: 'none',
+                flexShrink: 0,
               }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'oklch(0.265 0.008 72 / 0.5)' }}
-              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
             >
-              <span style={{ width: 8, height: 8, borderRadius: 99, background: proj.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 12.5, color: isActive ? 'var(--ink)' : 'var(--ink-dim)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {proj.name}
-              </span>
-              {count > 0 && (
-                <span style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)' }}>
-                  {count}
-                </span>
-              )}
+              {projects.map(proj => {
+                const isActive = selectedProjectId === proj.id
+                return (
+                  <button
+                    key={proj.id}
+                    onClick={() => setSelectedProjectId(isActive ? null : proj.id)}
+                    style={{
+                      flexShrink: 0,
+                      fontSize: 11.5,
+                      padding: '4px 12px',
+                      borderRadius: 99,
+                      background: isActive ? 'var(--c-task-dim)' : 'var(--bg-raised-2)',
+                      border: `1px solid ${isActive ? 'var(--c-task)' : 'var(--edge)'}`,
+                      color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: 99, background: proj.color, display: 'inline-block', flexShrink: 0 }} />
+                    {proj.name}
+                  </button>
+                )
+              })}
             </div>
-          )
-        })}
+          )}
+        </>
+      )}
 
-        {/* Add project */}
-        {showAddProject ? (
-          <AddProjectForm onSave={() => setShowAddProject(false)} onCancel={() => setShowAddProject(false)} />
-        ) : (
+      {/* Desktop left sidebar */}
+      {!isMobile && (
+        <div
+          className="fin-sidebar"
+          style={{
+            width: 200,
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, var(--bg-raised), transparent)',
+            borderRight: '1px solid var(--edge-soft)',
+            padding: '18px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto',
+          }}
+        >
+          <div
+            className="subnav-label"
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-faint)', letterSpacing: '0.18em', padding: '0 8px', marginBottom: 12 }}
+          >
+            {L("TAREFAS", "TASKS")}
+          </div>
+
+          {VIEWS.map(v => {
+            const isActive = activeView === v.id
+            return (
+              <button
+                key={v.id}
+                className="subnav-item"
+                onClick={() => { setActiveView(v.id); setSelectedProjectId(null) }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: isActive ? '9px 10px 9px 8px' : '9px 10px',
+                  borderRadius: 9, width: '100%', cursor: 'pointer', border: 'none',
+                  background: isActive ? 'color-mix(in oklch, var(--c-task) 14%, transparent)' : 'transparent',
+                  color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
+                  borderLeft: isActive ? '2px solid var(--c-task)' : '2px solid transparent',
+                  transition: 'all .15s',
+                }}
+              >
+                <span style={{ display: 'flex', color: 'inherit' }}>
+                  <Icon name={v.glyph as any} size={15} />
+                </span>
+                <span className="subnav-label" style={{ fontSize: 13, fontWeight: 500 }}>
+                  {L(v.labelPt, v.labelEn)}
+                </span>
+              </button>
+            )
+          })}
+
           <button
             type="button"
-            onClick={() => setShowAddProject(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 8px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', fontSize: 11, marginTop: 4 }}
+            onClick={() => setShowAddTask(true)}
+            style={{
+              width: '100%', background: 'var(--c-task-dim)', border: '1px solid var(--c-task)',
+              color: 'var(--c-task)', borderRadius: 'var(--radius-sm)', padding: '9px 13px',
+              marginTop: 12, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'opacity .15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.8' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
           >
-            <Icon name="plus" size={10} />
-            {L("+ Novo Projeto", "+ New Project")}
+            <Icon name="plus" size={14} />
+            {L("+ Nova Tarefa", "+ New Task")}
           </button>
-        )}
 
-        {loading && (
-          <div style={{ marginTop: 'auto', padding: '8px', fontSize: 10.5, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-            {L("A carregar…", "Loading…")}
+          <div style={{ borderTop: '1px solid var(--edge-soft)', margin: '16px 0' }} />
+
+          <div
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-faint)', letterSpacing: '0.18em', padding: '0 8px', marginBottom: 8 }}
+          >
+            {L("PROJETOS", "PROJECTS")}
           </div>
-        )}
-      </div>
 
-      {/* Right content */}
+          {projects.map(proj => {
+            const isActive = selectedProjectId === proj.id
+            const count = projectTaskCount(proj.id)
+            return (
+              <div
+                key={proj.id}
+                onClick={() => setSelectedProjectId(isActive ? null : proj.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '7px 8px', borderRadius: 8, cursor: 'pointer',
+                  background: isActive ? 'var(--bg-raised-2)' : 'transparent',
+                  transition: 'background .12s',
+                }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'oklch(0.265 0.008 72 / 0.5)' }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: 99, background: proj.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, color: isActive ? 'var(--ink)' : 'var(--ink-dim)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {proj.name}
+                </span>
+                {count > 0 && (
+                  <span style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)' }}>
+                    {count}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+
+          {showAddProject ? (
+            <AddProjectForm onSave={() => setShowAddProject(false)} onCancel={() => setShowAddProject(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddProject(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 8px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', fontSize: 11, marginTop: 4 }}
+            >
+              <Icon name="plus" size={10} />
+              {L("+ Novo Projeto", "+ New Project")}
+            </button>
+          )}
+
+          {loading && (
+            <div style={{ marginTop: 'auto', padding: '8px', fontSize: 10.5, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+              {L("A carregar…", "Loading…")}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         {activeView === 'today' && (
           <TodayView tasks={filteredTasks} onSelect={setSelectedTask} onToggleDone={handleToggleDone} onToggleFav={handleToggleFav} />
@@ -251,6 +334,32 @@ export default function TasksShell() {
           </div>
         )}
       </div>
+
+      {/* Mobile FAB */}
+      {isMobile && (
+        <button
+          onClick={() => setShowAddTask(true)}
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            right: 20,
+            zIndex: 200,
+            width: 52,
+            height: 52,
+            borderRadius: 99,
+            background: 'var(--c-task)',
+            color: 'oklch(0.18 0.01 80)',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 0 calc(30px * var(--glow)) -6px var(--c-task)',
+          }}
+        >
+          <Icon name="plus" size={22} />
+        </button>
+      )}
 
       {/* Modals */}
       {selectedTask && (

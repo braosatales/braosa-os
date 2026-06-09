@@ -11,6 +11,7 @@ import {
 import dynamic from "next/dynamic"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
+import BottomNav from "@/components/nav/BottomNav"
 import SettingsModal from "@/components/settings/SettingsModal"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
@@ -153,21 +154,25 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             ...(locked ? blurStyle : {}),
           }}
         >
-          <TopNav
-            active={active}
-            onNavigate={navigate}
-            onLock={doLock}
-            onSettings={() => setSettingsOpen(true)}
-            user={user}
-          />
+          <div className="desktop-only">
+            <TopNav
+              active={active}
+              onNavigate={navigate}
+              onLock={doLock}
+              onSettings={() => setSettingsOpen(true)}
+              user={user}
+            />
+          </div>
           <div
             ref={contentRef}
+            className="mobile-bottom-pad"
             style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
           >
             <ErrorBoundary>
               {renderActive(active)}
             </ErrorBoundary>
           </div>
+          <BottomNav />
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
         <SettingsModal

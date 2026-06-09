@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useLang } from "@/lib/i18n"
 import { getLockPassword, unlock as doUnlock } from "@/lib/lockscreen"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 
 interface Props {
   onUnlock: () => void
@@ -19,6 +20,7 @@ const EN_MONTHS = ["January", "February", "March", "April", "May", "June", "July
 
 export default function LockScreen({ onUnlock }: Props) {
   const lang = useLang()
+  const isMobile = useIsMobile()
   const [now, setNow] = useState<Date | null>(null)
   const [pw, setPw] = useState("")
   const [exiting, setExiting] = useState(false)
@@ -95,7 +97,8 @@ export default function LockScreen({ onUnlock }: Props) {
       <div style={{
         position: "relative",
         width: "100%",
-        maxWidth: 380,
+        maxWidth: isMobile ? '100%' : 380,
+        padding: isMobile ? '0 24px' : undefined,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -118,7 +121,7 @@ export default function LockScreen({ onUnlock }: Props) {
           className="tnum"
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: 72,
+            fontSize: isMobile ? 56 : 72,
             fontWeight: 600,
             color: "var(--ink)",
             lineHeight: 1,

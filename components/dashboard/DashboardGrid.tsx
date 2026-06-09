@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Icon } from "@/components/ui"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 import WidgetShell from "./WidgetShell"
 import NetWorthWidget from "./widgets/NetWorthWidget"
 import AssetsWidget from "./widgets/AssetsWidget"
@@ -49,7 +50,10 @@ type ResizeState = {
 } | null
 type GhostState = { x: number; y: number; w: number; h: number } | null
 
+const MOBILE_WIDGETS: WidgetId[] = ['net', 'focus', 'tasks', 'habits', 'notes', 'ai']
+
 export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string) => void }) {
+  const isMobile = useIsMobile()
   const [layout, setLayout] = useState<Layout>(DEFAULT_LAYOUT)
   const [visible, setVisible] = useState<WidgetId[]>([])
   const [dragging, setDragging] = useState<DragState>(null)
@@ -238,25 +242,35 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const addPos = getNextAvailableCell()
   const hidden = ALL_WIDGETS.filter((w) => !visible.includes(w.id))
   const active = dragging !== null || resizing !== null
+  const displayWidgets = isMobile ? MOBILE_WIDGETS : visible
+
+  const containerStyle = isMobile ? {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: GRID_GAP,
+    padding: 16,
+    overflowY: 'auto' as const,
+    flex: 1,
+  } : {
+    position: 'relative' as const,
+    display: 'grid',
+    gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+    gap: GRID_GAP,
+    padding: 20,
+    overflowY: 'auto' as const,
+    flex: 1,
+    minHeight: 0,
+  }
 
   return (
     <div
       ref={gridRef}
-      style={{
-        position: "relative",
-        display: "grid",
-        gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-        gap: GRID_GAP,
-        padding: 20,
-        overflowY: "auto",
-        flex: 1,
-        minHeight: 0,
-      }}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      style={containerStyle}
+      onPointerMove={isMobile ? undefined : handlePointerMove}
+      onPointerUp={isMobile ? undefined : handlePointerUp}
     >
       {/* Grid guides — shown during drag/resize */}
-      {active &&
+      {!isMobile && active &&
         Array.from({ length: GRID_COLS * 5 }, (_, i) => {
           const col = (i % GRID_COLS) + 1
           const row = Math.floor(i / GRID_COLS) + 1
@@ -270,7 +284,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         })}
 
       {/* Ghost drop target */}
-      {ghost && (
+      {!isMobile && ghost && (
         <div
           className="grid-ghost"
           style={{
@@ -285,18 +299,18 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       )}
 
       {/* Widget items */}
-      {visible.map((id) => {
+      {displayWidgets.map((id) => {
         const item = layout[id]
-        const isDragging = dragging?.id === id
-        const isResizing = resizing?.id === id
+        const isDragging = !isMobile && dragging?.id === id
+        const isResizing = !isMobile && resizing?.id === id
         const showBadge = isDragging || isResizing
 
         const shellProps: ShellProps = {
           dragging: isDragging,
-          lifted: lifted === id,
+          lifted: !isMobile && lifted === id,
           sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
-          onHandleDown: (e) => handleDragStart(e, id),
-          onResizeDown: (e) => handleResizeStart(e, id),
+          onHandleDown: isMobile ? undefined : (e) => handleDragStart(e, id),
+          onResizeDown: isMobile ? undefined : (e) => handleResizeStart(e, id),
           onRemove: () => {
             const next = visible.filter((v) => v !== id)
             setVisible(next)
@@ -307,7 +321,11 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         return (
           <div
             key={id}
-            style={{
+            style={isMobile ? {
+              zIndex: 1,
+              minHeight: GRID_ROW_H,
+              position: 'relative' as const,
+            } : {
               gridColumn: `${item.x + 1} / span ${item.w}`,
               gridRow: `${item.y + 1} / span ${item.h}`,
               zIndex: isDragging ? 20 : 1,
@@ -321,8 +339,8 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         )
       })}
 
-      {/* Add widget button */}
-      {hidden.length > 0 && (
+      {/* Add widget button — desktop only */}
+      {!isMobile && hidden.length > 0 && (
         <div
           style={{
             gridColumn: `${addPos.x + 1} / span 1`,

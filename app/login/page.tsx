@@ -51,6 +51,8 @@ export default function LoginPage() {
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
+        padding: '0 16px',
+        boxSizing: 'border-box',
       }}
     >
       {/* Glow 1 */}
@@ -91,7 +93,9 @@ export default function LoginPage() {
           border: '1px solid var(--edge)',
           borderRadius: 'var(--radius-lg)',
           padding: '40px 44px',
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
+          boxSizing: 'border-box',
           boxShadow: 'var(--shadow-pop)',
           animation: 'pop-in .3s cubic-bezier(.2,.8,.2,1) both',
         }}
