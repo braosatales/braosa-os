@@ -17,7 +17,6 @@ import HealthWidget from "./widgets/HealthWidget"
 import NotesWidget from "./widgets/NotesWidget"
 import AddWidgetModal from "./AddWidgetModal"
 import {
-  GRID_COLS,
   getLayout,
   saveLayout,
   getVisibleWidgets,
@@ -32,11 +31,9 @@ import {
 import type { IconName } from "@/lib/icons"
 import { L } from "@/lib/i18n"
 
-const MAX_CELL_SIZE = 160
-const MIN_CELL_SIZE = 100
+const CELL_SIZE = 160
 const GRID_GAP = 16
 const GRID_PADDING = 20
-const MAX_GRID_WIDTH = MAX_CELL_SIZE * GRID_COLS + GRID_GAP * (GRID_COLS - 1) + GRID_PADDING * 2
 
 type ShellProps = {
   dragging?: boolean
@@ -67,12 +64,13 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const [ghost, setGhost] = useState<GhostState>(null)
   const [lifted, setLifted] = useState<WidgetId | null>(null)
   const [showAddWidget, setShowAddWidget] = useState(false)
-  const [cellSize, setCellSize] = useState(118)
+  const [cols, setCols] = useState(5)
 
-  // outerRef: pointer-capture target; gridRef: CSS grid (measured for column width)
+  // outerRef: measured by ResizeObserver, pointer-capture target, horizontal scroll wrapper
+  // gridRef: inner CSS grid, used for drag/resize coordinate calculations
   const outerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
-  const cellSizeRef = useRef(118)
+  const colsRef = useRef(5)
 
   // Refs for stale-closure-safe pointer handlers
   const draggingRef = useRef<DragState>(null)
@@ -90,39 +88,29 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     setVisible(v)
   }, [])
 
-  useEffect(() => { cellSizeRef.current = cellSize }, [cellSize])
+  useEffect(() => { colsRef.current = cols }, [cols])
   useEffect(() => { visibleRef.current = visible }, [visible])
 
-  // Observe the inner grid (after maxWidth cap) so cellSize matches actual column width
   useEffect(() => {
-    const el = gridRef.current
+    const el = outerRef.current
     if (!el) return
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width
-      const cs = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE,
-        Math.floor((w - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS)
-      ))
-      setCellSize(cs)
+      const rawCols = Math.floor((w - GRID_PADDING * 2 + GRID_GAP) / (CELL_SIZE + GRID_GAP))
+      const c = Math.max(2, Math.min(20, rawCols))
+      setCols(c)
     })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
-  function getColWidth(): number {
-    if (!gridRef.current) return 100
-    const rect = gridRef.current.getBoundingClientRect()
-    return (rect.width - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
-  }
-
   function handleDragStart(e: React.PointerEvent, id: WidgetId) {
     e.preventDefault()
     if (!outerRef.current || !gridRef.current) return
     const rect = gridRef.current.getBoundingClientRect()
-    const colW = getColWidth()
-    const rowH = cellSizeRef.current + GRID_GAP
     const item = layoutRef.current[id]
-    const widgetLeft = rect.left + GRID_PADDING + item.x * (colW + GRID_GAP)
-    const widgetTop = rect.top + GRID_PADDING + item.y * rowH
+    const widgetLeft = rect.left + GRID_PADDING + item.x * (CELL_SIZE + GRID_GAP)
+    const widgetTop = rect.top + GRID_PADDING + item.y * (CELL_SIZE + GRID_GAP)
     const ox = e.clientX - widgetLeft
     const oy = e.clientY - widgetTop
     const state: DragState = { id, ox, oy }
@@ -159,15 +147,13 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     if (drag) {
       if (!gridRef.current) return
       const rect = gridRef.current.getBoundingClientRect()
-      const colW = (rect.width - GRID_PADDING * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
-      const rowH = cellSizeRef.current + GRID_GAP
       const item = layoutRef.current[drag.id]
-      const gx = Math.round((e.clientX - rect.left - GRID_PADDING - drag.ox) / (colW + GRID_GAP))
-      const gy = Math.round((e.clientY - rect.top - GRID_PADDING - drag.oy) / rowH)
-      const snappedX = Math.max(0, Math.min(GRID_COLS - item.w, gx))
+      const gx = Math.round((e.clientX - rect.left - GRID_PADDING - drag.ox) / (CELL_SIZE + GRID_GAP))
+      const gy = Math.round((e.clientY - rect.top - GRID_PADDING - drag.oy) / (CELL_SIZE + GRID_GAP))
+      const snappedX = Math.max(0, Math.min(colsRef.current - item.w, gx))
       const snappedY = Math.max(0, gy)
       const candidate = { x: snappedX, y: snappedY, w: item.w, h: item.h }
-      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, candidate)) {
+      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, candidate, colsRef.current)) {
         ghostRef.current = candidate
         setGhost(candidate)
       } else {
@@ -175,12 +161,12 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         outer: for (let dy = -2; dy <= 2; dy++) {
           for (let dx = -2; dx <= 2; dx++) {
             const alt = {
-              x: Math.max(0, Math.min(GRID_COLS - item.w, snappedX + dx)),
+              x: Math.max(0, Math.min(colsRef.current - item.w, snappedX + dx)),
               y: Math.max(0, snappedY + dy),
               w: item.w,
               h: item.h,
             }
-            if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, alt)) {
+            if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, alt, colsRef.current)) {
               ghostRef.current = alt
               setGhost(alt)
               found = true
@@ -196,14 +182,13 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     }
 
     if (resize) {
-      const colW = getColWidth()
+      const item = layoutRef.current[resize.id]
       const dx = e.clientX - resize.startPX
       const dy = e.clientY - resize.startPY
-      const item = layoutRef.current[resize.id]
-      const newW = Math.max(1, Math.min(GRID_COLS - item.x, Math.round(resize.startW + dx / (colW + GRID_GAP))))
-      const newH = Math.max(1, Math.min(5, Math.round(resize.startH + dy / (cellSizeRef.current + GRID_GAP))))
+      const newW = Math.max(1, Math.min(colsRef.current - item.x, Math.round(resize.startW + dx / (CELL_SIZE + GRID_GAP))))
+      const newH = Math.max(1, Math.min(5, Math.round(resize.startH + dy / (CELL_SIZE + GRID_GAP))))
       const candidate = { x: item.x, y: item.y, w: newW, h: newH }
-      if (!hasCollision(layoutRef.current, visibleRef.current, resize.id, candidate)) {
+      if (!hasCollision(layoutRef.current, visibleRef.current, resize.id, candidate, colsRef.current)) {
         const newLayout = { ...layoutRef.current, [resize.id]: candidate }
         setLayout(newLayout)
         layoutRef.current = newLayout
@@ -219,7 +204,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
 
     if (drag && g) {
       const item = layoutRef.current[drag.id]
-      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, g)) {
+      if (!hasCollision(layoutRef.current, visibleRef.current, drag.id, g, colsRef.current)) {
         const newLayout = {
           ...layoutRef.current,
           [drag.id]: { x: g.x, y: g.y, w: item.w, h: item.h },
@@ -312,28 +297,28 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       {/* Scroll container */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-        {/* Pointer-capture wrapper */}
+        {/* Outer wrapper — measured by ResizeObserver, pointer capture, horizontal scroll */}
         <div
           ref={outerRef}
+          style={{ width: "100%", overflowX: "auto" }}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* CSS grid — fills available width, caps at MAX_GRID_WIDTH, centers itself */}
+          {/* CSS grid — fixed 160px cells, fit-content width, centered */}
           <div
             ref={gridRef}
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-              gridAutoRows: `${cellSize}px`,
+              gridTemplateColumns: `repeat(${cols}, ${CELL_SIZE}px)`,
+              gridAutoRows: `${CELL_SIZE}px`,
               gap: GRID_GAP,
               padding: GRID_PADDING,
-              width: "100%",
-              maxWidth: MAX_GRID_WIDTH,
+              width: "fit-content",
               margin: "0 auto",
               position: "relative",
             }}
           >
-            {/* Ghost drop target — shown only during active drag */}
+            {/* Ghost drop target */}
             {ghost && (
               <div
                 className="grid-ghost"
@@ -418,7 +403,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
             saveVisibleWidgets(newVisible)
           } else {
             const defaultSize = DEFAULT_LAYOUT[id]
-            const pos = findFreePosition(layout, visible, defaultSize.w, defaultSize.h)
+            const pos = findFreePosition(layout, visible, defaultSize.w, defaultSize.h, cols)
             const newLayout = { ...layout, [id]: { ...defaultSize, ...pos } }
             setLayout(newLayout)
             layoutRef.current = newLayout

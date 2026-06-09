@@ -14,8 +14,6 @@ export type GridItem = {
 
 export type Layout = Record<WidgetId, Omit<GridItem, "id">>
 
-export const GRID_COLS = 5
-
 export const DEFAULT_LAYOUT: Layout = {
   net:     { x: 0, y: 0, w: 2, h: 2 },
   tasks:   { x: 2, y: 0, w: 2, h: 2 },
@@ -34,8 +32,10 @@ export function hasCollision(
   layout: Layout,
   visible: WidgetId[],
   moving: WidgetId,
-  newPos: { x: number; y: number; w: number; h: number }
+  newPos: { x: number; y: number; w: number; h: number },
+  cols: number
 ): boolean {
+  if (newPos.x < 0 || newPos.x + newPos.w > cols) return true
   for (const id of visible) {
     if (id === moving) continue
     const b = layout[id]
@@ -54,10 +54,11 @@ export function findFreePosition(
   layout: Layout,
   visible: WidgetId[],
   w: number,
-  h: number
+  h: number,
+  cols: number
 ): { x: number; y: number } {
   for (let y = 0; y < 50; y++) {
-    for (let x = 0; x <= GRID_COLS - w; x++) {
+    for (let x = 0; x <= cols - w; x++) {
       const candidate = { x, y, w, h }
       const collision = visible.some(id => {
         const b = layout[id]
