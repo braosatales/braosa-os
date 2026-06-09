@@ -24,7 +24,6 @@ import {
   type WidgetId,
   type Layout,
 } from "@/lib/dashboard"
-import { useTweaksPanel } from "@/components/tweaks/TweaksPanel"
 import type { IconName } from "@/lib/icons"
 
 const GRID_COLS = 5
@@ -67,8 +66,6 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
   const resizingRef = useRef<ResizeState>(null)
   const ghostRef = useRef<GhostState>(null)
   const layoutRef = useRef<Layout>(DEFAULT_LAYOUT)
-
-  const { previewDrag } = useTweaksPanel()
 
   useEffect(() => {
     const l = getLayout()
@@ -296,7 +293,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
 
         const shellProps: ShellProps = {
           dragging: isDragging,
-          lifted: previewDrag && lifted === id,
+          lifted: lifted === id,
           sizeBadge: showBadge ? `${item.w}×${item.h}` : undefined,
           onHandleDown: (e) => handleDragStart(e, id),
           onResizeDown: (e) => handleResizeStart(e, id),
