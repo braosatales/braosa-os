@@ -168,3 +168,12 @@ body { overflow: hidden; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
 @keyframes scanLine { 0% { top: 0 } 100% { top: 100% } }
+@keyframes toast-slide-up { 0% { opacity: 0; transform: translateX(-50%) translateY(12px); } 100% { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* Contenteditable placeholder */
+.reply-editor:empty:before {
+  content: attr(data-placeholder);
+  color: var(--ink-faint);
+  pointer-events: none;
+}

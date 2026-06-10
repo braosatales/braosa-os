@@ -8,6 +8,9 @@ import { MAIL_FOLDERS, type MailThread } from '@/lib/mail'
 import ThreadList from './ThreadList'
 import ThreadDetail from './ThreadDetail'
 import ComposeModal from './ComposeModal'
+import SmartInboxView from './SmartInboxView'
+import LabelsPanel from './LabelsPanel'
+import FiltersPanel from './FiltersPanel'
 
 type GmailLabel = {
   id: string
@@ -16,21 +19,79 @@ type GmailLabel = {
   totalCount: number
 }
 
+function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useLang()
+  if (!open) return null
+  const shortcuts = [
+    { key: 'C', action: L('Escrever email', 'Compose email') },
+    { key: 'R', action: L('Responder', 'Reply') },
+    { key: 'E', action: L('Arquivar', 'Archive') },
+    { key: 'S', action: L('Favorito / Desfavorito', 'Star / Unstar') },
+    { key: '#', action: L('Mover para o lixo', 'Move to trash') },
+    { key: 'U', action: L('Marcar como não lido', 'Mark as unread') },
+    { key: '?', action: L('Mostrar atalhos', 'Show shortcuts') },
+    { key: 'Esc', action: L('Fechar', 'Close') },
+  ]
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'oklch(0 0 0 / 0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: 'var(--bg-raised)', border: '1px solid var(--edge)', borderRadius: 'var(--radius-lg)', padding: 24, width: 360, boxShadow: 'var(--shadow-pop)', animation: 'pop-in .22s ease both' }}
+      >
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 16 }}>
+          {L('Atalhos de Teclado', 'Keyboard Shortcuts')}
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px' }}>
+          {shortcuts.map(s => (
+            <>
+              <kbd key={`key-${s.key}`} style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 28, padding: '2px 7px', borderRadius: 6,
+                background: 'var(--bg-raised-2)', border: '1px solid var(--edge-strong)',
+                fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-soft)',
+                boxShadow: '0 2px 0 var(--edge-strong)',
+              }}>
+                {s.key}
+              </kbd>
+              <span key={`action-${s.key}`} style={{ fontSize: 13, color: 'var(--ink-dim)', alignSelf: 'center' }}>
+                {s.action}
+              </span>
+            </>
+          ))}
+        </div>
+        <button
+          className="btn"
+          onClick={onClose}
+          style={{ marginTop: 16, width: '100%', justifyContent: 'center', fontSize: 13 }}
+        >
+          {L('Fechar', 'Close')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function MailShell() {
   const lang = useLang()
   const isMobile = useIsMobile()
-  const [activeFolder, setActiveFolder] = useState('inbox')
+  const [activeFolder, setActiveFolder] = useState('smart')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const [selectedThreadStarred, setSelectedThreadStarred] = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
+  const [labelsOpen, setLabelsOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [gmailLabels, setGmailLabels] = useState<GmailLabel[]>([])
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [extractedContacts, setExtractedContacts] = useState<Set<string>>(new Set())
   const [refreshKey, setRefreshKey] = useState(0)
 
-  // Fetch Gmail labels for unread counts and custom labels
-  useEffect(() => {
+  const fetchLabels = useCallback(() => {
     fetch('/api/mail/labels')
       .then(r => r.json())
       .then(d => {
@@ -48,7 +109,102 @@ export default function MailShell() {
         setUnreadCounts(counts)
       })
       .catch(() => {})
-  }, [refreshKey])
+  }, [])
+
+  useEffect(() => {
+    fetchLabels()
+  }, [fetchLabels, refreshKey])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true'
+      ) return
+
+      switch (e.key) {
+        case 'c':
+        case 'C':
+          e.preventDefault()
+          setComposeOpen(true)
+          break
+        case 'r':
+        case 'R':
+          if (selectedThreadId) {
+            e.preventDefault()
+            window.dispatchEvent(new CustomEvent('braosa:mail:focus-reply'))
+          }
+          break
+        case 'e':
+        case 'E':
+          if (selectedThreadId) {
+            e.preventDefault()
+            fetch(`/api/mail/threads/${selectedThreadId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ removeLabels: ['INBOX'] }),
+            }).catch(() => {})
+            setSelectedThreadId(null)
+            setRefreshKey(k => k + 1)
+          }
+          break
+        case 's':
+        case 'S':
+          if (selectedThreadId) {
+            e.preventDefault()
+            const body = selectedThreadStarred
+              ? { removeLabels: ['STARRED'] }
+              : { addLabels: ['STARRED'] }
+            fetch(`/api/mail/threads/${selectedThreadId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            }).catch(() => {})
+            setSelectedThreadStarred(s => !s)
+          }
+          break
+        case '#':
+          if (selectedThreadId) {
+            e.preventDefault()
+            fetch(`/api/mail/threads/${selectedThreadId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ addLabels: ['TRASH'], removeLabels: ['INBOX'] }),
+            }).catch(() => {})
+            setSelectedThreadId(null)
+            setRefreshKey(k => k + 1)
+          }
+          break
+        case 'u':
+        case 'U':
+          if (selectedThreadId) {
+            e.preventDefault()
+            fetch(`/api/mail/threads/${selectedThreadId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ addLabels: ['UNREAD'] }),
+            }).catch(() => {})
+          }
+          break
+        case '?':
+          e.preventDefault()
+          setShortcutsOpen(true)
+          break
+        case 'Escape':
+          if (shortcutsOpen) { setShortcutsOpen(false); break }
+          if (composeOpen) { setComposeOpen(false); break }
+          if (labelsOpen) { setLabelsOpen(false); break }
+          if (filtersOpen) { setFiltersOpen(false); break }
+          if (selectedThreadId) setSelectedThreadId(null)
+          break
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [selectedThreadId, selectedThreadStarred, composeOpen, labelsOpen, filtersOpen, shortcutsOpen])
 
   const customLabels = gmailLabels.filter(l =>
     !['INBOX', 'STARRED', 'SENT', 'DRAFT', 'IMPORTANT', 'TRASH', 'SPAM',
@@ -66,7 +222,7 @@ export default function MailShell() {
 
   function handleSelectThread(thread: MailThread) {
     setSelectedThreadId(thread.id)
-    // Mark as read via PATCH
+    setSelectedThreadStarred(thread.starred)
     if (!thread.read) {
       fetch(`/api/mail/threads/${thread.id}`, {
         method: 'PATCH',
@@ -76,7 +232,12 @@ export default function MailShell() {
     }
   }
 
-  const handleExtractContact = useCallback(async (messageId: string, threadId: string) => {
+  function handleSelectThreadId(id: string) {
+    setSelectedThreadId(id)
+    setSelectedThreadStarred(false)
+  }
+
+  const handleExtractContact = useCallback(async (messageId: string) => {
     try {
       await fetch('/api/mail/extract-contact', {
         method: 'POST',
@@ -84,10 +245,15 @@ export default function MailShell() {
         body: JSON.stringify({ messageId }),
       })
       setExtractedContacts(prev => new Set([...prev, messageId]))
-    } catch {
-      // silent
-    }
+    } catch { /* silent */ }
   }, [])
+
+  function switchFolder(id: string) {
+    setActiveFolder(id)
+    setSearch('')
+    setSearchInput('')
+    setSelectedThreadId(null)
+  }
 
   const sidebar = (
     <div
@@ -114,6 +280,7 @@ export default function MailShell() {
         >
           <Icon name="edit" size={13} />
           <span className="subnav-label">{L('+ Escrever', '+ Compose')}</span>
+          <span className="subnav-label" style={{ marginLeft: 'auto', opacity: 0.55, fontSize: 9, fontFamily: 'var(--font-mono)', background: 'oklch(0 0 0 / 0.2)', padding: '1px 4px', borderRadius: 3 }}>C</span>
         </button>
       </div>
 
@@ -126,7 +293,7 @@ export default function MailShell() {
             return (
               <button
                 key={folder.id}
-                onClick={() => { setActiveFolder(folder.id); setSearch(''); setSearchInput(''); setSelectedThreadId(null) }}
+                onClick={() => switchFolder(folder.id)}
                 className="subnav-item"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9,
@@ -195,7 +362,7 @@ export default function MailShell() {
                 return (
                   <button
                     key={label.id}
-                    onClick={() => { setActiveFolder(label.id); setSearch(''); setSearchInput(''); setSelectedThreadId(null) }}
+                    onClick={() => switchFolder(label.id)}
                     className="subnav-item"
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,
@@ -206,10 +373,7 @@ export default function MailShell() {
                       transition: 'background .12s',
                     }}
                   >
-                    <span style={{
-                      width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                      background: 'var(--c-mail)',
-                    }} />
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: 'var(--c-mail)' }} />
                     <span className="subnav-label" style={{ fontSize: 12.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                       {label.name}
                     </span>
@@ -225,99 +389,153 @@ export default function MailShell() {
           </div>
         )}
       </div>
+
+      {/* Sidebar footer: filters + manage labels */}
+      <div style={{ padding: '8px 10px', borderTop: '1px solid var(--edge-soft)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <button
+          onClick={() => setFiltersOpen(true)}
+          className="subnav-item"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px',
+            borderRadius: 'var(--radius-sm)', background: 'transparent', border: 'none',
+            cursor: 'pointer', width: '100%', textAlign: 'left', color: 'var(--ink-dim)',
+          }}
+        >
+          <span style={{ color: 'var(--ink-faint)', flexShrink: 0 }}><Icon name="filter" size={13} /></span>
+          <span className="subnav-label" style={{ fontSize: 12.5 }}>{L('Filtros', 'Filters')}</span>
+        </button>
+        <button
+          onClick={() => setLabelsOpen(true)}
+          className="subnav-item"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px',
+            borderRadius: 'var(--radius-sm)', background: 'transparent', border: 'none',
+            cursor: 'pointer', width: '100%', textAlign: 'left', color: 'var(--ink-dim)',
+          }}
+        >
+          <span style={{ color: 'var(--ink-faint)', flexShrink: 0 }}><Icon name="tag" size={13} /></span>
+          <span className="subnav-label" style={{ fontSize: 12.5 }}>{L('Gerir Etiquetas', 'Manage Labels')}</span>
+        </button>
+      </div>
     </div>
   )
+
+  const threadDetail = selectedThreadId ? (
+    <ThreadDetail
+      key={selectedThreadId}
+      threadId={selectedThreadId}
+      onClose={() => setSelectedThreadId(null)}
+      onAction={() => setRefreshKey(k => k + 1)}
+    />
+  ) : null
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {!isMobile && sidebar}
 
-      {/* Thread list */}
-      <div style={{
-        width: isMobile ? '100%' : 340,
-        minWidth: isMobile ? undefined : 280,
-        flexShrink: 0,
-        borderRight: isMobile ? 'none' : '1px solid var(--edge-soft)',
-        display: isMobile && selectedThreadId ? 'none' : 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        {/* List header */}
-        <div style={{
-          padding: '12px 14px 8px',
-          borderBottom: '1px solid var(--edge-soft)',
-          flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>
-            {search
-              ? L(`"${search}"`, `"${search}"`)
-              : (lang === 'pt'
-                ? MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_pt
-                : MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_en)
-                ?? activeFolder}
-          </span>
-          {isMobile && (
-            <button
-              className="btn btn-accent"
-              onClick={() => setComposeOpen(true)}
-              style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-mail)' } as any}
-            >
-              <Icon name="edit" size={12} />
-              {L('Escrever', 'Compose')}
-            </button>
-          )}
-        </div>
-
-        <ThreadList
-          key={`${activeFolder}-${search}-${refreshKey}`}
-          folder={activeFolder}
-          search={search}
-          onSelect={handleSelectThread}
-          selectedId={selectedThreadId}
-          onExtractContact={handleExtractContact}
-          extractedContacts={extractedContacts}
-        />
-      </div>
-
-      {/* Thread detail */}
-      {!isMobile && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {selectedThreadId ? (
-            <ThreadDetail
-              key={selectedThreadId}
-              threadId={selectedThreadId}
-              onClose={() => setSelectedThreadId(null)}
-              onAction={() => setRefreshKey(k => k + 1)}
-            />
-          ) : (
-            <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexDirection: 'column', gap: 12,
-            }}>
-              <span style={{ color: 'var(--ink-faint)' }}><Icon name="mail" size={36} /></span>
-              <p style={{ fontSize: 13, color: 'var(--ink-faint)' }}>
-                {L('Seleciona um email', 'Select an email')}
-              </p>
+      {/* === SMART INBOX === */}
+      {activeFolder === 'smart' ? (
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Smart inbox view — hidden on mobile when thread open */}
+          {!(isMobile && selectedThreadId) && (
+            <div style={{ flex: 1, overflow: 'auto' }} className="hide-scrollbar">
+              <SmartInboxView
+                onSelectThreadId={handleSelectThreadId}
+                selectedId={selectedThreadId}
+              />
             </div>
           )}
+
+          {/* Thread detail on desktop */}
+          {!isMobile && selectedThreadId && (
+            <div style={{
+              width: 520, flexShrink: 0,
+              borderLeft: '1px solid var(--edge-soft)',
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}>
+              {threadDetail}
+            </div>
+          )}
+
+          {/* Thread detail on mobile — full screen slide-in */}
+          {isMobile && selectedThreadId && threadDetail}
         </div>
+      ) : (
+        /* === REGULAR INBOX === */
+        <>
+          {/* Thread list */}
+          <div style={{
+            width: isMobile ? '100%' : 340,
+            minWidth: isMobile ? undefined : 280,
+            flexShrink: 0,
+            borderRight: isMobile ? 'none' : '1px solid var(--edge-soft)',
+            display: isMobile && selectedThreadId ? 'none' : 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            {/* List header */}
+            <div style={{
+              padding: '12px 14px 8px',
+              borderBottom: '1px solid var(--edge-soft)',
+              flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>
+                {search
+                  ? `"${search}"`
+                  : (lang === 'pt'
+                    ? MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_pt
+                    : MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_en)
+                    ?? activeFolder}
+              </span>
+              {isMobile && (
+                <button
+                  className="btn btn-accent"
+                  onClick={() => setComposeOpen(true)}
+                  style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-mail)' } as any}
+                >
+                  <Icon name="edit" size={12} />
+                  {L('Escrever', 'Compose')}
+                </button>
+              )}
+            </div>
+
+            <ThreadList
+              key={`${activeFolder}-${search}-${refreshKey}`}
+              folder={activeFolder}
+              search={search}
+              onSelect={handleSelectThread}
+              selectedId={selectedThreadId}
+              onExtractContact={handleExtractContact}
+              extractedContacts={extractedContacts}
+            />
+          </div>
+
+          {/* Thread detail — desktop */}
+          {!isMobile && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {selectedThreadId ? (
+                threadDetail
+              ) : (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+                  <span style={{ color: 'var(--ink-faint)' }}><Icon name="mail" size={36} /></span>
+                  <p style={{ fontSize: 13, color: 'var(--ink-faint)' }}>
+                    {L('Seleciona um email', 'Select an email')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Thread detail — mobile full screen */}
+          {isMobile && selectedThreadId && threadDetail}
+        </>
       )}
 
-      {/* Mobile: thread detail as modal */}
-      {isMobile && selectedThreadId && (
-        <ThreadDetail
-          key={selectedThreadId}
-          threadId={selectedThreadId}
-          onClose={() => setSelectedThreadId(null)}
-          onAction={() => setRefreshKey(k => k + 1)}
-        />
-      )}
-
-      <ComposeModal
-        open={composeOpen}
-        onClose={() => setComposeOpen(false)}
-      />
+      <ComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} />
+      <LabelsPanel open={labelsOpen} onClose={() => setLabelsOpen(false)} onRefresh={fetchLabels} />
+      <FiltersPanel open={filtersOpen} onClose={() => setFiltersOpen(false)} />
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   )
 }

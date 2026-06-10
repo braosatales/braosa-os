@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Icon } from "@/components/ui"
 import Ring from "@/components/ui/Ring"
 import { SYSTEMS, COMPANIES } from "@/lib/constants"
@@ -20,6 +21,22 @@ const divider = (
 
 export default function TopNav({ active, onNavigate, onLock, onSettings, user }: Props) {
   const lang = useLang()
+  const [inboxUnread, setInboxUnread] = useState(0)
+
+  useEffect(() => {
+    function fetchUnread() {
+      fetch("/api/mail/labels")
+        .then(r => r.json())
+        .then(d => {
+          const inbox = (d.labels ?? []).find((l: any) => l.id === "INBOX")
+          setInboxUnread(inbox?.unreadCount ?? 0)
+        })
+        .catch(() => {})
+    }
+    fetchUnread()
+    const interval = setInterval(fetchUnread, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <header
@@ -91,7 +108,26 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
                 whiteSpace: "nowrap",
               }}
             >
-              <Icon name={sys.icon as Parameters<typeof Icon>[0]["name"]} size={14} />
+              {/* Icon with optional unread badge for mail */}
+              <div style={{ position: "relative" }}>
+                <Icon name={sys.icon as Parameters<typeof Icon>[0]["name"]} size={14} />
+                {sys.id === "email" && inboxUnread > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: -5, right: -6,
+                    minWidth: 14, height: 14,
+                    borderRadius: 99,
+                    background: "var(--neg)",
+                    color: "white",
+                    fontSize: 9, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    lineHeight: 1, padding: "0 3px",
+                    border: "1.5px solid var(--bg-raised)",
+                  }}>
+                    {inboxUnread > 9 ? "9+" : inboxUnread}
+                  </span>
+                )}
+              </div>
               <span>{lang === "en" ? sys.label : sys.labelPt}</span>
             </button>
           )
@@ -135,13 +171,7 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
         {/* Streak */}
         <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--c-health)" }}>
           <Icon name="flame" size={14} stroke={1.8} />
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 14,
-              fontWeight: 700,
-            }}
-          >
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700 }}>
             {user?.streak ?? 0}
           </span>
         </div>
@@ -150,45 +180,16 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
 
         {/* Life score */}
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <Ring
-            value={user?.xpToNext ?? 0}
-            color="var(--c-fin)"
-            size={34}
-            stroke={3.5}
-            track="var(--edge-soft)"
-          >
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "var(--ink-soft)",
-              }}
-            >
+          <Ring value={user?.xpToNext ?? 0} color="var(--c-fin)" size={34} stroke={3.5} track="var(--edge-soft)">
+            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--ink-soft)" }}>
               {user?.level ?? 1}
             </span>
           </Ring>
-          <div
-            className="hide-below-720"
-            style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
-          >
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-                color: "var(--ink)",
-              }}
-            >
+          <div className="hide-below-720" style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--ink)" }}>
               {user?.lifeScore ?? 0}
             </span>
-            <span
-              style={{
-                fontSize: 8.5,
-                fontFamily: "var(--font-mono)",
-                color: "var(--ink-faint)",
-                letterSpacing: "0.1em",
-              }}
-            >
+            <span style={{ fontSize: 8.5, fontFamily: "var(--font-mono)", color: "var(--ink-faint)", letterSpacing: "0.1em" }}>
               LIFE SCORE
             </span>
           </div>
@@ -200,16 +201,10 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
         <button
           onClick={onLock}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: "var(--bg-raised-2)",
-            border: "1px solid var(--edge)",
-            color: "var(--ink-dim)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: 36, height: 36, borderRadius: 10,
+            background: "var(--bg-raised-2)", border: "1px solid var(--edge)",
+            color: "var(--ink-dim)", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
           <Icon name="lock" size={16} />

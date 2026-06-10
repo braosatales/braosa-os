@@ -39,7 +39,8 @@ export type MailFolder = {
 }
 
 export const MAIL_FOLDERS: MailFolder[] = [
-  { id: 'inbox',     label_pt: 'Entrada',      label_en: 'Inbox',     glyph: 'inbox', color: 'var(--c-mail)'   },
+  { id: 'smart',     label_pt: 'Inteligente',  label_en: 'Smart Inbox', glyph: 'wand',  color: 'var(--c-task)'   },
+  { id: 'inbox',     label_pt: 'Entrada',      label_en: 'Inbox',       glyph: 'inbox', color: 'var(--c-mail)'   },
   { id: 'starred',   label_pt: 'Favoritos',    label_en: 'Starred',   glyph: 'star',  color: 'var(--c-fin)'    },
   { id: 'sent',      label_pt: 'Enviados',     label_en: 'Sent',      glyph: 'send',  color: 'var(--c-cal)'    },
   { id: 'drafts',    label_pt: 'Rascunhos',    label_en: 'Drafts',    glyph: 'edit',  color: 'var(--c-dash)'   },
