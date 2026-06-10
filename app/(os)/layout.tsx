@@ -35,6 +35,7 @@ const ContactsPage   = dynamic(() => import("./contacts/page"),   { ssr: false }
 const MailPage       = dynamic(() => import("./mail/page"),       { ssr: false })
 const CalendarShell  = dynamic(() => import("@/components/calendar/CalendarShell"), { ssr: false })
 const DriveShell     = dynamic(() => import("@/components/drive/DriveShell"),     { ssr: false })
+const BraosaShell    = dynamic(() => import("@/components/braosa/BraosaShell"),   { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -94,6 +95,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "email":     return <MailPage />
     case "calendar":  return <CalendarShell />
     case "drive":     return <DriveShell />
+    case "braosa":    return <BraosaShell />
     default:          return <ComingOnlinePage id={active} />
   }
 }
