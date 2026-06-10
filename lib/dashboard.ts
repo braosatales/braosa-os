@@ -3,6 +3,7 @@ import type { IconName } from "@/lib/icons"
 export type WidgetId =
   | "net" | "tasks" | "assets" | "debt" | "budget"
   | "ai" | "weather" | "health" | "focus" | "habits" | "notes"
+  | "finance_overview" | "upcoming" | "streak" | "quick_note" | "ai_insight"
 
 export type GridItem = {
   id: WidgetId
@@ -15,17 +16,22 @@ export type GridItem = {
 export type Layout = Record<WidgetId, Omit<GridItem, "id">>
 
 export const DEFAULT_LAYOUT: Layout = {
-  net:     { x: 0, y: 0, w: 2, h: 2 },
-  tasks:   { x: 2, y: 0, w: 2, h: 2 },
-  assets:  { x: 4, y: 0, w: 1, h: 1 },
-  debt:    { x: 4, y: 1, w: 1, h: 1 },
-  budget:  { x: 0, y: 2, w: 2, h: 2 },
-  ai:      { x: 2, y: 2, w: 2, h: 2 },
-  weather: { x: 4, y: 2, w: 1, h: 1 },
-  health:  { x: 4, y: 3, w: 1, h: 1 },
-  focus:   { x: 0, y: 4, w: 3, h: 2 },
-  habits:  { x: 3, y: 4, w: 2, h: 2 },
-  notes:   { x: 0, y: 6, w: 2, h: 2 },
+  net:              { x: 0, y: 0,  w: 2, h: 2 },
+  tasks:            { x: 2, y: 0,  w: 2, h: 2 },
+  assets:           { x: 4, y: 0,  w: 1, h: 1 },
+  debt:             { x: 4, y: 1,  w: 1, h: 1 },
+  budget:           { x: 0, y: 2,  w: 2, h: 2 },
+  ai:               { x: 2, y: 2,  w: 2, h: 2 },
+  weather:          { x: 4, y: 2,  w: 1, h: 1 },
+  health:           { x: 4, y: 3,  w: 1, h: 1 },
+  focus:            { x: 0, y: 4,  w: 3, h: 2 },
+  habits:           { x: 3, y: 4,  w: 2, h: 2 },
+  notes:            { x: 0, y: 6,  w: 2, h: 2 },
+  finance_overview: { x: 0, y: 10, w: 3, h: 2 },
+  upcoming:         { x: 3, y: 10, w: 2, h: 2 },
+  streak:           { x: 0, y: 12, w: 2, h: 1 },
+  quick_note:       { x: 2, y: 12, w: 2, h: 2 },
+  ai_insight:       { x: 4, y: 12, w: 1, h: 2 },
 }
 
 export function hasCollision(
@@ -76,18 +82,29 @@ export function findFreePosition(
   return { x: 0, y: 0 }
 }
 
-export const ALL_WIDGETS: { id: WidgetId; label: string; color: string; glyph: string }[] = [
-  { id: "net",     label: "Net Worth",     color: "var(--c-fin)",    glyph: "trending-up"   },
-  { id: "tasks",   label: "Top Tasks",     color: "var(--c-task)",   glyph: "check"         },
-  { id: "assets",  label: "Assets",        color: "var(--c-fin)",    glyph: "wallet"        },
-  { id: "debt",    label: "Debt",          color: "var(--neg)",      glyph: "trending-down" },
-  { id: "budget",  label: "Budget",        color: "var(--c-fin)",    glyph: "chart-bar"     },
-  { id: "ai",      label: "AI Assistant",  color: "var(--c-task)",   glyph: "wand"          },
-  { id: "weather", label: "Weather",       color: "var(--c-dash)",   glyph: "cloud"         },
-  { id: "health",  label: "Health",        color: "var(--c-health)", glyph: "activity"      },
-  { id: "focus",   label: "Today's Focus", color: "var(--c-task)",   glyph: "target"        },
-  { id: "habits",  label: "Habits",        color: "var(--c-health)", glyph: "flame"         },
-  { id: "notes",   label: "Notes",         color: "var(--c-task)",   glyph: "note"          },
+export const ALL_WIDGETS: {
+  id: WidgetId
+  label: string
+  color: string
+  glyph: string
+  description: string
+}[] = [
+  { id: "net",              label: "Net Worth",        color: "var(--c-fin)",    glyph: "trending-up",   description: "Net worth, assets and sparkline trend"        },
+  { id: "tasks",            label: "Top Tasks",        color: "var(--c-task)",   glyph: "check",         description: "Top 5 priority tasks with quick complete"     },
+  { id: "assets",           label: "Assets",           color: "var(--c-fin)",    glyph: "wallet",        description: "Total cash and invested summary"               },
+  { id: "debt",             label: "Debt",             color: "var(--neg)",      glyph: "trending-down", description: "Total debt overview"                           },
+  { id: "budget",           label: "Budget",           color: "var(--c-fin)",    glyph: "chart-bar",     description: "Over-budget categories alert"                  },
+  { id: "ai",               label: "AI Assistant",     color: "var(--c-task)",   glyph: "wand",          description: "Quick access to Braosa AI assistant"           },
+  { id: "weather",          label: "Weather",          color: "var(--c-dash)",   glyph: "cloud",         description: "Current weather conditions"                    },
+  { id: "health",           label: "Health",           color: "var(--c-health)", glyph: "activity",      description: "This week's training progress"                 },
+  { id: "focus",            label: "Today's Focus",    color: "var(--c-task)",   glyph: "target",        description: "Today's urgent and important tasks"            },
+  { id: "habits",           label: "Habits",           color: "var(--c-health)", glyph: "flame",         description: "Daily habit tracker with streaks"              },
+  { id: "notes",            label: "Notes",            color: "var(--c-task)",   glyph: "note",          description: "Recent notes with quick create"                },
+  { id: "finance_overview", label: "Finance Overview", color: "var(--c-fin)",    glyph: "chart-line",    description: "Full financial snapshot at a glance"           },
+  { id: "upcoming",         label: "Upcoming Events",  color: "var(--c-cal)",    glyph: "calendar",      description: "Next 3 calendar events"                        },
+  { id: "streak",           label: "Streak Counter",   color: "var(--c-health)", glyph: "flame",         description: "Current training and habit streaks"            },
+  { id: "quick_note",       label: "Quick Note",       color: "var(--c-task)",   glyph: "note",          description: "Instant note capture widget"                   },
+  { id: "ai_insight",       label: "AI Insight",       color: "var(--c-task)",   glyph: "wand",          description: "Daily AI observation about your data"          },
 ]
 
 const LAYOUT_KEY = "braosa-layout"

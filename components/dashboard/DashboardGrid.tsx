@@ -15,6 +15,11 @@ import AIWidget from "./widgets/AIWidget"
 import WeatherWidget from "./widgets/WeatherWidget"
 import HealthWidget from "./widgets/HealthWidget"
 import NotesWidget from "./widgets/NotesWidget"
+import FinanceOverviewWidget from "./widgets/FinanceOverviewWidget"
+import UpcomingWidget from "./widgets/UpcomingWidget"
+import StreakWidget from "./widgets/StreakWidget"
+import QuickNoteWidget from "./widgets/QuickNoteWidget"
+import AIInsightWidget from "./widgets/AIInsightWidget"
 import AddWidgetModal from "./AddWidgetModal"
 import {
   getLayout,
@@ -239,7 +244,12 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       case "ai":      return <AIWidget {...shellProps} onNavigate={nav} />
       case "weather": return <WeatherWidget {...shellProps} />
       case "health":  return <HealthWidget {...shellProps} />
-      case "notes":   return <NotesWidget {...shellProps} onNavigate={nav} />
+      case "notes":            return <NotesWidget {...shellProps} onNavigate={nav} />
+      case "finance_overview": return <FinanceOverviewWidget {...shellProps} />
+      case "upcoming":         return <UpcomingWidget {...shellProps} />
+      case "streak":           return <StreakWidget {...shellProps} />
+      case "quick_note":       return <QuickNoteWidget {...shellProps} />
+      case "ai_insight":       return <AIInsightWidget {...shellProps} />
       default: {
         const meta = ALL_WIDGETS.find((w) => w.id === id)!
         return (
@@ -373,22 +383,11 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
         </div>
       </div>
 
-      {/* Add Widget + Reset buttons */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "16px 20px 24px" }}>
+      {/* Add Widget button */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "16px 20px 24px" }}>
         <button className="btn" onClick={() => setShowAddWidget(true)} style={{ gap: 8 }}>
           <span style={{ display: "flex" }}><Icon name="plus" size={14} /></span>
           {L("Adicionar Widget", "Add Widget")}
-        </button>
-        <button className="btn" onClick={() => {
-          setLayout(DEFAULT_LAYOUT)
-          layoutRef.current = DEFAULT_LAYOUT
-          saveLayout(DEFAULT_LAYOUT)
-          const defaultVisible: WidgetId[] = ['net', 'tasks', 'assets', 'debt', 'budget', 'ai', 'weather', 'health']
-          setVisible(defaultVisible)
-          saveVisibleWidgets(defaultVisible)
-        }} style={{ gap: 8 }}>
-          <span style={{ display: "flex" }}><Icon name="refresh" size={14} /></span>
-          {L("Repor", "Reset")}
         </button>
       </div>
 
