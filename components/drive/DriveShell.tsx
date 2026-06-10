@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useContext, useRef } from "react"
 import type { DriveFile } from "@/lib/drive"
 import { DRIVE_ROOTS } from "@/lib/drive"
 import { Icon, EmptyState } from "@/components/ui"
 import { useLang } from "@/lib/i18n"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
+import { MobileSubTabContext } from "@/lib/mobile-context"
 import { relativeTime } from "@/lib/date"
 import type { IconName } from "@/lib/icons"
 import FileBrowser from "./FileBrowser"
@@ -29,6 +31,9 @@ type FolderIds = Record<string, string | null>
 
 export default function DriveShell() {
   const lang = useLang()
+  const isMobile = useIsMobile()
+  const { activeSubTab: mobileSubTab } = useContext(MobileSubTabContext)
+
   const [folderIds, setFolderIds] = useState<FolderIds>({})
   const [resolving, setResolving] = useState(true)
   const [activeRootId, setActiveRootId] = useState<string | null>(null)
@@ -40,9 +45,19 @@ export default function DriveShell() {
   const [mobileView, setMobileView] = useState<"browser" | "editor">("browser")
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Sync mobile sub-tab to root selection
+  useEffect(() => {
+    if (isMobile && mobileSubTab) {
+      setActiveRootId(mobileSubTab)
+      setSelectedFile(null)
+      setSearchQ("")
+      setSearchResults(null)
+      setMobileView("browser")
+    }
+  }, [isMobile, mobileSubTab])
+
   useEffect(() => {
     setRecent(getRecent())
-    // Resolve folder IDs once per session
     const sessionKey = "braosa-drive-folders"
     const cached = sessionStorage.getItem(sessionKey)
     if (cached) {
@@ -90,12 +105,13 @@ export default function DriveShell() {
     }, 350)
   }
 
-  const activeRoot = DRIVE_ROOTS.find(r => r.id === activeRootId)
-  const activeFolderId = activeRootId ? folderIds[activeRootId] ?? null : null
+  const currentRootId = isMobile ? mobileSubTab || activeRootId : activeRootId
+  const activeRoot = DRIVE_ROOTS.find(r => r.id === currentRootId)
+  const activeFolderId = currentRootId ? folderIds[currentRootId] ?? null : null
 
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-      {/* Left sidebar */}
+      {/* Left sidebar — desktop only */}
       <div style={{
         width: 220, flexShrink: 0, borderRight: "1px solid var(--edge)",
         display: "flex", flexDirection: "column", overflow: "hidden",
@@ -111,7 +127,7 @@ export default function DriveShell() {
           {/* Root cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
             {DRIVE_ROOTS.map(root => {
-              const isActive = activeRootId === root.id
+              const isActive = currentRootId === root.id
               return (
                 <button
                   key={root.id}
@@ -125,7 +141,6 @@ export default function DriveShell() {
                     transition: "border-color .15s, background .15s",
                   }}
                 >
-                  {/* Top accent line */}
                   <div style={{
                     position: "absolute", top: 0, left: 0, right: 0, height: 2,
                     background: root.color, opacity: isActive ? 1 : 0.3,
@@ -243,7 +258,7 @@ export default function DriveShell() {
         )}
 
         {/* No root selected */}
-        {!searchQ && !activeRootId && (
+        {!searchQ && !currentRootId && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <EmptyState
               icon="archive"
@@ -254,14 +269,14 @@ export default function DriveShell() {
         )}
 
         {/* Resolving */}
-        {!searchQ && activeRootId && resolving && (
+        {!searchQ && currentRootId && resolving && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-faint)", fontSize: 13 }}>
             {lang === "pt" ? "A resolver pastas..." : "Resolving folders..."}
           </div>
         )}
 
         {/* Folder not found */}
-        {!searchQ && activeRootId && !resolving && !activeFolderId && (
+        {!searchQ && currentRootId && !resolving && !activeFolderId && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <EmptyState
               icon="warning"
@@ -272,9 +287,8 @@ export default function DriveShell() {
         )}
 
         {/* Browser + editor split */}
-        {!searchQ && activeRootId && !resolving && activeFolderId && (
+        {!searchQ && currentRootId && !resolving && activeFolderId && (
           <>
-            {/* File browser — hidden on mobile when editor open */}
             <div style={{
               width: selectedFile ? "40%" : "100%",
               flexShrink: 0, borderRight: selectedFile ? "1px solid var(--edge)" : "none",
@@ -283,20 +297,18 @@ export default function DriveShell() {
               className={mobileView === "editor" ? "desktop-only" : undefined}
             >
               <FileBrowser
-                rootId={activeRootId}
+                rootId={currentRootId}
                 folderId={activeFolderId}
                 rootLabel={lang === "pt" ? activeRoot!.label_pt : activeRoot!.label_en}
-                onFileSelect={file => handleFileSelect(file, activeRootId)}
+                onFileSelect={file => handleFileSelect(file, currentRootId)}
                 onFolderNavigate={() => {}}
               />
             </div>
 
-            {/* Editor panel */}
             {selectedFile ? (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
                 className={mobileView === "browser" ? "desktop-only" : undefined}
               >
-                {/* Mobile back button */}
                 <div className="mobile-only" style={{ padding: "10px 14px", borderBottom: "1px solid var(--edge)", flexShrink: 0 }}>
                   <button
                     className="btn"

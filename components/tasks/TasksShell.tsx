@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Icon, FavStar } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { L, useLang } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import { useTaskStore, TaskStore } from '@/lib/task-store'
 import type { Task, TaskView } from '@/lib/tasks'
 import { burstConfetti } from '@/lib/confetti'
@@ -76,13 +77,21 @@ function AddProjectForm({ onSave, onCancel }: { onSave: () => void; onCancel: ()
 export default function TasksShell() {
   useLang()
   const isMobile = useIsMobile()
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
   const { tasks, projects, loading } = useTaskStore()
 
-  const [activeView, setActiveView] = useState<TaskView>('today')
+  const [desktopView, setDesktopView] = useState<TaskView>('today')
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [showAddTask, setShowAddTask] = useState(false)
   const [showAddProject, setShowAddProject] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+
+  const activeView = (isMobile ? (mobileSubTab as TaskView) || 'today' : desktopView)
+
+  const handleSetView = (id: TaskView) => {
+    if (isMobile) setMobileSubTab(id)
+    else setDesktopView(id)
+  }
 
   function handleToggleDone(id: string, e: React.MouseEvent) {
     const task = tasks.find(t => t.id === id)
@@ -106,92 +115,7 @@ export default function TasksShell() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-
-      {/* Mobile: views tab bar + project chips */}
-      {isMobile && (
-        <>
-          <div
-            className="hide-scrollbar"
-            style={{
-              display: 'flex',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              borderBottom: '1px solid var(--edge-soft)',
-              flexShrink: 0,
-              height: 48,
-            }}
-          >
-            {VIEWS.map(v => {
-              const isActive = activeView === v.id
-              return (
-                <button
-                  key={v.id}
-                  onClick={() => { setActiveView(v.id); setSelectedProjectId(null) }}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 13,
-                    whiteSpace: 'nowrap',
-                    color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
-                    borderBottom: isActive ? '2px solid var(--c-task)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon name={v.glyph as any} size={14} />
-                  {L(v.labelPt, v.labelEn)}
-                </button>
-              )
-            })}
-          </div>
-
-          {projects.length > 0 && (
-            <div
-              className="hide-scrollbar"
-              style={{
-                display: 'flex',
-                gap: 8,
-                padding: '8px 16px',
-                overflowX: 'auto',
-                scrollbarWidth: 'none',
-                flexShrink: 0,
-              }}
-            >
-              {projects.map(proj => {
-                const isActive = selectedProjectId === proj.id
-                return (
-                  <button
-                    key={proj.id}
-                    onClick={() => setSelectedProjectId(isActive ? null : proj.id)}
-                    style={{
-                      flexShrink: 0,
-                      fontSize: 11.5,
-                      padding: '4px 12px',
-                      borderRadius: 99,
-                      background: isActive ? 'var(--c-task-dim)' : 'var(--bg-raised-2)',
-                      border: `1px solid ${isActive ? 'var(--c-task)' : 'var(--edge)'}`,
-                      color: isActive ? 'var(--c-task)' : 'var(--ink-dim)',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    <span style={{ width: 6, height: 6, borderRadius: 99, background: proj.color, display: 'inline-block', flexShrink: 0 }} />
-                    {proj.name}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
 
       {/* Desktop left sidebar */}
       {!isMobile && (
@@ -221,7 +145,7 @@ export default function TasksShell() {
               <button
                 key={v.id}
                 className="subnav-item"
-                onClick={() => { setActiveView(v.id); setSelectedProjectId(null) }}
+                onClick={() => { handleSetView(v.id); setSelectedProjectId(null) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: isActive ? '9px 10px 9px 8px' : '9px 10px',

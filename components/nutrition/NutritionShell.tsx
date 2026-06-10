@@ -1,8 +1,9 @@
 'use client'
-import { useState, createContext, useContext } from 'react'
+import { useState, useContext, createContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import DiaryView from './views/DiaryView'
 import LogFoodView from './views/LogFoodView'
 import ProgressView from './views/ProgressView'
@@ -48,19 +49,23 @@ function renderView(tab: NutritionTab) {
 export default function NutritionShell() {
   useLang()
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState<NutritionTab>('diary')
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+  const [desktopTab, setDesktopTab] = useState<NutritionTab>('diary')
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
   const [logMeal, setLogMeal] = useState('breakfast')
+
+  const activeTab = (isMobile ? (mobileSubTab as NutritionTab) || 'diary' : desktopTab)
 
   const navigateTo = (tab: NutritionTab, date?: string, meal?: string) => {
     if (date) setLogDate(date)
     if (meal) setLogMeal(meal)
-    setActiveTab(tab)
+    if (isMobile) setMobileSubTab(tab)
+    else setDesktopTab(tab)
   }
 
   return (
     <NutritionContext.Provider value={{ activeTab, navigateTo, logDate, logMeal }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', height: '100%', overflow: 'hidden' }}>
 
         {/* ── Desktop sidebar ── */}
         {!isMobile && (
@@ -112,48 +117,6 @@ export default function NutritionShell() {
               )
             })}
           </aside>
-        )}
-
-        {/* ── Mobile tab bar ── */}
-        {isMobile && (
-          <div
-            className="hide-scrollbar"
-            style={{
-              display: 'flex',
-              overflowX: 'auto',
-              borderBottom: '1px solid var(--edge-soft)',
-              flexShrink: 0,
-              height: 48,
-            }}
-          >
-            {NAV_ITEMS.map(item => {
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => navigateTo(item.id)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '0 16px',
-                    height: '100%',
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 13,
-                    whiteSpace: 'nowrap',
-                    color: isActive ? 'var(--c-cal)' : 'var(--ink-dim)',
-                    borderBottom: isActive ? '2px solid var(--c-cal)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon name={item.glyph} size={14} />
-                  {L(item.label_pt, item.label_en)}
-                </button>
-              )
-            })}
-          </div>
         )}
 
         {/* ── Main content ── */}

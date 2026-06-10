@@ -1,8 +1,9 @@
 'use client'
-import { useState, createContext, useContext } from 'react'
+import { useState, useContext, createContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import { PlannedSession } from '@/lib/journey'
 import OverviewView from './views/OverviewView'
 import JourneyView from './views/JourneyView'
@@ -54,16 +55,22 @@ function renderView(tab: HealthTab, onNavigate: (t: string) => void) {
 export default function HealthShell() {
   useLang()
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState<HealthTab>('overview')
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+  const [desktopTab, setDesktopTab] = useState<HealthTab>('overview')
   const [pendingSession, setPendingSession] = useState<PlannedSession | null>(null)
   const [pendingRoutineId, setPendingRoutineId] = useState<string | null>(null)
 
-  const onNavigate = (tab: string) => setActiveTab(tab as HealthTab)
+  const activeTab = (isMobile ? (mobileSubTab as HealthTab) || 'overview' : desktopTab)
+
+  const navigateTo = (tab: string) => {
+    if (isMobile) setMobileSubTab(tab)
+    else setDesktopTab(tab as HealthTab)
+  }
 
   const startWorkout = (session: PlannedSession | null, routineId?: string) => {
     setPendingSession(session)
     setPendingRoutineId(routineId ?? null)
-    setActiveTab('workout')
+    navigateTo('workout')
   }
 
   const clearPending = () => {
@@ -72,49 +79,8 @@ export default function HealthShell() {
   }
 
   return (
-    <HealthContext.Provider value={{ navigateTo: onNavigate, startWorkout, pendingSession, pendingRoutineId, clearPending }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-        {/* Mobile tab bar */}
-        {isMobile && (
-          <div
-            className="hide-scrollbar"
-            style={{
-              display: 'flex',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              borderBottom: '1px solid var(--edge-soft)',
-              flexShrink: 0,
-              height: 48,
-            }}
-          >
-            {HEALTH_TABS.map((item) => {
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as HealthTab)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 13,
-                    whiteSpace: 'nowrap',
-                    color: isActive ? 'var(--c-health)' : 'var(--ink-dim)',
-                    borderBottom: isActive ? '2px solid var(--c-health)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={14} />
-                  {item.label()}
-                </button>
-              )
-            })}
-          </div>
-        )}
+    <HealthContext.Provider value={{ navigateTo, startWorkout, pendingSession, pendingRoutineId, clearPending }}>
+      <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
 
         {/* Desktop left sidebar */}
         {!isMobile && (
@@ -148,7 +114,7 @@ export default function HealthShell() {
                 <button
                   key={item.id}
                   className="subnav-item"
-                  onClick={() => setActiveTab(item.id as HealthTab)}
+                  onClick={() => navigateTo(item.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -180,7 +146,7 @@ export default function HealthShell() {
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          {renderView(activeTab, onNavigate)}
+          {renderView(activeTab, navigateTo)}
         </div>
       </div>
     </HealthContext.Provider>

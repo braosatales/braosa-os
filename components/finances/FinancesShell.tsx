@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Icon, Modal } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import type { FinanceTab } from '@/lib/finance'
 import OverviewView from './views/OverviewView'
 import AccountsView from './views/AccountsView'
@@ -35,52 +36,19 @@ function renderView(tab: FinanceTab) {
 export default function FinancesShell() {
   useLang()
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState<FinanceTab>("overview")
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+  const [desktopTab, setDesktopTab] = useState<FinanceTab>("overview")
   const [showScanner, setShowScanner] = useState(false)
 
+  const activeTab = (isMobile ? (mobileSubTab as FinanceTab) || 'overview' : desktopTab)
+
+  const handleSetTab = (id: string) => {
+    if (isMobile) setMobileSubTab(id)
+    else setDesktopTab(id as FinanceTab)
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-      {/* Mobile tab bar */}
-      {isMobile && (
-        <div
-          className="hide-scrollbar"
-          style={{
-            display: 'flex',
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            borderBottom: '1px solid var(--edge-soft)',
-            flexShrink: 0,
-            height: 48,
-          }}
-        >
-          {FINANCE_TABS.map((item) => {
-            const isActive = activeTab === item.id
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id as FinanceTab)}
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 13,
-                  whiteSpace: 'nowrap',
-                  color: isActive ? 'var(--c-fin)' : 'var(--ink-dim)',
-                  borderBottom: isActive ? '2px solid var(--c-fin)' : '2px solid transparent',
-                }}
-              >
-                <Icon name={item.glyph as Parameters<typeof Icon>[0]['name']} size={14} />
-                {item.label()}
-              </button>
-            )
-          })}
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
 
       {/* Desktop left sidebar */}
       {!isMobile && (
@@ -114,7 +82,7 @@ export default function FinancesShell() {
               <button
                 key={item.id}
                 className="subnav-item"
-                onClick={() => setActiveTab(item.id as FinanceTab)}
+                onClick={() => handleSetTab(item.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

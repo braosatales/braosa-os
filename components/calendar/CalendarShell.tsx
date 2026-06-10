@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useContext, useRef } from 'react'
 import { useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import { Icon } from '@/components/ui'
 import type { CalendarEvent, GoogleCalendar, CalendarView } from '@/lib/calendar'
 import MonthView from './MonthView'
@@ -12,6 +14,9 @@ import CreateEventModal from './CreateEventModal'
 
 export default function CalendarShell() {
   const lang = useLang()
+  const isMobile = useIsMobile()
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+
   const [view, setView] = useState<CalendarView>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -25,6 +30,18 @@ export default function CalendarShell() {
   const suggestionsRef = useRef<string[] | null>(null)
   const dropRef = useRef<HTMLDivElement>(null)
 
+  // Sync mobile sub-tab to view state
+  useEffect(() => {
+    if (isMobile && mobileSubTab && (mobileSubTab === 'day' || mobileSubTab === 'week' || mobileSubTab === 'month')) {
+      setView(mobileSubTab as CalendarView)
+    }
+  }, [isMobile, mobileSubTab])
+
+  const handleSetView = (v: CalendarView) => {
+    setView(v)
+    if (isMobile) setMobileSubTab(v)
+  }
+
   // Date range for fetching
   const getRange = useCallback(() => {
     const d = new Date(currentDate)
@@ -34,12 +51,11 @@ export default function CalendarShell() {
       return { start, end }
     }
     if (view === 'week') {
-      const dow = d.getDay() === 0 ? 6 : d.getDay() - 1 // Mon-based
+      const dow = d.getDay() === 0 ? 6 : d.getDay() - 1
       const start = new Date(d); start.setDate(d.getDate() - dow); start.setHours(0,0,0,0)
       const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999)
       return { start, end }
     }
-    // month
     const start = new Date(d.getFullYear(), d.getMonth(), 1)
     const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59)
     return { start, end }
@@ -87,7 +103,6 @@ export default function CalendarShell() {
     fetchEvents()
   }, [fetchEvents])
 
-  // Close calendar dropdown on outside click
   useEffect(() => {
     if (!calDropOpen) return
     const handler = (e: MouseEvent) => {
@@ -117,7 +132,6 @@ export default function CalendarShell() {
       const label = currentDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
       return label.charAt(0).toUpperCase() + label.slice(1)
     }
-    // week
     const { start, end } = getRange()
     const startStr = start.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
     const endStr = end.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
@@ -129,7 +143,7 @@ export default function CalendarShell() {
   const handleEventClick = (e: CalendarEvent) => setSelectedEvent(e)
   const handleDayClick = (d: Date) => {
     setCurrentDate(d)
-    setView('day')
+    handleSetView('day')
   }
   const handleSlotClick = (d: Date) => {
     setCreateInitial({ start: d.toISOString(), end: new Date(d.getTime() + 60 * 60000).toISOString() })
@@ -193,28 +207,29 @@ export default function CalendarShell() {
           </span>
         </div>
 
-        {/* Center: view switcher */}
-        <div style={{ display: 'flex', gap: 4, background: 'var(--bg-inset)', borderRadius: 'var(--radius-sm)', padding: 3 }}>
-          {views.map(v => (
-            <button
-              key={v.id}
-              onClick={() => setView(v.id)}
-              style={{
-                padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
-                background: view === v.id ? 'var(--c-cal-dim)' : 'transparent',
-                color: view === v.id ? 'var(--c-cal)' : 'var(--ink-dim)',
-                outline: view === v.id ? '1px solid var(--c-cal)' : 'none',
-                transition: 'all .15s',
-              }}
-            >
-              {lang === 'pt' ? v.pt : v.en}
-            </button>
-          ))}
-        </div>
+        {/* Center: view switcher (hidden on mobile — MobileAppContainer handles it) */}
+        {!isMobile && (
+          <div style={{ display: 'flex', gap: 4, background: 'var(--bg-inset)', borderRadius: 'var(--radius-sm)', padding: 3 }}>
+            {views.map(v => (
+              <button
+                key={v.id}
+                onClick={() => handleSetView(v.id)}
+                style={{
+                  padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
+                  background: view === v.id ? 'var(--c-cal-dim)' : 'transparent',
+                  color: view === v.id ? 'var(--c-cal)' : 'var(--ink-dim)',
+                  outline: view === v.id ? '1px solid var(--c-cal)' : 'none',
+                  transition: 'all .15s',
+                }}
+              >
+                {lang === 'pt' ? v.pt : v.en}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Right: calendar selector + add */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Calendar dropdown */}
           <div style={{ position: 'relative' }} ref={dropRef}>
             <button className="btn" style={{ padding: '7px 12px', fontSize: 12, gap: 6 }} onClick={() => setCalDropOpen(p => !p)}>
               <Icon name="cal" size={13} />

@@ -1,8 +1,9 @@
 'use client'
-import { useState, createContext, useContext } from 'react'
+import { useState, useContext, createContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import DashboardView from './views/DashboardView'
 import ProductsView from './views/ProductsView'
 import ContentView from './views/ContentView'
@@ -36,54 +37,19 @@ function renderView(tab: BraosaTab) {
 export default function BraosaShell() {
   useLang()
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState<BraosaTab>('dashboard')
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+  const [desktopTab, setDesktopTab] = useState<BraosaTab>('dashboard')
 
-  const navigateTo = (tab: BraosaTab) => setActiveTab(tab)
+  const activeTab = (isMobile ? (mobileSubTab as BraosaTab) || 'dashboard' : desktopTab)
+
+  const navigateTo = (tab: BraosaTab) => {
+    if (isMobile) setMobileSubTab(tab)
+    else setDesktopTab(tab)
+  }
 
   return (
     <BraosaContext.Provider value={{ navigateTo }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-
-        {/* Mobile tab bar */}
-        {isMobile && (
-          <div
-            className="hide-scrollbar"
-            style={{
-              display: 'flex',
-              overflowX: 'auto',
-              borderBottom: '1px solid var(--edge-soft)',
-              flexShrink: 0,
-              height: 48,
-            }}
-          >
-            {BRAOSA_TABS.map(item => {
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 13,
-                    whiteSpace: 'nowrap',
-                    color: isActive ? 'var(--c-braosa)' : 'var(--ink-dim)',
-                    borderBottom: isActive ? '2px solid var(--c-braosa)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon name={item.glyph} size={14} />
-                  {item.label()}
-                </button>
-              )
-            })}
-          </div>
-        )}
+      <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
 
         {/* Desktop left sidebar */}
         {!isMobile && (
@@ -122,7 +88,7 @@ export default function BraosaShell() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => navigateTo(item.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

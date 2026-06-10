@@ -177,3 +177,31 @@ body { overflow: hidden; }
   color: var(--ink-faint);
   pointer-events: none;
 }
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutToRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes iconJiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-2.5deg) scale(1.02); }
+  75% { transform: rotate(2.5deg) scale(1.02); }
+}
+
+.app-open {
+  animation: slideInFromRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.app-close {
+  animation: slideOutToRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.icon-jiggle {
+  animation: iconJiggle 0.3s ease-in-out infinite;
+}

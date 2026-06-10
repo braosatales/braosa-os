@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useContext, useRef } from 'react'
 import { Icon } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import { MAIL_FOLDERS, type MailThread } from '@/lib/mail'
 import ThreadList from './ThreadList'
 import ThreadDetail from './ThreadDetail'
@@ -77,6 +78,8 @@ function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void 
 export default function MailShell() {
   const lang = useLang()
   const isMobile = useIsMobile()
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+
   const [activeFolder, setActiveFolder] = useState('smart')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -90,6 +93,21 @@ export default function MailShell() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [extractedContacts, setExtractedContacts] = useState<Set<string>>(new Set())
   const [refreshKey, setRefreshKey] = useState(0)
+
+  const prevMobileSubTab = useRef(mobileSubTab)
+
+  // Sync mobile tab changes to internal folder state + clear selection
+  useEffect(() => {
+    if (isMobile && mobileSubTab && mobileSubTab !== prevMobileSubTab.current) {
+      prevMobileSubTab.current = mobileSubTab
+      setActiveFolder(mobileSubTab)
+      setSearch('')
+      setSearchInput('')
+      setSelectedThreadId(null)
+    }
+  }, [isMobile, mobileSubTab])
+
+  const currentFolder = isMobile ? mobileSubTab || 'smart' : activeFolder
 
   const fetchLabels = useCallback(() => {
     fetch('/api/mail/labels')
@@ -249,7 +267,8 @@ export default function MailShell() {
   }, [])
 
   function switchFolder(id: string) {
-    setActiveFolder(id)
+    if (isMobile) setMobileSubTab(id)
+    else setActiveFolder(id)
     setSearch('')
     setSearchInput('')
     setSelectedThreadId(null)
@@ -288,7 +307,7 @@ export default function MailShell() {
       <div style={{ flex: 1, overflow: 'auto' }} className="hide-scrollbar">
         <div style={{ padding: '0 10px', display: 'flex', flexDirection: 'column', gap: 1 }}>
           {MAIL_FOLDERS.map(folder => {
-            const active = activeFolder === folder.id
+            const active = currentFolder === folder.id
             const unread = unreadCounts[folder.id] ?? 0
             return (
               <button
@@ -358,7 +377,7 @@ export default function MailShell() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {customLabels.slice(0, 12).map(label => {
-                const active = activeFolder === label.id
+                const active = currentFolder === label.id
                 return (
                   <button
                     key={label.id}
@@ -390,7 +409,7 @@ export default function MailShell() {
         )}
       </div>
 
-      {/* Sidebar footer: filters + manage labels */}
+      {/* Sidebar footer */}
       <div style={{ padding: '8px 10px', borderTop: '1px solid var(--edge-soft)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <button
           onClick={() => setFiltersOpen(true)}
@@ -434,9 +453,8 @@ export default function MailShell() {
       {!isMobile && sidebar}
 
       {/* === SMART INBOX === */}
-      {activeFolder === 'smart' ? (
+      {currentFolder === 'smart' ? (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Smart inbox view — hidden on mobile when thread open */}
           {!(isMobile && selectedThreadId) && (
             <div style={{ flex: 1, overflow: 'auto' }} className="hide-scrollbar">
               <SmartInboxView
@@ -446,7 +464,6 @@ export default function MailShell() {
             </div>
           )}
 
-          {/* Thread detail on desktop */}
           {!isMobile && selectedThreadId && (
             <div style={{
               width: 520, flexShrink: 0,
@@ -457,13 +474,11 @@ export default function MailShell() {
             </div>
           )}
 
-          {/* Thread detail on mobile — full screen slide-in */}
           {isMobile && selectedThreadId && threadDetail}
         </div>
       ) : (
         /* === REGULAR INBOX === */
         <>
-          {/* Thread list */}
           <div style={{
             width: isMobile ? '100%' : 340,
             minWidth: isMobile ? undefined : 280,
@@ -473,7 +488,6 @@ export default function MailShell() {
             flexDirection: 'column',
             overflow: 'hidden',
           }}>
-            {/* List header */}
             <div style={{
               padding: '12px 14px 8px',
               borderBottom: '1px solid var(--edge-soft)',
@@ -484,9 +498,9 @@ export default function MailShell() {
                 {search
                   ? `"${search}"`
                   : (lang === 'pt'
-                    ? MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_pt
-                    : MAIL_FOLDERS.find(f => f.id === activeFolder)?.label_en)
-                    ?? activeFolder}
+                    ? MAIL_FOLDERS.find(f => f.id === currentFolder)?.label_pt
+                    : MAIL_FOLDERS.find(f => f.id === currentFolder)?.label_en)
+                    ?? currentFolder}
               </span>
               {isMobile && (
                 <button
@@ -501,8 +515,8 @@ export default function MailShell() {
             </div>
 
             <ThreadList
-              key={`${activeFolder}-${search}-${refreshKey}`}
-              folder={activeFolder}
+              key={`${currentFolder}-${search}-${refreshKey}`}
+              folder={currentFolder}
               search={search}
               onSelect={handleSelectThread}
               selectedId={selectedThreadId}

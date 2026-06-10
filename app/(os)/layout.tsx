@@ -11,7 +11,6 @@ import {
 import dynamic from "next/dynamic"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
-import BottomNav from "@/components/nav/BottomNav"
 import SettingsModal from "@/components/settings/SettingsModal"
 import { isLocked, lock } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
@@ -24,6 +23,11 @@ import { NoteStore } from "@/lib/note-store"
 import { FinanceStore } from "@/lib/finance-store"
 import { ContactStore } from "@/lib/contact-store"
 import GoogleConnectPrompt from "@/components/google/GoogleConnectPrompt"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
+import MobileHomeScreen from "@/components/mobile/MobileHomeScreen"
+import MobileAppContainer from "@/components/mobile/MobileAppContainer"
+import { MOBILE_APPS } from "@/lib/mobile-apps"
+import { MobileSubTabContext } from "@/lib/mobile-context"
 
 const DashboardPage  = dynamic(() => import("./dashboard/page"),  { ssr: false })
 const FinancesPage   = dynamic(() => import("./finances/page"),   { ssr: false })
@@ -73,6 +77,7 @@ function ComingOnlinePage({ id }: { id: string }) {
 
 const GOOGLE_TAB_META: Record<string, { tabName: string; description: string; icon: string; color: string }> = {
   email:    { tabName: "Mail",     description: "Acede ao teu Gmail diretamente no BraosaOS.",  icon: "mail",  color: "var(--c-mail)"  },
+  mail:     { tabName: "Mail",     description: "Acede ao teu Gmail diretamente no BraosaOS.",  icon: "mail",  color: "var(--c-mail)"  },
   calendar: { tabName: "Calendar", description: "Vê e gere o teu Google Calendar.",              icon: "cal",   color: "var(--c-cal)"   },
   contacts: { tabName: "Contacts", description: "Os teus contactos Google num CRM pessoal.",     icon: "users", color: "var(--c-task)"  },
   drive:    { tabName: "Drive",    description: "Acede aos teus ficheiros do Google Drive.",     icon: "file",  color: "var(--c-fin)"   },
@@ -94,7 +99,8 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "ai":        return <AIPage />
     case "health":    return <HealthPage />
     case "contacts":  return <ContactsPage />
-    case "email":     return <MailPage />
+    case "email":
+    case "mail":      return <MailPage />
     case "calendar":  return <CalendarShell />
     case "drive":     return <DriveShell />
     case "braosa":    return <BraosaShell />
@@ -144,7 +150,10 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   const [user, setUser] = useState<OSUser | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
+  const [mobileOpenApp, setMobileOpenApp] = useState<string | null>(null)
+  const [mobileSubTab, setMobileSubTab] = useState<string>('')
   const contentRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
 
   const refreshGoogleStatus = useCallback(() => {
     fetch('/api/google/status')
@@ -163,7 +172,6 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     ContactStore.fetch()
     refreshGoogleStatus()
 
-    // Background bank sync if any connection is stale (> 4 hours)
     fetch('/api/bank/connections')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -184,6 +192,31 @@ export default function OsLayout({ children: _children }: { children: React.Reac
       .catch(() => {})
   }, [])
 
+  // Restore last open app on mobile mount
+  useEffect(() => {
+    if (!isMobile) return
+    try {
+      const saved = localStorage.getItem('braosa-last-app')
+      if (saved) {
+        const { appId, subTabId } = JSON.parse(saved)
+        if (appId && MOBILE_APPS.find(a => a.id === appId)) {
+          setMobileOpenApp(appId)
+          setMobileSubTab(subTabId || '')
+          setActive(appId)
+        }
+      }
+    } catch {}
+  }, [isMobile])
+
+  // Persist last open app
+  useEffect(() => {
+    if (!isMobile || !mobileOpenApp) return
+    localStorage.setItem('braosa-last-app', JSON.stringify({ appId: mobileOpenApp, subTabId: mobileSubTab }))
+    if (mobileSubTab) {
+      localStorage.setItem(`braosa-subtab-${mobileOpenApp}`, mobileSubTab)
+    }
+  }, [isMobile, mobileOpenApp, mobileSubTab])
+
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0
   }, [active])
@@ -201,12 +234,79 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     setActive(id)
   }, [])
 
+  const handleOpenApp = useCallback((appId: string) => {
+    const app = MOBILE_APPS.find(a => a.id === appId)
+    const firstSubTab = app?.subTabs?.[0]?.id || ''
+    let subTab = firstSubTab
+    try {
+      const saved = localStorage.getItem(`braosa-subtab-${appId}`)
+      if (saved) subTab = saved
+    } catch {}
+    setMobileSubTab(subTab)
+    setMobileOpenApp(appId)
+    setActive(appId)
+  }, [])
+
+  const handleCloseApp = useCallback(() => {
+    setMobileOpenApp(null)
+    try { localStorage.removeItem('braosa-last-app') } catch {}
+  }, [])
+
   const blurStyle = {
     filter: "blur(15px) brightness(0.68)",
     transform: "scale(1.025)",
     pointerEvents: "none" as const,
     transition: "filter .3s, transform .3s",
   }
+
+  // ─── Mobile render ──────────────────────────────────────────────────────────
+
+  if (isMobile) {
+    let mobileContent: React.ReactNode
+
+    if (mobileOpenApp === null) {
+      mobileContent = <MobileHomeScreen onOpenApp={handleOpenApp} />
+    } else {
+      const app = MOBILE_APPS.find(a => a.id === mobileOpenApp)
+      if (!app) {
+        mobileContent = <MobileHomeScreen onOpenApp={handleOpenApp} />
+      } else {
+        mobileContent = (
+          <MobileSubTabContext.Provider value={{ activeSubTab: mobileSubTab, setSubTab: setMobileSubTab }}>
+            <MobileAppContainer
+              appId={mobileOpenApp}
+              app={app}
+              subTabId={mobileSubTab}
+              onSubTabChange={setMobileSubTab}
+              onClose={handleCloseApp}
+            >
+              <ErrorBoundary>
+                {renderActive(mobileOpenApp, googleConnected)}
+              </ErrorBoundary>
+            </MobileAppContainer>
+          </MobileSubTabContext.Provider>
+        )
+      }
+    }
+
+    return (
+      <LockContext.Provider value={{ lock: doLock }}>
+        <NavigationContext.Provider value={{ active, navigate, googleConnected, refreshGoogleStatus }}>
+          <div style={locked ? blurStyle : {}}>
+            {mobileContent}
+          </div>
+          {locked && <LockScreen onUnlock={handleUnlock} />}
+          <SettingsModal
+            open={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            onLock={doLock}
+          />
+        </NavigationContext.Provider>
+      </LockContext.Provider>
+    )
+  }
+
+  // ─── Desktop render ─────────────────────────────────────────────────────────
 
   return (
     <LockContext.Provider value={{ lock: doLock }}>
@@ -220,25 +320,21 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             ...(locked ? blurStyle : {}),
           }}
         >
-          <div className="desktop-only">
-            <TopNav
-              active={active}
-              onNavigate={navigate}
-              onLock={doLock}
-              onSettings={() => setSettingsOpen(true)}
-              user={user}
-            />
-          </div>
+          <TopNav
+            active={active}
+            onNavigate={navigate}
+            onLock={doLock}
+            onSettings={() => setSettingsOpen(true)}
+            user={user}
+          />
           <div
             ref={contentRef}
-            className="mobile-bottom-pad"
             style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}
           >
             <ErrorBoundary>
               {renderActive(active, googleConnected)}
             </ErrorBoundary>
           </div>
-          <BottomNav />
         </div>
         {locked && <LockScreen onUnlock={handleUnlock} />}
         <SettingsModal

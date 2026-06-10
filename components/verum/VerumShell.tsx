@@ -1,8 +1,9 @@
 'use client'
-import { useState, createContext, useContext } from 'react'
+import { useState, useContext, createContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
+import { MobileSubTabContext } from '@/lib/mobile-context'
 import DashboardView from './views/DashboardView'
 import ProjectsView from './views/ProjectsView'
 import TeamView from './views/TeamView'
@@ -36,54 +37,19 @@ function renderView(tab: VerumTab) {
 export default function VerumShell() {
   useLang()
   const isMobile = useIsMobile()
-  const [activeTab, setActiveTab] = useState<VerumTab>('dashboard')
+  const { activeSubTab: mobileSubTab, setSubTab: setMobileSubTab } = useContext(MobileSubTabContext)
+  const [desktopTab, setDesktopTab] = useState<VerumTab>('dashboard')
 
-  const navigateTo = (tab: VerumTab) => setActiveTab(tab)
+  const activeTab = (isMobile ? (mobileSubTab as VerumTab) || 'dashboard' : desktopTab)
+
+  const navigateTo = (tab: VerumTab) => {
+    if (isMobile) setMobileSubTab(tab)
+    else setDesktopTab(tab)
+  }
 
   return (
     <VerumContext.Provider value={{ navigateTo }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
-
-        {/* Mobile tab bar */}
-        {isMobile && (
-          <div
-            className="hide-scrollbar"
-            style={{
-              display: 'flex',
-              overflowX: 'auto',
-              borderBottom: '1px solid var(--edge-soft)',
-              flexShrink: 0,
-              height: 48,
-            }}
-          >
-            {VERUM_TABS.map(item => {
-              const isActive = activeTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 13,
-                    whiteSpace: 'nowrap',
-                    color: isActive ? 'var(--c-verum)' : 'var(--ink-dim)',
-                    borderBottom: isActive ? '2px solid var(--c-verum)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon name={item.glyph} size={14} />
-                  {item.label()}
-                </button>
-              )
-            })}
-          </div>
-        )}
+      <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
 
         {/* Desktop left sidebar */}
         {!isMobile && (
@@ -122,7 +88,7 @@ export default function VerumShell() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => navigateTo(item.id)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
