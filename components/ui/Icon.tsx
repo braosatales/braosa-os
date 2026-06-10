@@ -1,4 +1,5 @@
 import {
+  Camera,
   Activity,
   AlertTriangle,
   Archive,
@@ -152,6 +153,7 @@ const iconMap: Record<IconName, LucideComponent> = {
   pin: Pin,
   archive: Archive,
   note: StickyNote,
+  camera: Camera,
 };
 
 export default function Icon({ name, size = 16, stroke = 1.8, className }: IconComponentProps) {

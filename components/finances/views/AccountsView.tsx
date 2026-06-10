@@ -11,6 +11,8 @@ import EditAccountModal from '../modals/EditAccountModal'
 import AddTransactionModal from '../modals/AddTransactionModal'
 import EditTransactionModal from '../modals/EditTransactionModal'
 import ConnectBankModal from '../modals/ConnectBankModal'
+import InvoiceScanner from '../InvoiceScanner'
+import { Modal } from '@/components/ui'
 
 type BankLink = {
   id: string
@@ -51,6 +53,7 @@ export default function AccountsView() {
   useLang()
   const { data } = useFinanceStore()
 
+  const [showScanner, setShowScanner] = useState(false)
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [showConnectBank, setShowConnectBank] = useState(false)
   const [editAccount, setEditAccount] = useState<Account | null>(null)
@@ -285,6 +288,13 @@ export default function AccountsView() {
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
+              className="btn"
+              onClick={() => setShowScanner(true)}
+            >
+              <Icon name="camera" size={14} />
+              {L('Digitalizar Fatura', 'Scan Invoice')}
+            </button>
+            <button
               className="btn btn-accent"
               style={{ '--accent': 'var(--c-fin)' } as React.CSSProperties}
               onClick={() => setShowConnectBank(true)}
@@ -485,6 +495,9 @@ export default function AccountsView() {
         )}
       </div>
 
+      <Modal open={showScanner} onClose={() => setShowScanner(false)} width={520}>
+        <InvoiceScanner onClose={() => setShowScanner(false)} />
+      </Modal>
       <AddAccountModal open={showAddAccount} onClose={() => setShowAddAccount(false)} />
       <ConnectBankModal open={showConnectBank} onClose={() => setShowConnectBank(false)} />
       <EditAccountModal account={editAccount} onClose={() => setEditAccount(null)} />

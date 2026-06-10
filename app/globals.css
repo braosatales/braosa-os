@@ -166,3 +166,5 @@ body { overflow: hidden; }
 /* Hide scrollbar for mobile tab bars */
 .hide-scrollbar { scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+@keyframes scanLine { 0% { top: 0 } 100% { top: 100% } }

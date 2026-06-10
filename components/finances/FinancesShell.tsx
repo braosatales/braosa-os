@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Icon } from '@/components/ui'
+import { Icon, Modal } from '@/components/ui'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useLang, L } from '@/lib/i18n'
 import type { FinanceTab } from '@/lib/finance'
@@ -10,6 +10,7 @@ import DebtView from './views/DebtView'
 import InvestView from './views/InvestView'
 import BudgetView from './views/BudgetView'
 import BabyStepsView from './views/BabyStepsView'
+import InvoiceScanner from './InvoiceScanner'
 
 const FINANCE_TABS = [
   { id: "overview",  label: () => L("Visão Geral","Overview"),   glyph: "chart-line",    color: "var(--c-fin)"  },
@@ -35,6 +36,7 @@ export default function FinancesShell() {
   useLang()
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<FinanceTab>("overview")
+  const [showScanner, setShowScanner] = useState(false)
 
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%' }}>
@@ -149,6 +151,36 @@ export default function FinancesShell() {
       <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         {renderView(activeTab)}
       </div>
+
+      {/* Mobile: floating camera FAB */}
+      {isMobile && (
+        <button
+          onClick={() => setShowScanner(true)}
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            right: 20,
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: 'var(--c-fin)',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'oklch(0.18 0.01 80)',
+            boxShadow: '0 4px 20px -4px var(--c-fin)',
+            zIndex: 90,
+          }}
+        >
+          <Icon name="camera" size={22} />
+        </button>
+      )}
+
+      <Modal open={showScanner} onClose={() => setShowScanner(false)} width={520}>
+        <InvoiceScanner onClose={() => setShowScanner(false)} />
+      </Modal>
     </div>
   )
 }
