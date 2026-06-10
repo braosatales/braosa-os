@@ -1,6 +1,9 @@
 import {
   Camera,
   Activity,
+  Sun,
+  Moon,
+  Droplets,
   AlertTriangle,
   Archive,
   ArrowDown,
@@ -154,6 +157,9 @@ const iconMap: Record<IconName, LucideComponent> = {
   archive: Archive,
   note: StickyNote,
   camera: Camera,
+  sun: Sun,
+  moon: Moon,
+  droplet: Droplets,
 };
 
 export default function Icon({ name, size = 16, stroke = 1.8, className }: IconComponentProps) {

@@ -10,4 +10,5 @@ export type IconName =
   | "flag" | "inbox" | "list" | "board" | "timeline" | "chart-bar"
   | "chart-line" | "wallet" | "bank" | "trending-up" | "trending-down"
   | "target" | "award" | "activity" | "user" | "users" | "home" | "pin"
-  | "archive" | "note" | "camera";
+  | "archive" | "note" | "camera"
+  | "sun" | "moon" | "droplet";

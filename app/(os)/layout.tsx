@@ -37,6 +37,7 @@ const CalendarShell  = dynamic(() => import("@/components/calendar/CalendarShell
 const DriveShell     = dynamic(() => import("@/components/drive/DriveShell"),     { ssr: false })
 const BraosaShell    = dynamic(() => import("@/components/braosa/BraosaShell"),   { ssr: false })
 const VerumShell     = dynamic(() => import("@/components/verum/VerumShell"),     { ssr: false })
+const NutritionShell = dynamic(() => import("@/components/nutrition/NutritionShell"), { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "drive":     return <DriveShell />
     case "braosa":    return <BraosaShell />
     case "verum":     return <VerumShell />
+    case "nutrition": return <NutritionShell />
     default:          return <ComingOnlinePage id={active} />
   }
 }

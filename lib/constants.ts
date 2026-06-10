@@ -8,6 +8,7 @@ export const SYSTEMS = [
   { id: "drive",     label: "Drive",      labelPt: "Drive",      icon: "file",    color: "var(--c-fin)",    dim: "var(--c-fin-dim)"    },
   { id: "health",    label: "Health",     labelPt: "Saúde",      icon: "pulse",   color: "var(--c-health)", dim: "var(--c-health-dim)" },
   { id: "notes",     label: "Notes",      labelPt: "Notas",      icon: "note",    color: "var(--c-dash)",   dim: "var(--c-dash-dim)"   },
+  { id: "nutrition", label: "Nutrition",  labelPt: "Nutrição",   icon: "activity", color: "var(--c-cal)",    dim: "var(--c-cal-dim)"    },
 ] as const
 
 export const COMPANIES = [
