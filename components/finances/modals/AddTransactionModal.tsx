@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Modal from '@/components/ui/Modal'
 import { useLang, L } from '@/lib/i18n'
+import { FinanceStore } from '@/lib/finance-store'
 
 type Props = {
   open: boolean
@@ -34,26 +35,26 @@ export default function AddTransactionModal({ open, accountId, onClose, onAdded 
   const [category, setCategory] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
     try {
-      await fetch('/api/finances/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          account_id: accountId,
-          date,
-          description,
-          amount: sign * parseFloat(amount),
-          category: category || null,
-          notes: notes || null,
-        }),
+      await FinanceStore.addTransaction({
+        account_id: accountId,
+        date,
+        description,
+        amount: sign * parseFloat(amount),
+        category: category || null,
+        notes: notes || null,
       })
       setDescription(''); setAmount(''); setSign(-1); setDate(todayISO()); setCategory(''); setNotes('')
       onAdded()
       onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : L('Erro ao guardar', 'Failed to save'))
     } finally {
       setLoading(false)
     }
@@ -169,6 +170,9 @@ export default function AddTransactionModal({ open, accountId, onClose, onAdded 
         </div>
 
         <div style={{ padding: '0 20px 20px' }}>
+          {error && (
+            <div style={{ color: 'var(--neg)', fontSize: 12, marginBottom: 10 }}>{error}</div>
+          )}
           <button
             type="submit"
             className="btn btn-accent"

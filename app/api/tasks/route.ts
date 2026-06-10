@@ -30,9 +30,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const { userRow, supabase } = await resolveUser()
+  console.log('POST /api/tasks USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('POST /api/tasks BODY:', body)
   const { title, description, priority, due, system, project_id, tags, fav } = body
 
   const { data, error } = await supabase
@@ -47,11 +49,11 @@ export async function POST(request: NextRequest) {
       project_id: project_id ?? null,
       tags: tags ?? [],
       fav: fav ?? false,
-      status: 'todo',
+      status: body.status ?? 'todo',
     })
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('POST /api/tasks ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true, task: data }, { status: 201 })
 }

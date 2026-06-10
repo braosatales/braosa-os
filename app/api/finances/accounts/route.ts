@@ -13,15 +13,17 @@ async function resolveUser() {
 
 export async function POST(request: NextRequest) {
   const { userRow, supabase } = await resolveUser()
+  console.log('POST /api/finances/accounts USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('POST /api/finances/accounts BODY:', body)
   const { data, error } = await supabase
     .from('finance_accounts')
     .insert({ ...body, user_id: userRow.id })
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('POST /api/finances/accounts ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true, account: data }, { status: 201 })
 }

@@ -17,9 +17,11 @@ export async function PATCH(
 ) {
   const { id } = await params
   const { userRow, supabase } = await resolveUser()
+  console.log('PATCH /api/finances/transactions/:id USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('PATCH /api/finances/transactions/:id BODY:', body)
   const { description, amount, category, notes, date } = body
 
   if (typeof amount === 'number') {
@@ -64,7 +66,7 @@ export async function PATCH(
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('PATCH /api/finances/transactions/:id ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true, transaction: data })
 }
 
@@ -74,6 +76,7 @@ export async function DELETE(
 ) {
   const { id } = await params
   const { userRow, supabase } = await resolveUser()
+  console.log('DELETE /api/finances/transactions/:id USER:', userRow?.id, 'id:', id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data: oldTx } = await supabase
@@ -89,7 +92,7 @@ export async function DELETE(
     .eq('id', id)
     .eq('user_id', userRow.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('DELETE /api/finances/transactions/:id ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
 
   if (oldTx) {
     const { data: acct } = await supabase

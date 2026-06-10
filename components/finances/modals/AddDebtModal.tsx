@@ -37,10 +37,12 @@ export default function AddDebtModal({ open, onClose }: Props) {
   const [minPayment, setMinPayment] = useState('')
   const [payoffDate, setPayoffDate] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
     try {
       await FinanceStore.addDebt({
         name,
@@ -52,6 +54,8 @@ export default function AddDebtModal({ open, onClose }: Props) {
       })
       setName(''); setKind('Credit Card'); setBalance(''); setRate(''); setMinPayment(''); setPayoffDate('')
       onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : L('Erro ao guardar', 'Failed to save'))
     } finally {
       setLoading(false)
     }
@@ -171,6 +175,9 @@ export default function AddDebtModal({ open, onClose }: Props) {
         </div>
 
         <div style={{ padding: '0 20px 20px' }}>
+          {error && (
+            <div style={{ color: 'var(--neg)', fontSize: 12, marginBottom: 10 }}>{error}</div>
+          )}
           <button
             type="submit"
             className="btn btn-accent"

@@ -18,6 +18,16 @@ let _data: FinanceData | null = null
 let _loading = false
 const _listeners = new Set<() => void>()
 
+async function mutate(url: string, options: RequestInit): Promise<unknown> {
+  const r = await fetch(url, options)
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+    console.error('FinanceStore mutation error:', url, e)
+    throw new Error(e.error || `Request failed (${r.status})`)
+  }
+  return r.json().catch(() => null)
+}
+
 export const FinanceStore = {
   get: () => _data,
   isLoading: () => _loading,
@@ -32,18 +42,58 @@ export const FinanceStore = {
       if (r.ok) _data = await r.json()
     } finally { _loading = false; FinanceStore.notify() }
   },
-  async addAccount(data: Partial<Account>) { await fetch('/api/finances/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async updateAccount(id: string, data: Partial<Account>) { await fetch(`/api/finances/accounts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async deleteAccount(id: string) { await fetch(`/api/finances/accounts/${id}`, { method: 'DELETE' }); FinanceStore.invalidate() },
-  async addDebt(data: Partial<Debt>) { await fetch('/api/finances/debts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async updateDebt(id: string, data: Partial<Debt>) { await fetch(`/api/finances/debts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async deleteDebt(id: string) { await fetch(`/api/finances/debts/${id}`, { method: 'DELETE' }); FinanceStore.invalidate() },
-  async addInvestment(data: Partial<Investment>) { await fetch('/api/finances/investments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async updateInvestment(id: string, data: Partial<Investment>) { await fetch(`/api/finances/investments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async deleteInvestment(id: string) { await fetch(`/api/finances/investments/${id}`, { method: 'DELETE' }); FinanceStore.invalidate() },
-  async addBudget(data: Partial<Budget>) { await fetch('/api/finances/budgets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async updateBudget(id: string, data: Partial<Budget>) { await fetch(`/api/finances/budgets/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); FinanceStore.invalidate() },
-  async deleteBudget(id: string) { await fetch(`/api/finances/budgets/${id}`, { method: 'DELETE' }); FinanceStore.invalidate() },
+  async addAccount(data: Partial<Account>) {
+    await mutate('/api/finances/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async updateAccount(id: string, data: Partial<Account>) {
+    await mutate(`/api/finances/accounts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async deleteAccount(id: string) {
+    await mutate(`/api/finances/accounts/${id}`, { method: 'DELETE' })
+    FinanceStore.invalidate()
+  },
+  async addDebt(data: Partial<Debt>) {
+    await mutate('/api/finances/debts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async updateDebt(id: string, data: Partial<Debt>) {
+    await mutate(`/api/finances/debts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async deleteDebt(id: string) {
+    await mutate(`/api/finances/debts/${id}`, { method: 'DELETE' })
+    FinanceStore.invalidate()
+  },
+  async addInvestment(data: Partial<Investment>) {
+    await mutate('/api/finances/investments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async updateInvestment(id: string, data: Partial<Investment>) {
+    await mutate(`/api/finances/investments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async deleteInvestment(id: string) {
+    await mutate(`/api/finances/investments/${id}`, { method: 'DELETE' })
+    FinanceStore.invalidate()
+  },
+  async addBudget(data: Partial<Budget>) {
+    await mutate('/api/finances/budgets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async updateBudget(id: string, data: Partial<Budget>) {
+    await mutate(`/api/finances/budgets/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
+  async deleteBudget(id: string) {
+    await mutate(`/api/finances/budgets/${id}`, { method: 'DELETE' })
+    FinanceStore.invalidate()
+  },
+  async addTransaction(data: { account_id: string; date: string; description: string; amount: number; category: string | null; notes: string | null }) {
+    await mutate('/api/finances/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    FinanceStore.invalidate()
+  },
 }
 
 export function useFinanceStore(): { data: FinanceData | null; loading: boolean } {

@@ -37,9 +37,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { userRow, supabase } = await resolveUser()
+  console.log('POST /api/finances/transactions USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('POST /api/finances/transactions BODY:', body)
   const { account_id, date, description, amount, category, notes } = body
 
   const { data, error } = await supabase
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('POST /api/finances/transactions ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
 
   const { data: acct } = await supabase
     .from('finance_accounts')

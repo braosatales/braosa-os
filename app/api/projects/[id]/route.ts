@@ -17,9 +17,11 @@ export async function PATCH(
 ) {
   const { id } = await params
   const { userRow, supabase } = await resolveUser()
+  console.log('PATCH /api/projects/:id USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('PATCH /api/projects/:id BODY:', body)
   const allowed = ['name', 'color', 'icon']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
@@ -34,7 +36,7 @@ export async function PATCH(
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('PATCH /api/projects/:id ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true, project: data })
 }
 
@@ -44,6 +46,7 @@ export async function DELETE(
 ) {
   const { id } = await params
   const { userRow, supabase } = await resolveUser()
+  console.log('DELETE /api/projects/:id USER:', userRow?.id, 'id:', id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   await supabase
@@ -58,6 +61,6 @@ export async function DELETE(
     .eq('id', id)
     .eq('user_id', userRow.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('DELETE /api/projects/:id ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true })
 }

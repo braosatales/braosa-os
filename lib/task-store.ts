@@ -30,8 +30,12 @@ export const TaskStore = {
   },
   async addTask(data: Partial<Task>) {
     const r = await fetch('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    if (r.ok) { const d = await r.json(); _tasks = [d.task, ..._tasks]; TaskStore.notify() }
-    else TaskStore.invalidate()
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+      console.error('addTask error:', e)
+      throw new Error(e.error || `Request failed (${r.status})`)
+    }
+    const d = await r.json(); _tasks = [d.task, ..._tasks]; TaskStore.notify()
   },
   async updateTask(id: string, data: Partial<Task>) {
     _tasks = _tasks.map(t => t.id === id ? { ...t, ...data, updated_at: new Date().toISOString() } : t)
@@ -58,8 +62,12 @@ export const TaskStore = {
   },
   async addProject(data: Partial<Project>) {
     const r = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-    if (r.ok) { const d = await r.json(); _projects = [..._projects, d.project].sort((a, b) => a.name.localeCompare(b.name)); TaskStore.notify() }
-    else TaskStore.invalidate()
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+      console.error('addProject error:', e)
+      throw new Error(e.error || `Request failed (${r.status})`)
+    }
+    const d = await r.json(); _projects = [..._projects, d.project].sort((a, b) => a.name.localeCompare(b.name)); TaskStore.notify()
   },
   async updateProject(id: string, data: Partial<Project>) {
     _projects = _projects.map(p => p.id === id ? { ...p, ...data } : p)

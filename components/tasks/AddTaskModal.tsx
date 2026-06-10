@@ -26,11 +26,13 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
   const [system, setSystem] = useState('')
   const [fav, setFav] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
     setSaving(true)
+    setError(null)
     try {
       await TaskStore.addTask({
         title: title.trim(),
@@ -43,6 +45,8 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
       })
       setTitle(''); setDescription(''); setDue(''); setPriority(3); setSystem(''); setFav(false)
       onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : L('Erro ao criar tarefa', 'Failed to create task'))
     } finally {
       setSaving(false)
     }
@@ -133,6 +137,9 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
         </div>
 
         {/* Footer */}
+        {error && (
+          <div style={{ color: 'var(--neg)', fontSize: 12 }}>{error}</div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid var(--edge-soft)' }}>
           <FavStar on={fav} onClick={() => setFav(f => !f)} size={18} />
           <div style={{ display: 'flex', gap: 8 }}>

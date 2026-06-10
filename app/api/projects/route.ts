@@ -27,9 +27,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const { userRow, supabase } = await resolveUser()
+  console.log('POST /api/projects USER:', userRow?.id)
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
+  console.log('POST /api/projects BODY:', body)
   const { name, color, icon } = body
 
   const { data, error } = await supabase
@@ -38,6 +40,6 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.log('POST /api/projects ERROR:', error); return NextResponse.json({ error: error.message, details: error }, { status: 500 }) }
   return NextResponse.json({ ok: true, project: data }, { status: 201 })
 }
