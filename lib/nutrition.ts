@@ -130,6 +130,33 @@ export function calculateWeightLossPace(profile: NutritionProfile): {
   return { weeklyLossKg, weeksToGoal, onTrack }
 }
 
+export type MealScanItem = {
+  name: string
+  name_pt: string
+  estimated_amount_g: number
+  amount_description: string
+  calories: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  fiber_g: number
+  confidence: number
+  selected: boolean
+}
+
+export type MealScanResult = {
+  meal_name: string
+  confidence: number
+  items: MealScanItem[]
+  total_calories: number
+  total_protein_g: number
+  total_carbs_g: number
+  total_fat_g: number
+  total_fiber_g: number
+  notes: string | null
+  image_url: string | null
+}
+
 export function sumDayTotals(logs: FoodLog[]): DayTotals {
   return logs.reduce(
     (acc, l) => ({

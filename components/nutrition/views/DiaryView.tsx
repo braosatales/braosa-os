@@ -6,6 +6,7 @@ import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { MEAL_META, type FoodLog, type NutritionProfile, sumDayTotals } from '@/lib/nutrition'
 import { useNutrition } from '../NutritionShell'
 import EditFoodLogModal from '../modals/EditFoodLogModal'
+import MealScanner from '../MealScanner'
 
 function todayStr() { return new Date().toISOString().split('T')[0] }
 function addDays(dateStr: string, n: number): string {
@@ -41,6 +42,8 @@ export default function DiaryView() {
   const [water, setWater] = useState<boolean[]>(Array(8).fill(false))
   const [editLog, setEditLog] = useState<FoodLog | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [showScanner, setShowScanner] = useState(false)
+  const [scannerMeal, setScannerMeal] = useState<string>('lunch')
 
   useEffect(() => {
     setWater(loadWater(date))
@@ -275,6 +278,27 @@ export default function DiaryView() {
                   <button
                     onClick={e => {
                       e.stopPropagation()
+                      setScannerMeal(mealKey)
+                      setShowScanner(true)
+                    }}
+                    style={{
+                      background: 'none',
+                      border: '1px solid var(--edge)',
+                      borderRadius: 6,
+                      color: 'var(--c-cal)',
+                      fontSize: 12,
+                      padding: '3px 7px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    title={L('Fotografar refeição', 'Scan meal')}
+                  >
+                    <Icon name="camera" size={11} />
+                  </button>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
                       navigateTo('log', date, mealKey)
                     }}
                     style={{
@@ -354,6 +378,40 @@ export default function DiaryView() {
           onSaved={() => { setEditLog(null); fetchData() }}
         />
       )}
+
+      {showScanner && (
+        <MealScanner
+          meal={scannerMeal}
+          date={date}
+          onLogged={fetchData}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      {/* Camera FAB */}
+      <button
+        onClick={() => { setScannerMeal('lunch'); setShowScanner(true) }}
+        style={{
+          position: 'fixed',
+          bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 16px)' : 24,
+          right: 20,
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: 'var(--c-cal)',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'oklch(0.18 0.01 80)',
+          zIndex: 50,
+          boxShadow: `0 0 calc(30px * var(--glow)) -6px var(--c-cal)`,
+        }}
+        title={L('Fotografar refeição', 'Scan meal')}
+      >
+        <Icon name="camera" size={22} />
+      </button>
     </div>
   )
 }

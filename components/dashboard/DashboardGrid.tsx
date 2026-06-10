@@ -20,6 +20,7 @@ import UpcomingWidget from "./widgets/UpcomingWidget"
 import StreakWidget from "./widgets/StreakWidget"
 import QuickNoteWidget from "./widgets/QuickNoteWidget"
 import AIInsightWidget from "./widgets/AIInsightWidget"
+import NutritionWidget from "./widgets/NutritionWidget"
 import AddWidgetModal from "./AddWidgetModal"
 import {
   getLayout,
@@ -250,6 +251,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
       case "streak":           return <StreakWidget {...shellProps} />
       case "quick_note":       return <QuickNoteWidget {...shellProps} />
       case "ai_insight":       return <AIInsightWidget {...shellProps} />
+      case "nutrition":        return <NutritionWidget {...shellProps} onNavigate={nav} />
       default: {
         const meta = ALL_WIDGETS.find((w) => w.id === id)!
         return (

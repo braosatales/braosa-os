@@ -5,6 +5,7 @@ import { useLang, L } from '@/lib/i18n'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { MEAL_META, type Food, calculateMacrosForAmount } from '@/lib/nutrition'
 import { useNutrition } from '../NutritionShell'
+import MealScanner from '../MealScanner'
 
 type MealKey = keyof typeof MEAL_META
 
@@ -265,6 +266,7 @@ export default function LogFoodView() {
   const [selectedFood, setSelectedFood] = useState<Food | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchRecent = useCallback(async () => {
@@ -362,6 +364,16 @@ export default function LogFoodView() {
           )
         })}
       </div>
+
+      {/* Scan meal button */}
+      <button
+        className="btn"
+        onClick={() => setShowScanner(true)}
+        style={{ width: '100%', justifyContent: 'center', marginBottom: 16, color: 'var(--c-cal)' }}
+      >
+        <Icon name="camera" size={15} />
+        {L('Fotografar Refeição', 'Scan Meal')}
+      </button>
 
       {/* Search input */}
       <div style={{ position: 'relative', marginBottom: 20 }}>
@@ -484,6 +496,14 @@ export default function LogFoodView() {
         <CreateFoodModal
           onClose={() => setShowCreate(false)}
           onCreated={handleCreated}
+        />
+      )}
+      {showScanner && (
+        <MealScanner
+          meal={selectedMeal}
+          date={logDate}
+          onLogged={() => setShowScanner(false)}
+          onClose={() => setShowScanner(false)}
         />
       )}
     </div>

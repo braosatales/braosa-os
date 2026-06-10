@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   if (!userRow || !supabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { date, meal, food_id, food_name, amount_g, calories, protein_g, carbs_g, fat_g, fiber_g, notes } = body
+  const { date, meal, food_id, food_name, amount_g, calories, protein_g, carbs_g, fat_g, fiber_g, notes, ai_identified, photo_url } = body
 
   const { data, error } = await supabase
     .from('food_logs')
@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
       fat_g: fat_g ?? 0,
       fiber_g: fiber_g ?? 0,
       notes: notes ?? null,
+      ai_identified: ai_identified ?? false,
+      photo_url: photo_url ?? null,
     })
     .select()
     .single()

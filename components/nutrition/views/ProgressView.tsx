@@ -18,6 +18,14 @@ type Summary = {
   currentWeight: number | null; weightChange: number | null
 }
 
+function getLast7Days(): string[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    return d.toISOString().split('T')[0]
+  })
+}
+
 function LogWeightModal({ onClose, onLogged }: { onClose: () => void; onLogged: () => void }) {
   const [weight, setWeight] = useState('')
   const [date,   setDate]   = useState(new Date().toISOString().split('T')[0])
@@ -97,6 +105,9 @@ export default function ProgressView() {
   const [period, setPeriod]       = useState<'7d' | '30d'>('7d')
   const [showLogWeight, setShowLogWeight] = useState(false)
   const [loading, setLoading]     = useState(true)
+  const [weekly7d, setWeekly7d]   = useState<Summary | null>(null)
+  const [tip, setTip]             = useState<string | null>(null)
+  const [tipLoading, setTipLoading] = useState(true)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -107,9 +118,24 @@ export default function ProgressView() {
     ])
     if (profileRes.ok) { const d = await profileRes.json(); setProfile(d.profile) }
     if (weightRes.ok)  { const d = await weightRes.json();  setWeightLogs(d.logs ?? []) }
-    if (summaryRes.ok) { const d = await summaryRes.json(); setSummary(d) }
+    if (summaryRes.ok) {
+      const d = await summaryRes.json()
+      setSummary(d)
+      if (period === '7d') setWeekly7d(d)
+    }
+    if (period !== '7d') {
+      const r = await fetch('/api/nutrition/summary?period=7d')
+      if (r.ok) { const d = await r.json(); setWeekly7d(d) }
+    }
     setLoading(false)
   }, [period])
+
+  useEffect(() => {
+    fetch('/api/nutrition/tip')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setTip(d?.tip ?? null); setTipLoading(false) })
+      .catch(() => setTipLoading(false))
+  }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -312,6 +338,77 @@ export default function ProgressView() {
           </>
         ) : null}
       </div>
+
+      {/* ── Weekly summary ── */}
+      {weekly7d && (() => {
+        const days7 = getLast7Days()
+        const trendMap = new Map(weekly7d.caloriesTrend.map(e => [e.date, e]))
+        const targetCal = profile?.target_calories ?? 2150
+        const onTargetDays = days7.filter(d => {
+          const e = trendMap.get(d)
+          if (!e || e.calories === 0) return false
+          const ratio = e.calories / targetCal
+          return ratio >= 0.9 && ratio <= 1.1
+        }).length
+        return (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, marginBottom: 14 }}>
+              {L('Esta Semana', 'This Week')}
+            </div>
+            <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--edge-soft)', borderRadius: 'var(--radius)', padding: 20, marginBottom: 12 }}>
+              {/* 7-day dot row */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                {days7.map(d => {
+                  const e = trendMap.get(d)
+                  let dotColor = 'var(--ink-faint)'
+                  if (e && e.calories > 0) {
+                    const ratio = e.calories / targetCal
+                    dotColor = ratio >= 0.9 && ratio <= 1.1 ? 'var(--pos)' : ratio <= 1.2 ? 'var(--c-fin)' : 'var(--neg)'
+                  }
+                  const label = new Date(d + 'T00:00:00').toLocaleDateString('pt-PT', { weekday: 'narrow' })
+                  return (
+                    <div key={d} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                      <span style={{ fontSize: 9, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)' }}>{label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginBottom: 6 }}>
+                <span style={{ color: onTargetDays >= 5 ? 'var(--pos)' : 'var(--c-fin)', fontWeight: 600 }}>{onTargetDays}</span>
+                {L('/7 dias dentro do objetivo', '/7 days on target')}
+              </div>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
+                  {L('Média:', 'Avg:')} <span className="tnum" style={{ color: 'var(--ink-dim)', fontWeight: 500 }}>{weekly7d.avgCalories} kcal</span>
+                  {' '}/ {targetCal} kcal
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--ink-faint)' }}>
+                  {L('Prot:', 'Prot:')} <span className="tnum" style={{ color: 'var(--c-health)', fontWeight: 500 }}>{weekly7d.avgProtein}g</span>
+                  {' '}/ {profile?.target_protein_g ?? 170}g
+                </div>
+              </div>
+            </div>
+
+            {/* AI tip */}
+            {tipLoading ? (
+              <div style={{ background: 'var(--bg-inset)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Icon name="wand" size={13} />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-cal)', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                  ))}
+                </div>
+              </div>
+            ) : tip ? (
+              <div style={{ background: 'var(--bg-inset)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <span style={{ color: 'var(--c-cal)', flexShrink: 0, marginTop: 1 }}><Icon name="wand" size={13} /></span>
+                <span style={{ fontSize: 13, color: 'var(--ink-dim)', fontStyle: 'italic', lineHeight: 1.5 }}>{tip}</span>
+              </div>
+            ) : null}
+          </div>
+        )
+      })()}
 
       {showLogWeight && (
         <LogWeightModal

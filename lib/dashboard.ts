@@ -4,6 +4,7 @@ export type WidgetId =
   | "net" | "tasks" | "assets" | "debt" | "budget"
   | "ai" | "weather" | "health" | "focus" | "habits" | "notes"
   | "finance_overview" | "upcoming" | "streak" | "quick_note" | "ai_insight"
+  | "nutrition"
 
 export type GridItem = {
   id: WidgetId
@@ -32,6 +33,7 @@ export const DEFAULT_LAYOUT: Layout = {
   streak:           { x: 0, y: 12, w: 2, h: 1 },
   quick_note:       { x: 2, y: 12, w: 2, h: 2 },
   ai_insight:       { x: 4, y: 12, w: 1, h: 2 },
+  nutrition:        { x: 2, y: 14, w: 2, h: 2 },
 }
 
 export function hasCollision(
@@ -105,6 +107,7 @@ export const ALL_WIDGETS: {
   { id: "streak",           label: "Streak Counter",   color: "var(--c-health)", glyph: "flame",         description: "Current training and habit streaks"            },
   { id: "quick_note",       label: "Quick Note",       color: "var(--c-task)",   glyph: "note",          description: "Instant note capture widget"                   },
   { id: "ai_insight",       label: "AI Insight",       color: "var(--c-task)",   glyph: "wand",          description: "Daily AI observation about your data"          },
+  { id: "nutrition",        label: "Nutrition",        color: "var(--c-cal)",    glyph: "activity",      description: "Today's calories and macros"                   },
 ]
 
 const LAYOUT_KEY = "braosa-layout"
