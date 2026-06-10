@@ -22,14 +22,16 @@ import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { TaskStore } from "@/lib/task-store"
 import { NoteStore } from "@/lib/note-store"
 import { FinanceStore } from "@/lib/finance-store"
+import { ContactStore } from "@/lib/contact-store"
 import GoogleConnectPrompt from "@/components/google/GoogleConnectPrompt"
 
-const DashboardPage = dynamic(() => import("./dashboard/page"), { ssr: false })
-const FinancesPage  = dynamic(() => import("./finances/page"),  { ssr: false })
-const TasksPage     = dynamic(() => import("./tasks/page"),     { ssr: false })
-const NotesPage     = dynamic(() => import("./notes/page"),     { ssr: false })
-const AIPage        = dynamic(() => import("./ai/page"),        { ssr: false })
-const HealthPage    = dynamic(() => import("./health/page"),    { ssr: false })
+const DashboardPage  = dynamic(() => import("./dashboard/page"),  { ssr: false })
+const FinancesPage   = dynamic(() => import("./finances/page"),   { ssr: false })
+const TasksPage      = dynamic(() => import("./tasks/page"),      { ssr: false })
+const NotesPage      = dynamic(() => import("./notes/page"),      { ssr: false })
+const AIPage         = dynamic(() => import("./ai/page"),         { ssr: false })
+const HealthPage     = dynamic(() => import("./health/page"),     { ssr: false })
+const ContactsPage   = dynamic(() => import("./contacts/page"),   { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -85,6 +87,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "notes":     return <NotesPage />
     case "ai":        return <AIPage />
     case "health":    return <HealthPage />
+    case "contacts":  return <ContactsPage />
     default:          return <ComingOnlinePage id={active} />
   }
 }
@@ -145,6 +148,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     TaskStore.fetch()
     NoteStore.fetch()
     FinanceStore.fetch()
+    ContactStore.fetch()
     refreshGoogleStatus()
 
     // Background bank sync if any connection is stale (> 4 hours)
