@@ -7,6 +7,7 @@ import { getUser, type OSUser } from "@/lib/user"
 import { getLang, setLang, type Lang } from "@/lib/i18n"
 import { getLockPassword, setLockPassword } from "@/lib/lockscreen"
 import { useTweaks } from "@/lib/tweaks"
+import GoogleConnectionSection from "./GoogleConnectionSection"
 
 type Props = {
   open: boolean
@@ -372,6 +373,9 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
             </button>
           </div>
         </div>
+
+        {/* Google */}
+        <GoogleConnectionSection open={open} />
 
         {/* Account */}
         <div style={{ padding: 20, borderTop: "1px solid var(--edge-soft)" }}>

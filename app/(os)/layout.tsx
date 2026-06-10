@@ -22,6 +22,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { TaskStore } from "@/lib/task-store"
 import { NoteStore } from "@/lib/note-store"
 import { FinanceStore } from "@/lib/finance-store"
+import GoogleConnectPrompt from "@/components/google/GoogleConnectPrompt"
 
 const DashboardPage = dynamic(() => import("./dashboard/page"), { ssr: false })
 const FinancesPage  = dynamic(() => import("./finances/page"),  { ssr: false })
@@ -60,9 +61,23 @@ function ComingOnlinePage({ id }: { id: string }) {
   )
 }
 
+// ─── Google tab metadata ─────────────────────────────────────────────────────
+
+const GOOGLE_TAB_META: Record<string, { tabName: string; description: string; icon: string; color: string }> = {
+  email:    { tabName: "Mail",     description: "Acede ao teu Gmail diretamente no BraosaOS.",  icon: "mail",  color: "var(--c-mail)"  },
+  calendar: { tabName: "Calendar", description: "Vê e gere o teu Google Calendar.",              icon: "cal",   color: "var(--c-cal)"   },
+  contacts: { tabName: "Contacts", description: "Os teus contactos Google num CRM pessoal.",     icon: "users", color: "var(--c-task)"  },
+  drive:    { tabName: "Drive",    description: "Acede aos teus ficheiros do Google Drive.",     icon: "file",  color: "var(--c-fin)"   },
+}
+
 // ─── renderActive ────────────────────────────────────────────────────────────
 
-function renderActive(active: string) {
+function renderActive(active: string, googleConnected: boolean | null) {
+  const googleMeta = GOOGLE_TAB_META[active]
+  if (googleMeta && googleConnected === false) {
+    return <GoogleConnectPrompt {...googleMeta} />
+  }
+
   switch (active) {
     case "dashboard": return <DashboardPage />
     case "finances":  return <FinancesPage />
@@ -91,11 +106,15 @@ export function useLock(): LockContextValue {
 interface NavigationContextValue {
   active: string
   navigate: (id: string) => void
+  googleConnected: boolean | null
+  refreshGoogleStatus: () => void
 }
 
 export const NavigationContext = createContext<NavigationContextValue>({
   active: "dashboard",
   navigate: () => {},
+  googleConnected: null,
+  refreshGoogleStatus: () => {},
 })
 
 export function useNavigation(): NavigationContextValue {
@@ -109,7 +128,15 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   const [active, setActive] = useState("dashboard")
   const [user, setUser] = useState<OSUser | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+
+  const refreshGoogleStatus = useCallback(() => {
+    fetch('/api/google/status')
+      .then(r => r.json())
+      .then(d => setGoogleConnected(d.connected ?? false))
+      .catch(() => setGoogleConnected(false))
+  }, [])
 
   useEffect(() => {
     setLocked(isLocked())
@@ -118,6 +145,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     TaskStore.fetch()
     NoteStore.fetch()
     FinanceStore.fetch()
+    refreshGoogleStatus()
 
     // Background bank sync if any connection is stale (> 4 hours)
     fetch('/api/bank/connections')
@@ -166,7 +194,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
 
   return (
     <LockContext.Provider value={{ lock: doLock }}>
-      <NavigationContext.Provider value={{ active, navigate }}>
+      <NavigationContext.Provider value={{ active, navigate, googleConnected, refreshGoogleStatus }}>
         <div
           style={{
             display: "flex",
@@ -191,7 +219,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}
           >
             <ErrorBoundary>
-              {renderActive(active)}
+              {renderActive(active, googleConnected)}
             </ErrorBoundary>
           </div>
           <BottomNav />
