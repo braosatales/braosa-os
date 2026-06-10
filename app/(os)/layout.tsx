@@ -33,6 +33,7 @@ const AIPage         = dynamic(() => import("./ai/page"),         { ssr: false }
 const HealthPage     = dynamic(() => import("./health/page"),     { ssr: false })
 const ContactsPage   = dynamic(() => import("./contacts/page"),   { ssr: false })
 const MailPage       = dynamic(() => import("./mail/page"),       { ssr: false })
+const CalendarShell  = dynamic(() => import("@/components/calendar/CalendarShell"), { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "health":    return <HealthPage />
     case "contacts":  return <ContactsPage />
     case "email":     return <MailPage />
+    case "calendar":  return <CalendarShell />
     default:          return <ComingOnlinePage id={active} />
   }
 }
