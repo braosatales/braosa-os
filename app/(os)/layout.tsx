@@ -34,6 +34,7 @@ const HealthPage     = dynamic(() => import("./health/page"),     { ssr: false }
 const ContactsPage   = dynamic(() => import("./contacts/page"),   { ssr: false })
 const MailPage       = dynamic(() => import("./mail/page"),       { ssr: false })
 const CalendarShell  = dynamic(() => import("@/components/calendar/CalendarShell"), { ssr: false })
+const DriveShell     = dynamic(() => import("@/components/drive/DriveShell"),     { ssr: false })
 
 // ─── ComingOnlinePage ────────────────────────────────────────────────────────
 
@@ -92,6 +93,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "contacts":  return <ContactsPage />
     case "email":     return <MailPage />
     case "calendar":  return <CalendarShell />
+    case "drive":     return <DriveShell />
     default:          return <ComingOnlinePage id={active} />
   }
 }

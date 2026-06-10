@@ -1,4 +1,5 @@
 import { createServiceClient } from './supabase/service'
+import { googleFetch } from './google'
 
 function getWeekStart(date: Date): string {
   const d = new Date(date)
@@ -31,6 +32,7 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
     notesRes,
     habitsRes,
     sessionsRes,
+    driveCacheRes,
   ] = await Promise.all([
     supabase.from('users').select('name, email').eq('id', userId).single(),
     supabase.from('workout_profiles').select('goal, experience_level, equipment').eq('user_id', userId).maybeSingle(),
@@ -42,6 +44,7 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
     supabase.from('notes').select('title').eq('user_id', userId).eq('archived', false).order('updated_at', { ascending: false }).limit(5),
     supabase.from('habits').select('name, streak').eq('user_id', userId).eq('archived', false),
     supabase.from('workout_sessions').select('name, started_at').eq('user_id', userId).order('started_at', { ascending: false }).limit(3),
+    supabase.from('drive_folder_cache').select('root_id, folder_id').eq('user_id', userId),
   ])
 
   const user = userRes.data
@@ -66,6 +69,32 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
   const completedSessions = (plan?.planned_sessions as { status: string }[] | null)?.filter(s => s.status === 'completed').length ?? 0
   const isCurrentWeek = plan?.week_start === weekStart
   const lastSession = sessions[0]
+
+  // Drive context — fetch recent files from resolved roots
+  const driveCache = driveCacheRes.data ?? []
+  const driveSections: string[] = []
+  await Promise.all(
+    driveCache.map(async (row: any) => {
+      const rootId = row.root_id as string
+      const folderId = row.folder_id as string
+      const label = rootId === 'rrr' ? 'RRR (Research Repository)' : 'Braosa Universe'
+      try {
+        const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`)
+        const fields = encodeURIComponent('files(name,modifiedTime)')
+        const data = await googleFetch(
+          userId,
+          `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&orderBy=modifiedTime desc&pageSize=20`
+        )
+        const files: { name: string; modifiedTime: string }[] = data.files ?? []
+        if (files.length > 0) {
+          const names = files.map(f => f.name).join(', ')
+          driveSections.push(`${label} — ${files.length} files, recently modified: ${names}`)
+        }
+      } catch {
+        // ignore if Drive not accessible
+      }
+    })
+  )
 
   const dayOfWeek = today.toLocaleDateString('pt-PT', { weekday: 'long' })
   const dateStr = today.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -99,7 +128,11 @@ ${habits.length > 0 ? habits.map(h => `- ${h.name as string}: ${(h.streak as num
 ## Recent Notes
 ${notes.length > 0 ? notes.map(n => `- ${(n.title as string | null) || 'Untitled'}`).join('\n') : '- No recent notes'}
 
-## Your role
+${driveSections.length > 0 ? `## Your Drive Files
+${driveSections.join('\n')}
+Note: If the user asks about specific file content, tell them to open it in the Drive tab.
+
+` : ''}## Your role
 - Be concise and direct — this is a command center, not a chatbot
 - Give actionable advice based on real data above
 - When asked about finances, reference actual numbers
