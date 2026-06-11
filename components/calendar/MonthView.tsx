@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useLang } from '@/lib/i18n'
 import type { CalendarEvent } from '@/lib/calendar'
 import { formatEventTime } from '@/lib/calendar'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type Props = {
   date: Date
@@ -25,6 +26,7 @@ function getEventStartDate(e: CalendarEvent): Date {
 
 export default function MonthView({ date, events, onEventClick, onDayClick }: Props) {
   const lang = useLang()
+  const isMobile = useIsMobile()
   const today = new Date()
   today.setHours(0,0,0,0)
 
@@ -82,8 +84,9 @@ export default function MonthView({ date, events, onEventClick, onDayClick }: Pr
           const isToday = isSameDay(day, today)
           const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`
           const dayEvents = eventsByDay.get(key) ?? []
-          const visible = dayEvents.slice(0, 3)
-          const overflow = dayEvents.length - 3
+          const maxVisible = isMobile ? 2 : 3
+          const visible = dayEvents.slice(0, maxVisible)
+          const overflow = dayEvents.length - maxVisible
 
           return (
             <div

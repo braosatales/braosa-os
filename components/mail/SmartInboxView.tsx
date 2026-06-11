@@ -53,7 +53,7 @@ function ThreadRow({
       className="task-row"
       style={{
         display: 'flex', gap: 12, padding: '12px 16px', cursor: 'pointer',
-        borderRadius: 8, margin: '0 0 2px',
+        borderRadius: 8, margin: '0 0 2px', minHeight: 64,
         background: selected ? 'color-mix(in oklab, var(--c-task) 10%, transparent)' : 'transparent',
         borderLeft: selected ? '3px solid var(--c-task)' : '3px solid transparent',
         transition: 'background .12s',
@@ -61,7 +61,7 @@ function ThreadRow({
     >
       {/* Avatar */}
       <div style={{
-        width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
         background: 'color-mix(in oklab, var(--c-mail) 18%, var(--bg-raised-2))',
         border: '1px solid color-mix(in oklab, var(--c-mail) 28%, transparent)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',

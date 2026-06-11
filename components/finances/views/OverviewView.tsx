@@ -5,6 +5,7 @@ import { relativeTime } from '@/lib/date'
 import { useFinanceStore } from '@/lib/finance-store'
 import { Icon, Ring, Sparkline, EmptyState } from '@/components/ui'
 import type { IconName } from '@/lib/icons'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 function categoryIcon(cat: string | null): IconName {
   if (!cat) return 'bank'
@@ -35,13 +36,14 @@ function SkeletonTxRow() {
 
 export default function OverviewView() {
   useLang()
+  const isMobile = useIsMobile()
   const { data, loading } = useFinanceStore()
 
   if (loading && !data) {
     return (
       <div className="ov-split">
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 24 }}>
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
           </div>
           <SkeletonTxRow /><SkeletonTxRow /><SkeletonTxRow />
@@ -67,7 +69,7 @@ export default function OverviewView() {
       {/* Left column */}
       <div>
         {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 14, marginBottom: 24 }}>
           {[
             { label: L('Patrimônio', 'Net Worth'), value: fmt.eurk(totals.netWorth), color: 'var(--ink)' },
             { label: L('Ativos', 'Assets'), value: fmt.eurk(totals.totalAssets), color: 'var(--pos)' },

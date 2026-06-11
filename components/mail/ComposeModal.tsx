@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { Icon, Modal } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useKeyboardHeight } from '@/lib/hooks/useKeyboardHeight'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type Props = {
   open: boolean
@@ -11,6 +13,8 @@ type Props = {
 
 export default function ComposeModal({ open, onClose }: Props) {
   useLang()
+  const isMobile = useIsMobile()
+  const keyboardHeight = useKeyboardHeight()
   const [to, setTo] = useState('')
   const [toTags, setToTags] = useState<string[]>([])
   const [cc, setCc] = useState('')
@@ -283,8 +287,9 @@ export default function ComposeModal({ open, onClose }: Props) {
             rows={8}
             style={{
               ...inputStyle,
-              resize: 'vertical',
-              minHeight: 200,
+              resize: isMobile ? 'none' : 'vertical',
+              minHeight: isMobile ? `calc(30vh - ${keyboardHeight}px)` : 200,
+              flex: isMobile ? 1 : undefined,
               lineHeight: 1.6,
             }}
           />

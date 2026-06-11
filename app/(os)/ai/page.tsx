@@ -6,6 +6,7 @@ import { useLang } from '@/lib/i18n'
 import { relativeTime } from '@/lib/date'
 import { getUser } from '@/lib/user'
 import { useNavigation } from '@/app/(os)/layout'
+import { useKeyboardHeight } from '@/lib/hooks/useKeyboardHeight'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -93,6 +94,7 @@ function detectActions(text: string, lang: string): { label: string; target: str
 export default function AIPage() {
   const lang = useLang()
   const { navigate } = useNavigation()
+  const keyboardHeight = useKeyboardHeight()
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
@@ -331,7 +333,7 @@ export default function AIPage() {
                     : 'Sou o Braosa, o teu assistente pessoal. Tenho acesso a tudo no teu OS.'}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 420 }}>
+              <div style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', gap: 8, justifyContent: isMobile ? 'flex-start' : 'center', maxWidth: isMobile ? '100%' : 420, overflowX: isMobile ? 'auto' : 'visible', width: '100%', paddingBottom: isMobile ? 4 : 0 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} className="btn" onClick={() => sendText(s)} style={{ fontSize: 12.5, padding: '7px 13px' }}>
                     {s}
@@ -411,7 +413,7 @@ export default function AIPage() {
         </div>
 
         {/* Input */}
-        <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '12px 18px', flexShrink: 0 }}>
+        <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '12px 18px', flexShrink: 0, paddingBottom: isMobile && keyboardHeight > 0 ? 12 + keyboardHeight : 12 }}>
           {input.length > 200 && (
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', textAlign: 'right', marginBottom: 4 }}>
               {input.length} chars
@@ -453,7 +455,7 @@ export default function AIPage() {
               onClick={handleSend}
               disabled={!input.trim() || loading}
               style={{
-                width: 40, height: 40,
+                width: isMobile ? 44 : 40, height: isMobile ? 44 : 40,
                 background: 'var(--c-task-dim)',
                 border: '1px solid var(--c-task)',
                 borderRadius: 'var(--radius-sm)',

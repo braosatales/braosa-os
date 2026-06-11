@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { Modal, Icon, EmptyState } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { fmt } from '@/lib/fmt'
 import { formatDate } from '@/lib/date'
 import type { VerumProject, VerumFinancial } from '@/lib/verum'
@@ -208,6 +209,7 @@ function AddFinancialModal({
 
 export default function FinancialsView() {
   useLang()
+  const isMobile = useIsMobile()
   const [data, setData] = useState<FinancialsData | null>(null)
   const [projects, setProjects] = useState<VerumProject[]>([])
   const [loading, setLoading] = useState(true)
@@ -290,7 +292,7 @@ export default function FinancialsView() {
       {loading ? (
         <div style={{ color: 'var(--ink-faint)', fontSize: 13 }}>{L('A carregar…', 'Loading…')}</div>
       ) : (
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap', flexDirection: isMobile ? 'column-reverse' : 'row' }}>
           {/* Left column — entries */}
           <div style={{ flex: '1 1 380px', minWidth: 0 }}>
             {/* Period selector */}

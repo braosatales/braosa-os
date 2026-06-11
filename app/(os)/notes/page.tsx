@@ -8,11 +8,13 @@ import NoteCard from '@/components/notes/NoteCard'
 import NoteModal from '@/components/notes/NoteModal'
 import { L } from '@/lib/i18n'
 import type { Note } from '@/lib/notes'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type ViewMode = 'grid' | 'list'
 
 export default function NotesPage() {
   const { notes, loading } = useNoteStore()
+  const isMobile = useIsMobile()
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
@@ -33,8 +35,8 @@ export default function NotesPage() {
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: 14,
+    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))',
+    gap: isMobile ? 10 : 14,
   }
   const listStyle: React.CSSProperties = {
     display: 'flex',

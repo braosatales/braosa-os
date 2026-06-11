@@ -5,6 +5,8 @@ import type { DriveFile } from "@/lib/drive"
 import { Icon } from "@/components/ui"
 import { useLang } from "@/lib/i18n"
 import { relativeTime } from "@/lib/date"
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 
 type Props = {
   file: DriveFile
@@ -77,6 +79,8 @@ function insertWrapped(textarea: HTMLTextAreaElement, prefix: string, suffix: st
 
 export default function FileEditor({ file, onClose, onSaved }: Props) {
   const lang = useLang()
+  const isMobile = useIsMobile()
+  const keyboardHeight = useKeyboardHeight()
   const [content, setContent] = useState("")
   const [savedContent, setSavedContent] = useState("")
   const [loading, setLoading] = useState(true)
@@ -172,7 +176,7 @@ export default function FileEditor({ file, onClose, onSaved }: Props) {
   ]
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--bg-base)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--bg-base)", paddingBottom: keyboardHeight }}>
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
@@ -227,6 +231,7 @@ export default function FileEditor({ file, onClose, onSaved }: Props) {
       <div style={{
         display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
         borderBottom: "1px solid var(--edge-soft)", flexShrink: 0,
+        overflowX: isMobile ? "auto" : "visible", flexWrap: "nowrap",
       }}>
         {(["edit", "preview"] as const).map(m => (
           <button

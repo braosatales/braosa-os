@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts'
 import { Icon, EmptyState } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { fmt } from '@/lib/fmt'
 import { KPI_META } from '@/lib/braosa'
 import { useBraosa } from '../BraosaShell'
@@ -183,6 +184,7 @@ function MiniChart({ data, color, title }: { data: { date: string; value: number
 
 export default function DashboardView() {
   useLang()
+  const isMobile = useIsMobile()
   const { navigateTo } = useBraosa()
   const [latest, setLatest] = useState<LatestMap>({})
   const [history, setHistory] = useState<HistoryMap>({})
@@ -244,8 +246,8 @@ export default function DashboardView() {
           {/* KPI Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: isMobile ? 10 : 14,
             marginBottom: 24,
           }}>
             {Object.entries(latest).map(([metric, info]) => (

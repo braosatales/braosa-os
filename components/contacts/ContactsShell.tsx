@@ -521,13 +521,13 @@ export default function ContactsShell() {
                 onClick={() => setSelectedId(c.id)}
                 style={{
                   display: 'flex', gap: 12, padding: '10px 14px', cursor: 'pointer',
-                  borderRadius: 8, margin: '0 6px 2px',
+                  borderRadius: 8, margin: '0 6px 2px', minHeight: 56,
                   background: active ? 'color-mix(in oklab, var(--c-task) 10%, transparent)' : 'transparent',
                   borderLeft: active ? '2px solid var(--c-task)' : '2px solid transparent',
                   transition: 'background .12s',
                 }}
               >
-                <Avatar contact={c} size={38} />
+                <Avatar contact={c} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--ink)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {getContactDisplayName(c)}

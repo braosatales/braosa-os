@@ -6,6 +6,7 @@ import { dueLabel } from '@/lib/date'
 import { L, useLang } from '@/lib/i18n'
 import { Icon, FavStar, Chip } from '@/components/ui'
 import { TaskStore } from '@/lib/task-store'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type SortKey = 'priority' | 'due' | 'title' | 'fav' | 'created_at'
 type SortDir = 'asc' | 'desc'
@@ -43,6 +44,7 @@ function SortHeader({ label, sortKey, active, dir, onClick }: { label: string; s
 
 export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }: Props) {
   useLang()
+  const isMobile = useIsMobile()
   const projects = TaskStore.getProjects()
   const [sortKey, setSortKey] = useState<SortKey>('priority')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -100,32 +102,35 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid var(--edge-soft)', flexShrink: 0 }}>
-        <span style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
-          {L("AGRUPAR", "GROUP")}
-        </span>
-        {(['none', 'project', 'system'] as GroupBy[]).map(g => (
-          <button
-            key={g}
-            type="button"
-            onClick={() => setGroupBy(g)}
-            style={{ fontSize: 11.5, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--edge-soft)', cursor: 'pointer', background: groupBy === g ? 'var(--c-task-dim)' : 'transparent', color: groupBy === g ? 'var(--c-task)' : 'var(--ink-faint)', transition: 'all .12s' }}
-          >
-            {g === 'none' ? L('Nenhum', 'None') : g === 'project' ? L('Projeto', 'Project') : L('Sistema', 'System')}
-          </button>
-        ))}
-      </div>
-
-      {/* Header row */}
-      <div style={{ display: 'grid', gridTemplateColumns: COL, gap: 8, padding: '8px 16px', borderBottom: '1px solid var(--edge)', flexShrink: 0 }}>
-        <div />
-        <SortHeader label={L("TÍTULO", "TITLE")} sortKey="title" active={sortKey === 'title'} dir={sortDir} onClick={() => handleSort('title')} />
-        <SortHeader label={L("PROJETO", "PROJECT")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
-        <SortHeader label={L("SISTEMA", "SYSTEM")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
-        <SortHeader label={L("PRIORIDADE", "PRIORITY")} sortKey="priority" active={sortKey === 'priority'} dir={sortDir} onClick={() => handleSort('priority')} />
-        <SortHeader label={L("DATA", "DUE")} sortKey="due" active={sortKey === 'due'} dir={sortDir} onClick={() => handleSort('due')} />
-        <SortHeader label="★" sortKey="fav" active={sortKey === 'fav'} dir={sortDir} onClick={() => handleSort('fav')} />
-      </div>
+      {!isMobile && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid var(--edge-soft)', flexShrink: 0 }}>
+            <span style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
+              {L("AGRUPAR", "GROUP")}
+            </span>
+            {(['none', 'project', 'system'] as GroupBy[]).map(g => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setGroupBy(g)}
+                style={{ fontSize: 11.5, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--edge-soft)', cursor: 'pointer', background: groupBy === g ? 'var(--c-task-dim)' : 'transparent', color: groupBy === g ? 'var(--c-task)' : 'var(--ink-faint)', transition: 'all .12s' }}
+              >
+                {g === 'none' ? L('Nenhum', 'None') : g === 'project' ? L('Projeto', 'Project') : L('Sistema', 'System')}
+              </button>
+            ))}
+          </div>
+          {/* Header row */}
+          <div style={{ display: 'grid', gridTemplateColumns: COL, gap: 8, padding: '8px 16px', borderBottom: '1px solid var(--edge)', flexShrink: 0 }}>
+            <div />
+            <SortHeader label={L("TÍTULO", "TITLE")} sortKey="title" active={sortKey === 'title'} dir={sortDir} onClick={() => handleSort('title')} />
+            <SortHeader label={L("PROJETO", "PROJECT")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
+            <SortHeader label={L("SISTEMA", "SYSTEM")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
+            <SortHeader label={L("PRIORIDADE", "PRIORITY")} sortKey="priority" active={sortKey === 'priority'} dir={sortDir} onClick={() => handleSort('priority')} />
+            <SortHeader label={L("DATA", "DUE")} sortKey="due" active={sortKey === 'due'} dir={sortDir} onClick={() => handleSort('due')} />
+            <SortHeader label="★" sortKey="fav" active={sortKey === 'fav'} dir={sortDir} onClick={() => handleSort('fav')} />
+          </div>
+        </>
+      )}
 
       {/* Rows */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -141,6 +146,47 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
               const isDone = task.status === 'done'
               const proj = projects.find(p => p.id === task.project_id)
               const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
+
+              if (isMobile) {
+                return (
+                  <div
+                    key={task.id}
+                    onClick={() => onSelect(task)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '12px 16px', margin: '0 8px 6px',
+                      background: 'var(--bg-raised)', border: '1px solid var(--edge)',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); onToggleDone(task.id, e) }}
+                      style={{
+                        width: 19, height: 19, borderRadius: 6, border: isDone ? 'none' : '1.5px solid var(--edge)',
+                        background: isDone ? 'var(--pos)' : 'transparent',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white', flexShrink: 0,
+                      }}
+                    >
+                      {isDone && <Icon name="check" size={11} stroke={3} />}
+                    </button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, color: isDone ? 'var(--ink-faint)' : 'var(--ink-soft)', textDecoration: isDone ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {task.title}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                        <PriorityBadge p={task.priority} />
+                        {proj && <span style={{ fontSize: 10, color: 'var(--ink-faint)' }}>{proj.name}</span>}
+                        {dl && <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: dl.over ? 'var(--neg)' : 'var(--ink-faint)' }}>{dl.text}</span>}
+                      </div>
+                    </div>
+                    <span onClick={e => e.stopPropagation()}>
+                      <FavStar on={task.fav} onClick={() => onToggleFav(task.id)} size={13} />
+                    </span>
+                  </div>
+                )
+              }
 
               return (
                 <div

@@ -9,6 +9,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { Modal, Icon, EmptyState } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { fmt } from '@/lib/fmt'
 import { formatDate } from '@/lib/date'
 import {
@@ -604,6 +605,7 @@ function ProjectFormModal({
 
 export default function ProjectsView() {
   useLang()
+  const isMobile = useIsMobile()
   const [projects, setProjects] = useState<ProjectWithCounts[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -684,7 +686,7 @@ export default function ProjectsView() {
           subtitle={L('Cria o teu primeiro projeto.', 'Create your first project.')}
         />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
           {projects.map(p => (
             <ProjectCard
               key={p.id}

@@ -5,6 +5,7 @@ import { L, useLang } from '@/lib/i18n'
 import { TaskStore } from '@/lib/task-store'
 import type { TaskStatus, TaskPriority } from '@/lib/tasks'
 import { SYSTEMS, COMPANIES } from '@/lib/constants'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type Props = {
   open: boolean
@@ -19,6 +20,8 @@ const ALL_SYSTEMS = [
 
 export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: Props) {
   useLang()
+  const isMobile = useIsMobile()
+  const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [due, setDue] = useState('')
@@ -74,42 +77,58 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
           style={{ width: '100%', fontSize: 15, fontWeight: 500, border: 'none', borderBottom: '1px solid var(--edge)', background: 'transparent', color: 'var(--ink)', padding: '6px 0', outline: 'none', fontFamily: 'inherit' }}
         />
 
-        {/* Description */}
-        <textarea
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder={L("Descrição (opcional)…", "Description (optional)…")}
-          rows={2}
-          style={{ width: '100%', fontSize: 13, border: 'none', borderBottom: '1px solid var(--edge-soft)', background: 'transparent', color: 'var(--ink-dim)', padding: '4px 0', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
-        />
-
-        {/* Due + System row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
-              {L("DATA LIMITE", "DUE DATE")}
-            </label>
-            <input
-              type="date"
-              value={due}
-              onChange={e => setDue(e.target.value)}
-              style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
-              {L("SISTEMA", "SYSTEM")}
-            </label>
-            <select
-              value={system}
-              onChange={e => setSystem(e.target.value)}
-              style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: system ? 'var(--ink)' : 'var(--ink-faint)', outline: 'none', fontFamily: 'inherit' }}
-            >
-              <option value="">—</option>
-              {ALL_SYSTEMS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
-          </div>
+        {/* Due date (always visible) */}
+        <div>
+          <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
+            {L("DATA LIMITE", "DUE DATE")}
+          </label>
+          <input
+            type="date"
+            value={due}
+            onChange={e => setDue(e.target.value)}
+            style={{ width: '100%', fontSize: isMobile ? 16 : 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
+          />
         </div>
+
+        {/* More options toggle on mobile */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={() => setShowMoreOptions(m => !m)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--ink-dim)', textAlign: 'left', padding: 0 }}
+          >
+            {showMoreOptions ? L('▲ Menos opções', '▲ Fewer options') : L('▼ Mais opções', '▼ More options')}
+          </button>
+        )}
+
+        {/* Extended options: hidden on mobile until toggled */}
+        {(!isMobile || showMoreOptions) && (
+          <>
+            {/* Description */}
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder={L("Descrição (opcional)…", "Description (optional)…")}
+              rows={2}
+              style={{ width: '100%', fontSize: 13, border: 'none', borderBottom: '1px solid var(--edge-soft)', background: 'transparent', color: 'var(--ink-dim)', padding: '4px 0', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+            />
+
+            {/* System */}
+            <div>
+              <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
+                {L("SISTEMA", "SYSTEM")}
+              </label>
+              <select
+                value={system}
+                onChange={e => setSystem(e.target.value)}
+                style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: system ? 'var(--ink)' : 'var(--ink-faint)', outline: 'none', fontFamily: 'inherit' }}
+              >
+                <option value="">—</option>
+                {ALL_SYSTEMS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </div>
+          </>
+        )}
 
         {/* Priority */}
         <div>

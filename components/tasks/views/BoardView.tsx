@@ -7,6 +7,7 @@ import { L, useLang } from '@/lib/i18n'
 import { Icon, FavStar } from '@/components/ui'
 import { TaskStore } from '@/lib/task-store'
 import AddTaskModal from '@/components/tasks/AddTaskModal'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 const COLUMNS: { id: TaskStatus; color: string; labelPt: string; labelEn: string }[] = [
   { id: 'todo',  color: 'var(--c-task)', labelPt: 'A Fazer',      labelEn: 'To Do'       },
@@ -26,11 +27,13 @@ function PriorityBadge({ p }: { p: number }) {
 
 export default function BoardView({ tasks, onSelect }: Props) {
   useLang()
+  const isMobile = useIsMobile()
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [draggingFrom, setDraggingFrom] = useState<TaskStatus | null>(null)
   const [ghostPos, setGhostPos] = useState({ x: 0, y: 0 })
   const [overColumn, setOverColumn] = useState<TaskStatus | null>(null)
   const [addForStatus, setAddForStatus] = useState<TaskStatus | null>(null)
+  const [moveSheetTask, setMoveSheetTask] = useState<Task | null>(null)
 
   useEffect(() => {
     if (!draggingId) return
@@ -58,7 +61,54 @@ export default function BoardView({ tasks, onSelect }: Props) {
   const ghostTask = draggingId ? tasks.find(t => t.id === draggingId) : null
 
   return (
-    <div style={{ display: 'flex', gap: 16, padding: 20, overflowX: 'auto', height: '100%', alignItems: 'flex-start' }}>
+    <div style={{
+      display: 'flex',
+      gap: 16,
+      padding: 20,
+      overflowX: 'auto',
+      height: '100%',
+      alignItems: 'flex-start',
+      ...(isMobile ? { scrollSnapType: 'x mandatory' } : {}),
+    }}>
+      {/* Mobile move bottom sheet */}
+      {isMobile && moveSheetTask && (
+        <div
+          onClick={() => setMoveSheetTask(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'oklch(0 0 0 / 0.5)' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              background: 'var(--bg-raised)', borderRadius: '16px 16px 0 0',
+              padding: '20px 20px 32px',
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 16 }}>
+              {L('Mover para...', 'Move to...')}
+            </div>
+            {COLUMNS.filter(c => c.id !== moveSheetTask.status).map(col => (
+              <button
+                key={col.id}
+                onClick={() => {
+                  TaskStore.updateTask(moveSheetTask.id, { status: col.id })
+                  setMoveSheetTask(null)
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  width: '100%', padding: '14px 0', background: 'none', border: 'none',
+                  borderBottom: '1px solid var(--edge-soft)', cursor: 'pointer',
+                  fontSize: 14, color: col.color, fontWeight: 500,
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color }} />
+                {L(col.labelPt, col.labelEn)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {COLUMNS.map(col => {
         const colTasks = tasks.filter(t => t.status === col.id)
         const isOver = draggingId && overColumn === col.id && draggingFrom !== col.id
@@ -66,7 +116,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
         return (
           <div
             key={col.id}
-            style={{ flex: '0 0 280px', display: 'flex', flexDirection: 'column' }}
+            style={{ flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column', ...(isMobile ? { scrollSnapAlign: 'start' } : {}) }}
             onPointerEnter={() => { if (draggingId) setOverColumn(col.id) }}
           >
             {/* Column header */}
@@ -96,7 +146,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
                   <div
                     key={task.id}
                     onClick={() => { if (!draggingId) onSelect(task) }}
-                    onPointerDown={e => {
+                    onPointerDown={isMobile ? undefined : e => {
                       setDraggingId(task.id)
                       setDraggingFrom(task.status)
                       setOverColumn(task.status)
@@ -127,9 +177,19 @@ export default function BoardView({ tasks, onSelect }: Props) {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <PriorityBadge p={task.priority} />
-                      <span onClick={e => { e.stopPropagation() }}>
-                        <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {isMobile && (
+                          <button
+                            onClick={e => { e.stopPropagation(); setMoveSheetTask(task) }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: '2px 4px', fontSize: 14 }}
+                          >
+                            •••
+                          </button>
+                        )}
+                        <span onClick={e => { e.stopPropagation() }}>
+                          <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
+                        </span>
+                      </div>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4, marginTop: 6 }}>
                       {task.title}

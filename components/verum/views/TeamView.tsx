@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Modal, Icon, EmptyState } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { fmt } from '@/lib/fmt'
 import { formatDate } from '@/lib/date'
 import type { VerumTeamMember } from '@/lib/verum'
@@ -230,6 +231,7 @@ function TeamMemberFormModal({
 
 export default function TeamView() {
   useLang()
+  const isMobile = useIsMobile()
   const [members, setMembers] = useState<VerumTeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [deptFilter, setDeptFilter] = useState('all')
@@ -330,7 +332,7 @@ export default function TeamView() {
       ) : (
         <>
           {filteredActive.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
               {filteredActive.map(m => (
                 <MemberCard
                   key={m.id}
@@ -361,7 +363,7 @@ export default function TeamView() {
               </button>
               {showInactive && (
                 <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                  display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))',
                   gap: 14, marginTop: 12, opacity: 0.6,
                 }}>
                   {inactiveMembers.map(m => (

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 import { Icon, EmptyState } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { fmt } from '@/lib/fmt'
 import { formatDate } from '@/lib/date'
 import type { VerumMilestone, VerumFinancial } from '@/lib/verum'
@@ -50,6 +51,7 @@ function KpiCard({ value, label, sub, color }: { value: string; label: string; s
 
 export default function DashboardView() {
   useLang()
+  const isMobile = useIsMobile()
   const { navigateTo } = useVerum()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -106,7 +108,7 @@ export default function DashboardView() {
       ) : (
         <>
           {/* KPI cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(180px, 1fr))', gap: isMobile ? 10 : 14, marginBottom: 24 }}>
             <KpiCard
               value={String(data.activeProjects)}
               label={L('Projetos Ativos', 'Active Projects')}

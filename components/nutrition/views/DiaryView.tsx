@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Icon, Ring } from '@/components/ui'
 import { useLang, L } from '@/lib/i18n'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -261,6 +261,7 @@ export default function DiaryView() {
                   gap: 8,
                   padding: '12px 16px',
                   cursor: 'pointer',
+                  minHeight: 44,
                 }}
                   onClick={() => toggleCollapse(mealKey)}
                 >
@@ -393,10 +394,10 @@ export default function DiaryView() {
         onClick={() => { setScannerMeal('lunch'); setShowScanner(true) }}
         style={{
           position: 'fixed',
-          bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 16px)' : 24,
+          bottom: isMobile ? 'calc(20px + env(safe-area-inset-bottom))' : 24,
           right: 20,
-          width: 52,
-          height: 52,
+          width: 56,
+          height: 56,
           borderRadius: '50%',
           background: 'var(--c-cal)',
           border: 'none',
@@ -418,13 +419,39 @@ export default function DiaryView() {
 
 function FoodRow({ log, onEdit, onDelete }: { log: FoodLog; onEdit: () => void; onDelete: () => void }) {
   const [showDelete, setShowDelete] = useState(false)
+  const [swipeX, setSwipeX] = useState(0)
+  const touchStartX = useRef(0)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    const delta = e.touches[0].clientX - touchStartX.current
+    if (delta < 0) setSwipeX(Math.max(delta, -120))
+  }
+  function handleTouchEnd() {
+    if (swipeX < -120) {
+      onDelete()
+    } else {
+      setSwipeX(0)
+    }
+  }
 
   return (
     <div
-      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderBottom: '1px solid var(--edge-soft)', cursor: 'pointer' }}
-      onClick={onEdit}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px',
+        borderBottom: '1px solid var(--edge-soft)', cursor: 'pointer',
+        transform: `translateX(${swipeX}px)`,
+        transition: swipeX === 0 ? 'transform 0.2s' : 'none',
+        position: 'relative',
+      }}
+      onClick={swipeX === 0 ? onEdit : undefined}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

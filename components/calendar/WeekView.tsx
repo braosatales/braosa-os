@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import { useLang } from '@/lib/i18n'
 import type { CalendarEvent } from '@/lib/calendar'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type Props = {
   date: Date
@@ -62,13 +63,22 @@ function layoutEvents(events: CalendarEvent[]): { event: CalendarEvent; col: num
 
 export default function WeekView({ date, events, onEventClick, onSlotClick }: Props) {
   const lang = useLang()
+  const isMobile = useIsMobile()
   const today = new Date(); today.setHours(0,0,0,0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [mobileOffset, setMobileOffset] = useState(0)
   const [nowMinutes, setNowMinutes] = useState(() => {
     const n = new Date(); return n.getHours() * 60 + n.getMinutes()
   })
 
-  const days = useMemo(() => getWeekDays(date), [date])
+  const allDays = useMemo(() => getWeekDays(date), [date])
+  const days = useMemo(() => {
+    if (!isMobile) return allDays
+    // 3-day view starting from today's position in the week, offset by swipe
+    const todayIdx = allDays.findIndex(d => isSameDay(d, today))
+    const start = Math.max(0, Math.min((todayIdx >= 0 ? todayIdx : 0) + mobileOffset * 3, 4))
+    return allDays.slice(start, start + 3)
+  }, [allDays, isMobile, mobileOffset, today])
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -4,6 +4,7 @@ import { Icon, Modal } from '@/components/ui'
 import { useLang, L } from '@/lib/i18n'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { MEAL_META, type Food, calculateMacrosForAmount } from '@/lib/nutrition'
+
 import { useNutrition } from '../NutritionShell'
 import MealScanner from '../MealScanner'
 
@@ -35,6 +36,7 @@ type AddFoodModalProps = {
 
 function AddFoodModal({ food, customName, meal, date, onClose, onAdded }: AddFoodModalProps) {
   const lang = useLang()
+  const isMobile = useIsMobile()
   const [amount, setAmount] = useState(String(food?.serving_size_g ?? 100))
   const [unit, setUnit]     = useState<'g' | 'serving'>('serving')
   const [selectedMeal, setSelectedMeal] = useState<MealKey>(meal)
@@ -98,7 +100,7 @@ function AddFoodModal({ food, customName, meal, date, onClose, onAdded }: AddFoo
               value={unit === 'serving' && food ? String(food.serving_size_g) : amount}
               onChange={e => setAmount(e.target.value)}
               disabled={unit === 'serving'}
-              style={{ width: '100%', background: 'var(--bg-inset)', border: '1px solid var(--edge)', borderRadius: 8, padding: '9px 12px', color: 'var(--ink)', fontSize: 14 }}
+              style={{ width: '100%', background: 'var(--bg-inset)', border: '1px solid var(--edge)', borderRadius: 8, padding: '9px 12px', color: 'var(--ink)', fontSize: isMobile ? 20 : 14 }}
               min={1}
             />
           </div>
@@ -161,7 +163,7 @@ function AddFoodModal({ food, customName, meal, date, onClose, onAdded }: AddFoo
             className="btn btn-accent"
             onClick={handleAdd}
             disabled={saving}
-            style={{ flex: 1, '--accent': 'var(--c-cal)' } as React.CSSProperties}
+            style={{ flex: isMobile ? 2 : 1, '--accent': 'var(--c-cal)', minHeight: isMobile ? 52 : undefined } as React.CSSProperties}
           >
             {saving ? L('A adicionar...', 'Adding...') : L('Adicionar', 'Add')}
           </button>
@@ -381,6 +383,7 @@ export default function LogFoodView() {
         <input
           type="text"
           value={query}
+          autoFocus
           onChange={e => setQuery(e.target.value)}
           placeholder={L('Pesquisar alimento...', 'Search food...')}
           style={{
@@ -524,6 +527,7 @@ function FoodSearchRow({ food, onSelect }: { food: Food; onSelect: () => void })
         border: '1px solid var(--edge-soft)',
         alignItems: 'center',
         transition: 'background .12s',
+        minHeight: 52,
       }}
       onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-raised-2)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg-raised)')}

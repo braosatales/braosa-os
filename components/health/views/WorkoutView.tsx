@@ -7,6 +7,7 @@ import { Routine, RoutineExercise } from '@/lib/exercise'
 import { ActiveWorkout, ActiveExercise, SessionSet } from '@/lib/workout-session'
 import { burstConfetti } from '@/lib/confetti'
 import { useHealth } from '@/components/health/HealthShell'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ function initLocalSets(exercises: ActiveExercise[]): Record<string, LocalSetRow[
 
 export default function WorkoutView() {
   useLang()
+  const isMobile = useIsMobile()
   const { pendingSession, pendingRoutineId, clearPending, navigateTo } = useHealth()
 
   // No-session state
@@ -744,9 +746,10 @@ export default function WorkoutView() {
       {/* Spotify mini player */}
       {spotify.connected && (
         <div style={{
-          height: 52, display: 'flex', alignItems: 'center', gap: 10,
+          height: isMobile ? 40 : 52, display: 'flex', alignItems: 'center', gap: 10,
           padding: '0 16px', background: 'var(--bg-raised)',
           borderBottom: '1px solid var(--edge-soft)', flexShrink: 0,
+          width: '100%',
         }}>
           {spotify.albumArt ? (
             <img src={spotify.albumArt} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />
@@ -820,7 +823,7 @@ export default function WorkoutView() {
                 }}>
                   {exIdx + 1}
                 </div>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 20 : 14, fontWeight: isMobile ? 600 : 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {getLang() === 'pt' && ex.exercise_name_pt ? ex.exercise_name_pt : ex.exercise_name}
                 </span>
                 <span className="tnum" style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
@@ -898,7 +901,7 @@ export default function WorkoutView() {
                 </div>
 
                 {rows.map(row => (
-                  <div key={row.localId} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
+                  <div key={row.localId} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', minHeight: isMobile ? 52 : undefined }}>
                     <div style={{
                       width: 22, height: 22, borderRadius: '50%', background: 'var(--bg-raised-2)',
                       color: 'var(--ink-faint)', fontSize: 11,
@@ -916,9 +919,9 @@ export default function WorkoutView() {
                       className="glow-focus tnum"
                       style={{
                         '--accent': 'var(--c-health)',
-                        width: 72, background: 'var(--bg-inset)', border: '1px solid var(--edge)',
+                        width: isMobile ? 80 : 72, background: 'var(--bg-inset)', border: '1px solid var(--edge)',
                         borderRadius: 'var(--radius-sm)', padding: '7px 8px',
-                        fontSize: 13, color: row.completed ? 'var(--ink-faint)' : 'var(--ink)',
+                        fontSize: isMobile ? 16 : 13, color: row.completed ? 'var(--ink-faint)' : 'var(--ink)',
                         outline: 'none', textAlign: 'center',
                         opacity: row.completed ? 0.6 : 1,
                       } as React.CSSProperties}
@@ -932,9 +935,9 @@ export default function WorkoutView() {
                       className="glow-focus tnum"
                       style={{
                         '--accent': 'var(--c-health)',
-                        width: 60, background: 'var(--bg-inset)', border: '1px solid var(--edge)',
+                        width: isMobile ? 64 : 60, background: 'var(--bg-inset)', border: '1px solid var(--edge)',
                         borderRadius: 'var(--radius-sm)', padding: '7px 8px',
-                        fontSize: 13, color: row.completed ? 'var(--ink-faint)' : 'var(--ink)',
+                        fontSize: isMobile ? 16 : 13, color: row.completed ? 'var(--ink-faint)' : 'var(--ink)',
                         outline: 'none', textAlign: 'center',
                         opacity: row.completed ? 0.6 : 1,
                       } as React.CSSProperties}
@@ -944,7 +947,7 @@ export default function WorkoutView() {
                       onClick={e => handleCompleteSet(ex.exercise_id, row.localId, e.currentTarget)}
                       disabled={row.completed}
                       style={{
-                        width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+                        width: isMobile ? 44 : 30, height: isMobile ? 44 : 30, borderRadius: '50%', flexShrink: 0,
                         border: row.completed ? 'none' : '1.5px solid var(--edge)',
                         background: row.completed ? 'var(--c-health)' : 'transparent',
                         cursor: row.completed ? 'default' : 'pointer',
@@ -978,25 +981,45 @@ export default function WorkoutView() {
       {/* Rest timer bar */}
       {restTimerActive && (
         <div style={{
-          position: 'fixed', bottom: 64, left: 0, right: 0, height: 64, zIndex: 200,
+          position: 'fixed', bottom: 64, left: 0, right: 0,
+          height: isMobile ? 'auto' : 64, zIndex: 200,
           background: 'var(--bg-raised)', borderTop: '1px solid var(--edge)',
-          display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px',
+          display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center', gap: isMobile ? 8 : 12, padding: isMobile ? '16px 20px' : '0 20px',
         }}>
-          <Ring value={restTotal > 0 ? restRemaining / restTotal : 0} color="var(--c-health)" size={44} stroke={4}>
-            <span className="tnum" style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-health)' }}>
-              {restRemaining}
-            </span>
-          </Ring>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{L('Descanso', 'Rest')}</div>
-          </div>
-          <button
-            className="btn"
-            onClick={() => { setRestTimerActive(false); setRestRemaining(0) }}
-            style={{ fontSize: 12, padding: '5px 12px' }}
-          >
-            {L('Saltar', 'Skip')}
-          </button>
+          {isMobile ? (
+            <>
+              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 700, color: 'var(--c-health)', lineHeight: 1 }}>
+                {restRemaining}s
+              </span>
+              <div style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{L('Descanso', 'Rest')}</div>
+              <button
+                className="btn"
+                onClick={() => { setRestTimerActive(false); setRestRemaining(0) }}
+                style={{ fontSize: 14, padding: '12px', width: '100%', justifyContent: 'center' }}
+              >
+                {L('Saltar', 'Skip')}
+              </button>
+            </>
+          ) : (
+            <>
+              <Ring value={restTotal > 0 ? restRemaining / restTotal : 0} color="var(--c-health)" size={44} stroke={4}>
+                <span className="tnum" style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-health)' }}>
+                  {restRemaining}
+                </span>
+              </Ring>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{L('Descanso', 'Rest')}</div>
+              </div>
+              <button
+                className="btn"
+                onClick={() => { setRestTimerActive(false); setRestRemaining(0) }}
+                style={{ fontSize: 12, padding: '5px 12px' }}
+              >
+                {L('Saltar', 'Skip')}
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -1004,7 +1027,7 @@ export default function WorkoutView() {
       <button
         onClick={() => setShowAddExercise(true)}
         style={{
-          position: 'fixed', bottom: 80, right: 20, zIndex: 200,
+          position: 'fixed', bottom: isMobile ? 20 : 80, right: 20, zIndex: 200,
           width: 52, height: 52, borderRadius: '50%',
           background: 'var(--c-health)', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',

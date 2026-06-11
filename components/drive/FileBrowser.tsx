@@ -8,6 +8,7 @@ import { useLang } from "@/lib/i18n"
 import { relativeTime } from "@/lib/date"
 import type { IconName } from "@/lib/icons"
 import CreateFileModal from "./CreateFileModal"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 
 type BreadcrumbEntry = { id: string; name: string }
 
@@ -29,6 +30,7 @@ function formatSize(size: string | null): string {
 
 export default function FileBrowser({ rootId, folderId, rootLabel, onFileSelect, onFolderNavigate }: Props) {
   const lang = useLang()
+  const isMobile = useIsMobile()
   const [files, setFiles] = useState<DriveFile[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<"grid" | "list">("list")
@@ -90,7 +92,7 @@ export default function FileBrowser({ rootId, folderId, rootLabel, onFileSelect,
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px 8px", flexShrink: 0, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px 8px", flexShrink: 0, flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : "visible" }}>
         {breadcrumb.map((entry, i) => (
           <span key={entry.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {i > 0 && <span style={{ color: "var(--ink-faint)", fontSize: 12 }}>›</span>}
@@ -161,7 +163,7 @@ export default function FileBrowser({ rootId, folderId, rootLabel, onFileSelect,
                 className="task-row"
                 onClick={() => handleFileClick(file)}
                 onContextMenu={e => { e.preventDefault(); setMenuFile(file) }}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, cursor: "pointer", position: "relative" }}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, cursor: "pointer", position: "relative", minHeight: isMobile ? 52 : undefined }}
               >
                 <span style={{ color: isFolder(file) ? "oklch(0.78 0.12 75)" : "var(--ink-faint)", flexShrink: 0 }}>
                   <Icon name={getFileIcon(file) as IconName} size={15} />

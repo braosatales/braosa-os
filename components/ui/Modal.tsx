@@ -8,9 +8,10 @@ type ModalProps = {
   onClose: () => void;
   children: React.ReactNode;
   width?: number;
+  fullScreen?: boolean;
 };
 
-export default function Modal({ open, onClose, children, width = 520 }: ModalProps) {
+export default function Modal({ open, onClose, children, width = 520, fullScreen = false }: ModalProps) {
   const isMobile = useIsMobile();
 
   const handleKey = useCallback(
@@ -28,7 +29,16 @@ export default function Modal({ open, onClose, children, width = 520 }: ModalPro
 
   if (!open) return null;
 
-  const cardStyle = isMobile ? {
+  const mobileFullScreen = isMobile && fullScreen;
+
+  const cardStyle = mobileFullScreen ? {
+    position: 'fixed' as const,
+    inset: 0,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    background: 'var(--bg-raised)',
+    overflowY: 'hidden' as const,
+  } : isMobile ? {
     position: 'fixed' as const,
     bottom: 0,
     left: 0,
@@ -55,17 +65,17 @@ export default function Modal({ open, onClose, children, width = 520 }: ModalPro
 
   return (
     <div
-      onClick={onClose}
+      onClick={mobileFullScreen ? undefined : onClose}
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 1000,
         display: 'flex',
-        alignItems: isMobile ? 'flex-end' : 'center',
+        alignItems: isMobile && !mobileFullScreen ? 'flex-end' : 'center',
         justifyContent: 'center',
-        background: 'oklch(0 0 0 / 0.6)',
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
+        background: mobileFullScreen ? 'transparent' : 'oklch(0 0 0 / 0.6)',
+        backdropFilter: mobileFullScreen ? 'none' : 'blur(6px)',
+        WebkitBackdropFilter: mobileFullScreen ? 'none' : 'blur(6px)',
         padding: isMobile ? 0 : 24,
       }}
     >
@@ -73,7 +83,7 @@ export default function Modal({ open, onClose, children, width = 520 }: ModalPro
         onClick={(e) => e.stopPropagation()}
         style={cardStyle}
       >
-        {isMobile && (
+        {isMobile && !mobileFullScreen && (
           <span style={{
             width: 36,
             height: 4,

@@ -22,6 +22,7 @@ import { Icon } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
 import { BraosaProduct, PRODUCT_STATUS_META, ATELIER_TOOLS } from '@/lib/braosa'
 import AddProductModal from '../modals/AddProductModal'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type KanbanStatus = 'planned' | 'in_progress' | 'beta' | 'live'
 const KANBAN_COLUMNS: KanbanStatus[] = ['planned', 'in_progress', 'beta', 'live']
@@ -198,6 +199,7 @@ function KanbanColumn({ status, products, activeId, onEdit, onDelete }: {
 
 export default function ProductsView() {
   useLang()
+  const isMobile = useIsMobile()
   const [products, setProducts] = useState<BraosaProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
@@ -205,6 +207,7 @@ export default function ProductsView() {
   const [editingProduct, setEditingProduct] = useState<BraosaProduct | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [statusSheetProduct, setStatusSheetProduct] = useState<BraosaProduct | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -423,7 +426,7 @@ export default function ProductsView() {
             </button>
           </div>
         </div>
-      ) : isKanban && statusFilter === 'all' ? (
+      ) : isKanban && statusFilter === 'all' && !isMobile ? (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -492,14 +495,24 @@ export default function ProductsView() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => { setEditingProduct(product); setModalOpen(true) }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: 6 }}>
-                  <Icon name="edit" size={13} />
-                </button>
-                <button onClick={() => handleDelete(product.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--neg)', padding: 6 }}>
-                  <Icon name="trash" size={13} />
-                </button>
+                {isMobile && (
+                  <button onClick={() => setStatusSheetProduct(product)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: 6 }}>
+                    <Icon name="dots" size={13} />
+                  </button>
+                )}
+                {!isMobile && (
+                  <button onClick={() => { setEditingProduct(product); setModalOpen(true) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: 6 }}>
+                    <Icon name="edit" size={13} />
+                  </button>
+                )}
+                {!isMobile && (
+                  <button onClick={() => handleDelete(product.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--neg)', padding: 6 }}>
+                    <Icon name="trash" size={13} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -512,6 +525,63 @@ export default function ProductsView() {
         onSaved={fetchProducts}
         editing={editingProduct}
       />
+
+      {/* Mobile status bottom sheet */}
+      {statusSheetProduct && (
+        <div
+          onClick={() => setStatusSheetProduct(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'oklch(0 0 0 / 0.5)' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              background: 'var(--bg-raised)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+              padding: '16px 16px calc(16px + env(safe-area-inset-bottom))',
+            }}
+          >
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>
+              {statusSheetProduct.name}
+            </div>
+            {KANBAN_COLUMNS.map(s => {
+              const meta = PRODUCT_STATUS_META[s]
+              return (
+                <button
+                  key={s}
+                  onClick={async () => {
+                    await fetch(`/api/braosa/products/${statusSheetProduct.id}`, {
+                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ status: s }),
+                    })
+                    fetchProducts()
+                    setStatusSheetProduct(null)
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                    padding: '12px 8px', background: 'none', border: 'none', cursor: 'pointer',
+                    borderRadius: 'var(--radius-sm)', textAlign: 'left',
+                    color: statusSheetProduct.status === s ? meta.color : 'var(--ink-soft)',
+                    fontWeight: statusSheetProduct.status === s ? 600 : 400,
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+                  {L(meta.label_pt, meta.label_en)}
+                </button>
+              )
+            })}
+            <div style={{ borderTop: '1px solid var(--edge-soft)', marginTop: 8, paddingTop: 8, display: 'flex', gap: 8 }}>
+              <button onClick={() => { setEditingProduct(statusSheetProduct); setModalOpen(true); setStatusSheetProduct(null) }}
+                style={{ flex: 1, padding: '10px', background: 'none', border: '1px solid var(--edge)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: 'var(--ink-dim)' }}>
+                {L('Editar', 'Edit')}
+              </button>
+              <button onClick={() => { handleDelete(statusSheetProduct.id); setStatusSheetProduct(null) }}
+                style={{ flex: 1, padding: '10px', background: 'none', border: '1px solid color-mix(in oklch, var(--neg) 40%, transparent)', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: 'var(--neg)' }}>
+                {L('Eliminar', 'Delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

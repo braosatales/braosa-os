@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react'
 import { useLang, L } from '@/lib/i18n'
 import { useFinanceStore } from '@/lib/finance-store'
 import { Icon } from '@/components/ui'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 export default function BabyStepsView() {
   useLang()
+  const isMobile = useIsMobile()
   const { data } = useFinanceStore()
   const [checked, setChecked] = useState<Record<number, boolean>>({})
 
@@ -117,8 +119,8 @@ export default function BabyStepsView() {
               {/* Number circle */}
               <div style={{
                 flexShrink: 0,
-                width: 36,
-                height: 36,
+                width: isMobile ? 44 : 36,
+                height: isMobile ? 44 : 36,
                 borderRadius: 99,
                 display: 'flex',
                 alignItems: 'center',

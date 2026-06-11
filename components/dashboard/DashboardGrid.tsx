@@ -59,7 +59,7 @@ type ResizeState = {
 } | null
 type GhostState = { x: number; y: number; w: number; h: number } | null
 
-const MOBILE_WIDGETS: WidgetId[] = ['net', 'focus', 'tasks', 'habits', 'notes', 'ai']
+const MOBILE_WIDGETS: WidgetId[] = ['net', 'focus', 'tasks', 'habits', 'nutrition', 'notes', 'ai', 'health']
 
 export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string) => void }) {
   const isMobile = useIsMobile()
@@ -296,7 +296,7 @@ export default function DashboardGrid({ onNavigate }: { onNavigate: (id: string)
             },
           }
           return (
-            <div key={id} style={{ position: "relative" }}>
+            <div key={id} style={{ position: "relative", minHeight: 160 }}>
               {renderWidget(id, shellProps, onNavigate)}
             </div>
           )

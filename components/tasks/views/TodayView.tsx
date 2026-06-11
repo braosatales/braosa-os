@@ -35,7 +35,7 @@ function TaskRow({ task, onSelect, onToggleDone, onToggleFav }: {
   return (
     <div
       onClick={() => onSelect(task)}
-      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 8px', borderRadius: 9, cursor: 'pointer', transition: 'background .12s' }}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 8px', borderRadius: 9, cursor: 'pointer', transition: 'background .12s', minHeight: 48 }}
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-raised-2)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
     >
@@ -81,7 +81,7 @@ function Section({ label, labelColor, tasks, onSelect, onToggleDone, onToggleFav
     <div style={{ marginBottom: 4 }}>
       <div
         onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', cursor: 'pointer', userSelect: 'none' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', cursor: 'pointer', userSelect: 'none', minHeight: 44 }}
       >
         <span style={{ display: 'flex', color: 'var(--ink-faint)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>
           <Icon name="chevron-right" size={14} />

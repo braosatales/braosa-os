@@ -4,6 +4,15 @@ import { Icon } from '@/components/ui'
 import { MOBILE_APPS } from '@/lib/mobile-apps'
 import { useLang } from '@/lib/i18n'
 
+function useGreeting() {
+  const [greeting, setGreeting] = useState('')
+  useEffect(() => {
+    const hour = new Date().getHours()
+    setGreeting(hour < 12 ? 'Bom dia, João! ☀️' : hour < 18 ? 'Boa tarde, João! 🌤️' : 'Boa noite, João! 🌙')
+  }, [])
+  return greeting
+}
+
 const HIDDEN_APPS_KEY = 'braosa-hidden-apps'
 
 function getHiddenApps(): string[] {
@@ -21,11 +30,14 @@ interface Props {
 
 export default function MobileHomeScreen({ onOpenApp }: Props) {
   const lang = useLang()
+  const greeting = useGreeting()
   const [now, setNow] = useState(new Date())
   const [editMode, setEditMode] = useState(false)
   const [pressedApp, setPressedApp] = useState<string | null>(null)
   const [hiddenApps, setHiddenAppsState] = useState<string[]>([])
   const [showMore, setShowMore] = useState(false)
+  const [swipeToast, setSwipeToast] = useState(false)
+  const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
 
@@ -49,6 +61,26 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   function handleContainerClick() {
     if (editMode) setEditMode(false)
     if (showMore) setShowMore(false)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0]
+    if (touch.clientY < window.innerHeight * 0.2) {
+      swipeStartY.current = touch.clientY
+    } else {
+      swipeStartY.current = null
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (swipeStartY.current === null) return
+    const touch = e.touches[0]
+    const deltaY = touch.clientY - swipeStartY.current
+    if (deltaY > 60 && !swipeToast) {
+      setSwipeToast(true)
+      swipeStartY.current = null
+      setTimeout(() => setSwipeToast(false), 2000)
+    }
   }
 
   function handlePointerDown(appId: string) {
@@ -94,6 +126,8 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   return (
     <div
       onClick={handleContainerClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       style={{
         minHeight: '100vh',
         background: 'radial-gradient(120% 100% at 50% 0%, oklch(0.205 0.007 70), var(--bg-void))',
@@ -102,11 +136,31 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         overflowY: 'auto',
       }}
     >
+      {/* Swipe-down toast */}
+      {swipeToast && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--bg-raised)',
+          color: 'var(--ink)',
+          borderRadius: 12,
+          padding: '8px 16px',
+          fontSize: 13,
+          zIndex: 200,
+          pointerEvents: 'none',
+          animation: 'toast-slide-up 0.3s ease both',
+        }}>
+          Search coming soon
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 40, paddingTop: 32 }}>
         <div style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 48,
+          fontSize: 'clamp(48px, 12vw, 64px)',
           fontWeight: 600,
           color: 'var(--ink)',
           fontVariantNumeric: 'tabular-nums',
@@ -116,9 +170,14 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         }}>
           {timeStr}
         </div>
-        <div style={{ fontSize: 14, color: 'var(--ink-dim)' }}>
+        <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 4 }}>
           {dateStr}
         </div>
+        {greeting && (
+          <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 32 }}>
+            {greeting}
+          </div>
+        )}
       </div>
 
       {/* App grid */}
@@ -150,7 +209,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                   boxShadow: '0 4px 16px -4px oklch(0 0 0 / 0.5)',
                   display: 'grid',
                   placeItems: 'center',
-                  transform: isPressed ? 'scale(0.92)' : 'scale(1)',
+                  transform: isPressed ? 'scale(0.85)' : 'scale(1)',
                   transition: 'transform .1s',
                   userSelect: 'none',
                   WebkitUserSelect: 'none',

@@ -5,6 +5,7 @@ import { Icon, Modal } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
 import { relativeTime, formatDate } from '@/lib/date'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useKeyboardHeight } from '@/lib/hooks/useKeyboardHeight'
 import type { MailThread, MailMessage } from '@/lib/mail'
 
 // ─── HTML sanitiser ────────────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ type ReplyMode = 'reply' | 'reply-all' | 'forward'
 
 function ReplyArea({ thread, onSent }: { thread: MailThread; onSent: () => void }) {
   useLang()
+  const keyboardHeight = useKeyboardHeight()
   const [mode, setMode] = useState<ReplyMode>('reply')
   const [to, setTo] = useState('')
   const [cc, setCc] = useState('')
@@ -216,7 +218,7 @@ function ReplyArea({ thread, onSent }: { thread: MailThread; onSent: () => void 
   }
 
   return (
-    <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '14px 16px', background: 'var(--bg-base)', flexShrink: 0 }}>
+    <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '14px 16px', background: 'var(--bg-base)', flexShrink: 0, paddingBottom: keyboardHeight > 0 ? `${14 + keyboardHeight}px` : '14px' }}>
       {/* Mode tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         {(['reply', 'reply-all', 'forward'] as const).map(m => (

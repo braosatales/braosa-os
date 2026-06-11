@@ -6,6 +6,8 @@ import { NoteStore } from '@/lib/note-store'
 import { NOTE_COLORS } from '@/lib/notes'
 import { L } from '@/lib/i18n'
 import type { Note, NoteColor } from '@/lib/notes'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useKeyboardHeight } from '@/lib/hooks/useKeyboardHeight'
 
 type Props = {
   note: Note | null
@@ -15,6 +17,8 @@ type Props = {
 const COLOR_ORDER: NoteColor[] = ['default', 'yellow', 'green', 'blue', 'purple', 'pink']
 
 export default function NoteModal({ note, onClose }: Props) {
+  const isMobile = useIsMobile()
+  const keyboardHeight = useKeyboardHeight()
   const [local, setLocal] = useState<Partial<Note>>(
     () => note ?? { title: '', content: '', color: 'default', pinned: false, tags: [] }
   )
@@ -97,8 +101,8 @@ export default function NoteModal({ note, onClose }: Props) {
   const color = (local.color ?? 'default') as NoteColor
 
   return (
-    <Modal open onClose={() => { flushSave(); onClose() }} width={680}>
-      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Modal open onClose={() => { flushSave(); onClose() }} width={680} fullScreen={isMobile}>
+      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 0, flex: isMobile ? 1 : undefined, paddingBottom: isMobile ? Math.max(24, keyboardHeight + 12) : 24 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <input
@@ -167,8 +171,9 @@ export default function NoteModal({ note, onClose }: Props) {
           placeholder={L('Começa a escrever…', 'Start writing…')}
           style={{
             width: '100%',
-            minHeight: 200,
-            maxHeight: '60vh',
+            minHeight: isMobile ? 0 : 200,
+            flex: isMobile ? 1 : undefined,
+            maxHeight: isMobile ? 'none' : '60vh',
             overflowY: 'auto',
             resize: 'none',
             border: 'none',
