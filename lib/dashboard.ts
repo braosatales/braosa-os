@@ -110,41 +110,31 @@ export const ALL_WIDGETS: {
   { id: "nutrition",        label: "Nutrition",        color: "var(--c-cal)",    glyph: "activity",      description: "Today's calories and macros"                   },
 ]
 
-const LAYOUT_KEY = "braosa-layout"
-const VISIBLE_KEY = "braosa-visible-widgets"
+export const MOBILE_DEFAULT_LAYOUT: Partial<Layout> = {}
+export const MOBILE_GRID_COLS = 2
 
-const DEFAULT_VISIBLE: WidgetId[] = [
-  "net", "tasks", "assets", "debt", "budget", "ai", "weather", "health",
-]
+export async function fetchLayout(device: 'desktop' | 'mobile'): Promise<{
+  layout: Layout
+  visibleWidgets: WidgetId[]
+  fresh: boolean
+}> {
+  const res = await fetch(`/api/dashboard/layout?device=${device}`)
+  if (!res.ok) return { layout: { ...DEFAULT_LAYOUT }, visibleWidgets: [], fresh: true }
+  return res.json()
+}
 
-export function getLayout(): Layout {
-  if (typeof window === "undefined") return { ...DEFAULT_LAYOUT }
+export async function saveLayout(
+  device: 'desktop' | 'mobile',
+  layout: Layout,
+  visibleWidgets: WidgetId[]
+): Promise<void> {
   try {
-    const stored = localStorage.getItem(LAYOUT_KEY)
-    if (!stored) return { ...DEFAULT_LAYOUT }
-    return { ...DEFAULT_LAYOUT, ...(JSON.parse(stored) as Partial<Layout>) }
-  } catch {
-    return { ...DEFAULT_LAYOUT }
+    await fetch('/api/dashboard/layout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device, layout, visibleWidgets }),
+    })
+  } catch (err) {
+    console.error('[saveLayout] failed:', err)
   }
-}
-
-export function saveLayout(layout: Layout): void {
-  if (typeof window === "undefined") return
-  localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout))
-}
-
-export function getVisibleWidgets(): WidgetId[] {
-  if (typeof window === "undefined") return DEFAULT_VISIBLE
-  try {
-    const stored = localStorage.getItem(VISIBLE_KEY)
-    if (!stored) return DEFAULT_VISIBLE
-    return JSON.parse(stored) as WidgetId[]
-  } catch {
-    return DEFAULT_VISIBLE
-  }
-}
-
-export function saveVisibleWidgets(ids: WidgetId[]): void {
-  if (typeof window === "undefined") return
-  localStorage.setItem(VISIBLE_KEY, JSON.stringify(ids))
 }

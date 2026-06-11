@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Modal, Icon } from "@/components/ui"
 import { ALL_WIDGETS, type WidgetId } from "@/lib/dashboard"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 import { L } from "@/lib/i18n"
 
 type Props = {
@@ -10,9 +11,11 @@ type Props = {
   onClose: () => void
   visible: WidgetId[]
   onToggle: (id: WidgetId) => void
+  onReorder?: (newOrder: WidgetId[]) => void
 }
 
-export default function AddWidgetModal({ open, onClose, visible, onToggle }: Props) {
+export default function AddWidgetModal({ open, onClose, visible, onToggle, onReorder }: Props) {
+  const isMobile = useIsMobile()
   const activeWidgets = ALL_WIDGETS.filter(w => visible.includes(w.id))
   const availableWidgets = ALL_WIDGETS.filter(w => !visible.includes(w.id))
 
@@ -122,6 +125,29 @@ export default function AddWidgetModal({ open, onClose, visible, onToggle }: Pro
             </div>
           </>
         )}
+
+        {/* ORDER section — mobile only */}
+        {isMobile && activeWidgets.length > 0 && onReorder && (
+          <>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 9.5,
+                color: 'var(--ink-faint)',
+                letterSpacing: '0.16em',
+                marginBottom: 10,
+                marginTop: 20,
+                textTransform: 'uppercase',
+              }}
+            >
+              ORDER
+            </div>
+            <ReorderList
+              visible={visible}
+              onReorder={onReorder}
+            />
+          </>
+        )}
       </div>
     </Modal>
   )
@@ -226,6 +252,81 @@ function WidgetCard({ widget: w, active, onAction }: WidgetCardProps) {
           {active ? L("Remover", "Remove") : L("+ Adicionar", "+ Add")}
         </button>
       </div>
+    </div>
+  )
+}
+
+type ReorderListProps = {
+  visible: WidgetId[]
+  onReorder: (newOrder: WidgetId[]) => void
+}
+
+function ReorderList({ visible, onReorder }: ReorderListProps) {
+  const dragIndex = useRef<number | null>(null)
+  const [order, setOrder] = useState<WidgetId[]>(visible)
+
+  function handlePointerDown(i: number) {
+    dragIndex.current = i
+  }
+
+  function handlePointerUp(i: number) {
+    if (dragIndex.current === null || dragIndex.current === i) {
+      dragIndex.current = null
+      return
+    }
+    const from = dragIndex.current
+    const to = i
+    dragIndex.current = null
+    const next = [...order]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    setOrder(next)
+    onReorder(next)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {order.map((id, i) => {
+        const meta = ALL_WIDGETS.find(w => w.id === id)
+        if (!meta) return null
+        return (
+          <div
+            key={id}
+            onPointerDown={() => handlePointerDown(i)}
+            onPointerUp={() => handlePointerUp(i)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 12px',
+              borderRadius: 'var(--radius)',
+              background: 'var(--bg-raised)',
+              border: '1px solid var(--edge-soft)',
+              cursor: 'grab',
+              userSelect: 'none',
+            }}
+          >
+            <span style={{ color: 'var(--ink-faint)', fontSize: 16, lineHeight: 1 }}>⠿</span>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: `color-mix(in oklch, ${meta.color} 18%, transparent)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ color: meta.color, display: 'flex' }}>
+                <Icon name={meta.glyph as any} size={13} />
+              </span>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>{meta.label}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
