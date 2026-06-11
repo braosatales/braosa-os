@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`
 
   const cookieStore = await cookies()
   const savedState = cookieStore.get('google-oauth-state')?.value
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID!,
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: `${APP_URL}/api/google/callback`,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   })

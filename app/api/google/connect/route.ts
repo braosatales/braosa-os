@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Google not configured' }, { status: 503 })
   }
 
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`
   const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
@@ -24,7 +24,7 @@ export async function GET() {
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: `${APP_URL}/api/google/callback`,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: GOOGLE_SCOPES,
     access_type: 'offline',
