@@ -52,7 +52,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'notes',
     label_pt: 'Notas',
     label_en: 'Notes',
-    color: 'var(--c-task)',
+    color: 'var(--c-notes)',
     glyph: 'note',
   },
   {
@@ -73,8 +73,8 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'nutrition',
     label_pt: 'Nutrição',
     label_en: 'Nutrition',
-    color: 'var(--c-cal)',
-    glyph: 'activity',
+    color: 'var(--c-nutrition)',
+    glyph: 'nutrition',
     subTabs: [
       { id: 'diary',    label_pt: 'Diário',    label_en: 'Diary',    glyph: 'calendar'    },
       { id: 'log',      label_pt: 'Registar',  label_en: 'Log',      glyph: 'plus'        },
@@ -86,7 +86,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'ai',
     label_pt: 'Braosa AI',
     label_en: 'Braosa AI',
-    color: 'var(--c-task)',
+    color: 'var(--c-ai)',
     glyph: 'wand',
   },
   {
@@ -118,14 +118,14 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'contacts',
     label_pt: 'Contactos',
     label_en: 'Contacts',
-    color: 'var(--c-task)',
+    color: 'var(--c-contacts)',
     glyph: 'users',
   },
   {
     id: 'drive',
     label_pt: 'Drive',
     label_en: 'Drive',
-    color: 'var(--c-fin)',
+    color: 'var(--c-drive)',
     glyph: 'file',
     subTabs: [
       { id: 'rrr',             label_pt: 'RRR',    label_en: 'RRR',    glyph: 'file' },

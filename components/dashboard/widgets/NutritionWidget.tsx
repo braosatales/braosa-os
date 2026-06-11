@@ -51,7 +51,7 @@ export default function NutritionWidget({ onNavigate, ...shellProps }: Props) {
   const ringColor = calPct < 0.9 ? "var(--pos)" : calPct <= 1.1 ? "var(--c-fin)" : "var(--neg)"
 
   return (
-    <WidgetShell title={L("Nutrição", "Nutrition")} color="var(--c-cal)" glyph="activity" {...shellProps}>
+    <WidgetShell title={L("Nutrição", "Nutrition")} color="var(--c-nutrition)" glyph="activity" {...shellProps}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
           {[1, 2].map(i => (
@@ -65,7 +65,7 @@ export default function NutritionWidget({ onNavigate, ...shellProps }: Props) {
           </div>
           <button
             className="btn"
-            style={{ fontSize: 11, padding: "4px 10px", color: "var(--c-cal)" }}
+            style={{ fontSize: 11, padding: "4px 10px", color: "var(--c-nutrition)" }}
             onClick={() => onNavigate?.("nutrition")}
           >
             {L("Registar Refeição", "Log Meal")}
@@ -92,7 +92,7 @@ export default function NutritionWidget({ onNavigate, ...shellProps }: Props) {
             {[
               { label: "P", value: consumed.protein_g, tgt: target.protein_g, color: "var(--c-health)" },
               { label: "H", value: consumed.carbs_g,   tgt: target.carbs_g,   color: "var(--c-fin)"    },
-              { label: "G", value: consumed.fat_g,     tgt: target.fat_g,     color: "var(--c-task)"   },
+              { label: "G", value: consumed.fat_g,     tgt: target.fat_g,     color: "var(--c-task)"  },
             ].map(m => (
               <div key={m.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ width: 12, fontSize: 10, color: "var(--ink-faint)", fontWeight: 600 }}>{m.label}</span>
@@ -116,7 +116,7 @@ export default function NutritionWidget({ onNavigate, ...shellProps }: Props) {
           <div style={{ marginTop: "auto" }}>
             <button
               className="btn"
-              style={{ fontSize: 11, padding: "4px 10px", color: "var(--c-cal)" }}
+              style={{ fontSize: 11, padding: "4px 10px", color: "var(--c-nutrition)" }}
               onClick={() => onNavigate?.("nutrition")}
             >
               + {L("Registar", "Log")}

@@ -58,7 +58,7 @@ function ComingOnlinePage({ id }: { id: string }) {
         boxShadow: `0 0 calc(30px * var(--glow)) -8px ${sys?.color ?? "var(--c-dash)"}`,
       }}>
         <span style={{ color: sys?.color ?? "var(--c-dash)" }}>
-          <Icon name={(sys?.icon ?? "grid") as any} size={26} />
+          <Icon name={(sys?.glyph ?? "grid") as any} size={26} />
         </span>
       </div>
       <div>
@@ -79,8 +79,8 @@ const GOOGLE_TAB_META: Record<string, { tabName: string; description: string; ic
   email:    { tabName: "Mail",     description: "Acede ao teu Gmail diretamente no BraosaOS.",  icon: "mail",  color: "var(--c-mail)"  },
   mail:     { tabName: "Mail",     description: "Acede ao teu Gmail diretamente no BraosaOS.",  icon: "mail",  color: "var(--c-mail)"  },
   calendar: { tabName: "Calendar", description: "Vê e gere o teu Google Calendar.",              icon: "cal",   color: "var(--c-cal)"   },
-  contacts: { tabName: "Contacts", description: "Os teus contactos Google num CRM pessoal.",     icon: "users", color: "var(--c-task)"  },
-  drive:    { tabName: "Drive",    description: "Acede aos teus ficheiros do Google Drive.",     icon: "file",  color: "var(--c-fin)"   },
+  contacts: { tabName: "Contacts", description: "Os teus contactos Google num CRM pessoal.",     icon: "users", color: "var(--c-contacts)" },
+  drive:    { tabName: "Drive",    description: "Acede aos teus ficheiros do Google Drive.",     icon: "file",  color: "var(--c-drive)"    },
 }
 
 // ─── renderActive ────────────────────────────────────────────────────────────

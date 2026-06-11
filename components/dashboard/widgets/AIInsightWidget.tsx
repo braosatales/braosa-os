@@ -36,7 +36,7 @@ export default function AIInsightWidget(props: ShellProps) {
   }, [])
 
   return (
-    <WidgetShell title={L("Insight AI", "AI Insight")} color="var(--c-task)" glyph="wand" {...props}>
+    <WidgetShell title={L("Insight AI", "AI Insight")} color="var(--c-ai)" glyph="wand" {...props}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 10 }}>
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--ink-faint)", fontSize: 12 }}>
@@ -47,7 +47,7 @@ export default function AIInsightWidget(props: ShellProps) {
                   width: 5,
                   height: 5,
                   borderRadius: "50%",
-                  background: "var(--c-task)",
+                  background: "var(--c-ai)",
                   display: "inline-block",
                   animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
                   opacity: 0.6,

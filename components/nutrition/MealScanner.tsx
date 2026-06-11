@@ -220,7 +220,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
         {step === 'capture' && (
           <>
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ color: 'var(--c-cal)', marginBottom: 10, display: 'flex', justifyContent: 'center' }}>
+              <div style={{ color: 'var(--c-nutrition)', marginBottom: 10, display: 'flex', justifyContent: 'center' }}>
                 <Icon name="camera" size={32} />
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 600 }}>
@@ -248,9 +248,9 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                   onClick={() => fileInputRef.current?.click()}
                   style={{
                     borderRadius: 'var(--radius-lg)',
-                    border: `2px dashed ${dragging ? 'var(--c-cal)' : 'var(--edge)'}`,
+                    border: `2px dashed ${dragging ? 'var(--c-nutrition)' : 'var(--edge)'}`,
                     padding: 40,
-                    background: dragging ? 'var(--c-cal-dim)' : 'var(--bg-inset)',
+                    background: dragging ? 'var(--c-nutrition-dim)' : 'var(--bg-inset)',
                     textAlign: 'center',
                     cursor: 'pointer',
                     transition: 'border-color .15s, background .15s',
@@ -270,7 +270,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleInputChange} />
                 <button
                   className="btn btn-accent"
-                  style={{ '--accent': 'var(--c-cal)', width: '100%', justifyContent: 'center', marginBottom: 16 } as React.CSSProperties}
+                  style={{ '--accent': 'var(--c-nutrition)', width: '100%', justifyContent: 'center', marginBottom: 16 } as React.CSSProperties}
                   onClick={() => cameraInputRef.current?.click()}
                 >
                   <Icon name="camera" size={16} />
@@ -312,9 +312,9 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                         flexShrink: 0,
                         padding: '6px 12px',
                         borderRadius: 99,
-                        border: isActive ? '1px solid var(--c-cal)' : '1px solid var(--edge)',
-                        background: isActive ? 'var(--c-cal-dim)' : 'transparent',
-                        color: isActive ? 'var(--c-cal)' : 'var(--ink-dim)',
+                        border: isActive ? '1px solid var(--c-nutrition)' : '1px solid var(--edge)',
+                        background: isActive ? 'var(--c-nutrition-dim)' : 'transparent',
+                        color: isActive ? 'var(--c-nutrition)' : 'var(--ink-dim)',
                         fontSize: 12,
                         fontWeight: isActive ? 600 : 400,
                         cursor: 'pointer',
@@ -335,7 +335,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
             {file && (
               <button
                 className="btn btn-accent"
-                style={{ '--accent': 'var(--c-cal)', width: '100%', justifyContent: 'center' } as React.CSSProperties}
+                style={{ '--accent': 'var(--c-nutrition)', width: '100%', justifyContent: 'center' } as React.CSSProperties}
                 onClick={analyse}
               >
                 <Icon name="spark" size={16} />
@@ -360,7 +360,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                   left: 0,
                   right: 0,
                   height: 2,
-                  background: 'linear-gradient(90deg, transparent, var(--c-cal), transparent)',
+                  background: 'linear-gradient(90deg, transparent, var(--c-nutrition), transparent)',
                   animation: 'scanLine 1.5s ease-in-out infinite',
                 }} />
               </div>
@@ -374,7 +374,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                   key={i}
                   style={{
                     width: 6, height: 6, borderRadius: '50%',
-                    background: 'var(--c-cal)',
+                    background: 'var(--c-nutrition)',
                     animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
                   }}
                 />
@@ -452,7 +452,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                       type="checkbox"
                       checked={item.selected}
                       onChange={() => toggleItem(idx)}
-                      style={{ cursor: 'pointer', accentColor: 'var(--c-cal)', width: 16, height: 16 }}
+                      style={{ cursor: 'pointer', accentColor: 'var(--c-nutrition)', width: 16, height: 16 }}
                     />
                   </div>
 
@@ -483,7 +483,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
                           autoFocus
                           min={1}
                           style={{
-                            width: 72, background: 'var(--bg-inset)', border: '1px solid var(--c-cal)',
+                            width: 72, background: 'var(--bg-inset)', border: '1px solid var(--c-nutrition)',
                             borderRadius: 5, padding: '3px 7px', color: 'var(--ink)', fontSize: 12, outline: 'none',
                           }}
                         />
@@ -518,8 +518,8 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
 
             {/* Totals row */}
             {selectedItems.length > 0 && (
-              <div style={{ background: 'var(--c-cal-dim)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 14 }}>
-                <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--c-cal)', fontWeight: 600 }}>
+              <div style={{ background: 'var(--c-nutrition-dim)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 14 }}>
+                <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--c-nutrition)', fontWeight: 600 }}>
                   Total: {Math.round(totalCalories)} kcal · P {Math.round(totalProtein)}g · H {Math.round(totalCarbs)}g · G {Math.round(totalFat)}g
                 </span>
               </div>
@@ -527,7 +527,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
 
             <button
               className="btn btn-accent"
-              style={{ '--accent': 'var(--c-cal)', width: '100%', justifyContent: 'center', marginBottom: 10 } as React.CSSProperties}
+              style={{ '--accent': 'var(--c-nutrition)', width: '100%', justifyContent: 'center', marginBottom: 10 } as React.CSSProperties}
               onClick={handleLog}
               disabled={logging || selectedItems.length === 0}
             >
@@ -564,7 +564,7 @@ export default function MealScanner({ meal, date, onLogged, onClose }: Props) {
               </button>
               <button
                 className="btn btn-accent"
-                style={{ '--accent': 'var(--c-cal)' } as React.CSSProperties}
+                style={{ '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
                 onClick={() => { onLogged(); onClose() }}
               >
                 {L('Ver Diário', 'View Diary')}

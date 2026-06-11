@@ -163,7 +163,7 @@ function AddFoodModal({ food, customName, meal, date, onClose, onAdded }: AddFoo
             className="btn btn-accent"
             onClick={handleAdd}
             disabled={saving}
-            style={{ flex: isMobile ? 2 : 1, '--accent': 'var(--c-cal)', minHeight: isMobile ? 52 : undefined } as React.CSSProperties}
+            style={{ flex: isMobile ? 2 : 1, '--accent': 'var(--c-nutrition)', minHeight: isMobile ? 52 : undefined } as React.CSSProperties}
           >
             {saving ? L('A adicionar...', 'Adding...') : L('Adicionar', 'Add')}
           </button>
@@ -245,7 +245,7 @@ function CreateFoodModal({ onClose, onCreated }: CreateFoodModalProps) {
             className="btn btn-accent"
             onClick={handleCreate}
             disabled={saving || !form.name || !form.calories_per_100g}
-            style={{ flex: 1, '--accent': 'var(--c-cal)' } as React.CSSProperties}
+            style={{ flex: 1, '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
           >
             {saving ? L('A criar...', 'Creating...') : L('Criar', 'Create')}
           </button>
@@ -348,9 +348,9 @@ export default function LogFoodView() {
                 flexShrink: 0,
                 padding: '7px 14px',
                 borderRadius: 99,
-                border: isActive ? `1px solid var(--c-cal)` : '1px solid var(--edge)',
-                background: isActive ? 'var(--c-cal-dim)' : 'transparent',
-                color: isActive ? 'var(--c-cal)' : 'var(--ink-dim)',
+                border: isActive ? `1px solid var(--c-nutrition)` : '1px solid var(--edge)',
+                background: isActive ? 'var(--c-nutrition-dim)' : 'transparent',
+                color: isActive ? 'var(--c-nutrition)' : 'var(--ink-dim)',
                 fontSize: 12.5,
                 fontWeight: isActive ? 600 : 400,
                 cursor: 'pointer',
@@ -371,7 +371,7 @@ export default function LogFoodView() {
       <button
         className="btn"
         onClick={() => setShowScanner(true)}
-        style={{ width: '100%', justifyContent: 'center', marginBottom: 16, color: 'var(--c-cal)' }}
+        style={{ width: '100%', justifyContent: 'center', marginBottom: 16, color: 'var(--c-nutrition)' }}
       >
         <Icon name="camera" size={15} />
         {L('Fotografar Refeição', 'Scan Meal')}

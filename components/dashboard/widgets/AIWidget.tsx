@@ -32,7 +32,7 @@ export default function AIWidget({ onNavigate, ...shellProps }: Props) {
   }
 
   return (
-    <WidgetShell title={L("Assistente IA", "AI Assistant")} color="var(--c-task)" glyph="wand" {...shellProps}>
+    <WidgetShell title={L("Assistente IA", "AI Assistant")} color="var(--c-ai)" glyph="wand" {...shellProps}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
           <div
@@ -62,7 +62,7 @@ export default function AIWidget({ onNavigate, ...shellProps }: Props) {
             onKeyDown={(e) => { if (e.key === "Enter") handleSend() }}
             placeholder={L("Pergunta algo…", "Ask something…")}
             style={{
-              "--accent": "var(--c-task)",
+              "--accent": "var(--c-ai)",
               flex: 1,
               background: "var(--bg-inset)",
               border: "1px solid var(--edge)",
@@ -85,7 +85,7 @@ export default function AIWidget({ onNavigate, ...shellProps }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--c-task)",
+              color: "var(--c-ai)",
               flexShrink: 0,
               padding: 0,
             }}

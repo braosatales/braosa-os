@@ -121,7 +121,7 @@ export default function DiaryView() {
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
           {date === todayStr() && (
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-cal)', letterSpacing: '0.12em', marginBottom: 2 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--c-nutrition)', letterSpacing: '0.12em', marginBottom: 2 }}>
               {L('HOJE', 'TODAY')}
             </div>
           )}
@@ -286,7 +286,7 @@ export default function DiaryView() {
                       background: 'none',
                       border: '1px solid var(--edge)',
                       borderRadius: 6,
-                      color: 'var(--c-cal)',
+                      color: 'var(--c-nutrition)',
                       fontSize: 12,
                       padding: '3px 7px',
                       cursor: 'pointer',
@@ -306,7 +306,7 @@ export default function DiaryView() {
                       background: 'none',
                       border: '1px solid var(--edge)',
                       borderRadius: 6,
-                      color: 'var(--c-cal)',
+                      color: 'var(--c-nutrition)',
                       fontSize: 12,
                       padding: '3px 8px',
                       cursor: 'pointer',
@@ -399,7 +399,7 @@ export default function DiaryView() {
           width: 56,
           height: 56,
           borderRadius: '50%',
-          background: 'var(--c-cal)',
+          background: 'var(--c-nutrition)',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -407,7 +407,7 @@ export default function DiaryView() {
           justifyContent: 'center',
           color: 'oklch(0.18 0.01 80)',
           zIndex: 50,
-          boxShadow: `0 0 calc(30px * var(--glow)) -6px var(--c-cal)`,
+          boxShadow: `0 0 calc(30px * var(--glow)) -6px var(--c-nutrition)`,
         }}
         title={L('Fotografar refeição', 'Scan meal')}
       >

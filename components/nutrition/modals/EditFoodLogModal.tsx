@@ -113,7 +113,7 @@ export default function EditFoodLogModal({ log, onClose, onSaved }: Props) {
             className="btn btn-accent"
             onClick={handleSave}
             disabled={saving}
-            style={{ flex: 1, '--accent': 'var(--c-cal)' } as React.CSSProperties}
+            style={{ flex: 1, '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
           >
             {saving ? L('A guardar...', 'Saving...') : L('Guardar', 'Save')}
           </button>

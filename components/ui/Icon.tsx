@@ -160,10 +160,14 @@ const iconMap: Record<IconName, LucideComponent> = {
   sun: Sun,
   moon: Moon,
   droplet: Droplets,
+  nutrition: Activity,
+  braosa: Building2,
+  verum: Shield,
 };
 
 export default function Icon({ name, size = 16, stroke = 1.8, className }: IconComponentProps) {
   const LucideIcon = iconMap[name];
+  if (!LucideIcon) return null;
   const fill = name === 'star-fill' ? 'currentColor' : 'none';
   return <LucideIcon size={size} strokeWidth={stroke} className={className} fill={fill} />;
 }

@@ -78,7 +78,7 @@ function LogWeightModal({ onClose, onLogged }: { onClose: () => void; onLogged: 
             className="btn btn-accent"
             onClick={handleLog}
             disabled={saving || !weight}
-            style={{ flex: 1, '--accent': 'var(--c-cal)' } as React.CSSProperties}
+            style={{ flex: 1, '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
           >
             {saving ? L('A guardar...', 'Saving...') : L('Guardar', 'Save')}
           </button>
@@ -158,7 +158,7 @@ export default function ProgressView() {
           <button
             className="btn btn-accent"
             onClick={() => setShowLogWeight(true)}
-            style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-cal)' } as React.CSSProperties}
+            style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
           >
             <Icon name="plus" size={13} />
             {L('Registar Peso', 'Log Weight')}
@@ -229,7 +229,7 @@ export default function ProgressView() {
                 {profile && (
                   <ReferenceLine y={profile.target_weight_kg} stroke="var(--ink-faint)" strokeDasharray="4 4" />
                 )}
-                <Line type="monotone" dataKey="weight" stroke="var(--c-cal)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="weight" stroke="var(--c-nutrition)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -254,7 +254,7 @@ export default function ProgressView() {
                 key={p}
                 onClick={() => setPeriod(p)}
                 className="btn"
-                style={{ padding: '4px 10px', fontSize: 12, background: period === p ? 'var(--c-cal-dim)' : undefined, color: period === p ? 'var(--c-cal)' : undefined, borderColor: period === p ? 'var(--c-cal)' : undefined }}
+                style={{ padding: '4px 10px', fontSize: 12, background: period === p ? 'var(--c-nutrition-dim)' : undefined, color: period === p ? 'var(--c-nutrition)' : undefined, borderColor: period === p ? 'var(--c-nutrition)' : undefined }}
               >
                 {p}
               </button>
@@ -278,7 +278,7 @@ export default function ProgressView() {
                     <YAxis tick={{ fill: 'var(--ink-faint)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <ReferenceLine y={summary.caloriesTrend[0]?.target ?? 2150} stroke="var(--ink-faint)" strokeDasharray="4 4" />
-                    <Area type="monotone" dataKey="calories" stroke="var(--c-cal)" fill="oklch(0.76 0.085 152 / 0.20)" strokeWidth={2} dot={false} />
+                    <Area type="monotone" dataKey="calories" stroke="var(--c-nutrition)" fill="oklch(0.72 0.14 145 / 0.20)" strokeWidth={2} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -290,7 +290,7 @@ export default function ProgressView() {
                 {L('Médias do período', 'Period averages')}
               </div>
               {[
-                { label: L('Calorias', 'Calories'), avg: summary.avgCalories, target: profile?.target_calories ?? 2150, unit: 'kcal', color: 'var(--c-cal)' },
+                { label: L('Calorias', 'Calories'), avg: summary.avgCalories, target: profile?.target_calories ?? 2150, unit: 'kcal', color: 'var(--c-nutrition)' },
                 { label: L('Proteína', 'Protein'),  avg: summary.avgProtein,  target: profile?.target_protein_g ?? 170,  unit: 'g',    color: 'var(--c-health)' },
                 { label: L('Hidratos', 'Carbs'),    avg: summary.avgCarbs,    target: profile?.target_carbs_g ?? 215,    unit: 'g',    color: 'var(--c-fin)' },
                 { label: L('Gordura', 'Fat'),        avg: summary.avgFat,      target: profile?.target_fat_g ?? 65,       unit: 'g',    color: 'var(--c-task)' },
@@ -396,13 +396,13 @@ export default function ProgressView() {
                 <Icon name="wand" size={13} />
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-cal)', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                    <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-nutrition)', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                   ))}
                 </div>
               </div>
             ) : tip ? (
               <div style={{ background: 'var(--bg-inset)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <span style={{ color: 'var(--c-cal)', flexShrink: 0, marginTop: 1 }}><Icon name="wand" size={13} /></span>
+                <span style={{ color: 'var(--c-nutrition)', flexShrink: 0, marginTop: 1 }}><Icon name="wand" size={13} /></span>
                 <span style={{ fontSize: 13, color: 'var(--ink-dim)', fontStyle: 'italic', lineHeight: 1.5 }}>{tip}</span>
               </div>
             ) : null}

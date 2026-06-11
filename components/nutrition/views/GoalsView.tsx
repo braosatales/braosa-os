@@ -122,9 +122,9 @@ export default function GoalsView() {
                     flex: 1,
                     padding: '9px 8px',
                     borderRadius: 8,
-                    border: `1px solid ${form.sex === s ? 'var(--c-cal)' : 'var(--edge)'}`,
-                    background: form.sex === s ? 'var(--c-cal-dim)' : 'var(--bg-inset)',
-                    color: form.sex === s ? 'var(--c-cal)' : 'var(--ink-dim)',
+                    border: `1px solid ${form.sex === s ? 'var(--c-nutrition)' : 'var(--edge)'}`,
+                    background: form.sex === s ? 'var(--c-nutrition-dim)' : 'var(--bg-inset)',
+                    color: form.sex === s ? 'var(--c-nutrition)' : 'var(--ink-dim)',
                     fontSize: 12.5,
                     cursor: 'pointer',
                     fontWeight: form.sex === s ? 600 : 400,
@@ -150,9 +150,9 @@ export default function GoalsView() {
                   justifyContent: 'space-between',
                   padding: '9px 14px',
                   borderRadius: 8,
-                  border: `1px solid ${form.activity_level === a.id ? 'var(--c-cal)' : 'var(--edge)'}`,
-                  background: form.activity_level === a.id ? 'var(--c-cal-dim)' : 'var(--bg-inset)',
-                  color: form.activity_level === a.id ? 'var(--c-cal)' : 'var(--ink-dim)',
+                  border: `1px solid ${form.activity_level === a.id ? 'var(--c-nutrition)' : 'var(--edge)'}`,
+                  background: form.activity_level === a.id ? 'var(--c-nutrition-dim)' : 'var(--bg-inset)',
+                  color: form.activity_level === a.id ? 'var(--c-nutrition)' : 'var(--ink-dim)',
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: form.activity_level === a.id ? 600 : 400,
@@ -183,9 +183,9 @@ export default function GoalsView() {
                 style={{
                   padding: '14px 10px',
                   borderRadius: 10,
-                  border: `1px solid ${isActive ? 'var(--c-cal)' : 'var(--edge)'}`,
-                  background: isActive ? 'var(--c-cal-dim)' : 'var(--bg-inset)',
-                  color: isActive ? 'var(--c-cal)' : 'var(--ink-dim)',
+                  border: `1px solid ${isActive ? 'var(--c-nutrition)' : 'var(--edge)'}`,
+                  background: isActive ? 'var(--c-nutrition-dim)' : 'var(--bg-inset)',
+                  color: isActive ? 'var(--c-nutrition)' : 'var(--ink-dim)',
                   cursor: 'pointer',
                   textAlign: 'center',
                   fontSize: 13,
@@ -229,7 +229,7 @@ export default function GoalsView() {
           <button
             className="btn"
             onClick={() => setCustomize(v => !v)}
-            style={{ fontSize: 12, padding: '5px 10px', color: customize ? 'var(--c-cal)' : undefined }}
+            style={{ fontSize: 12, padding: '5px 10px', color: customize ? 'var(--c-nutrition)' : undefined }}
           >
             {L('Personalizar', 'Customize')}
           </button>
@@ -259,7 +259,7 @@ export default function GoalsView() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
             {[
-              { label: 'kcal', value: autoCalories, color: 'var(--c-cal)' },
+              { label: 'kcal', value: autoCalories, color: 'var(--c-nutrition)' },
               { label: L('Prot', 'Prot'), value: `${autoProtein}g`, color: 'var(--c-health)' },
               { label: L('Hidr', 'Carbs'), value: `${Math.max(0, autoCarbs)}g`, color: 'var(--c-fin)' },
               { label: L('Gord', 'Fat'), value: `${autoFat}g`, color: 'var(--c-task)' },
@@ -277,7 +277,7 @@ export default function GoalsView() {
         className="btn btn-accent"
         onClick={handleSave}
         disabled={saving}
-        style={{ width: '100%', padding: 14, fontSize: 14, '--accent': 'var(--c-cal)' } as React.CSSProperties}
+        style={{ width: '100%', padding: 14, fontSize: 14, '--accent': 'var(--c-nutrition)' } as React.CSSProperties}
       >
         {saved ? L('✓ Guardado', '✓ Saved') : saving ? L('A guardar...', 'Saving...') : L('Guardar Objetivos', 'Save Goals')}
       </button>

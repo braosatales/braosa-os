@@ -29,7 +29,7 @@ export default function NotesWidget({ onNavigate, ...shellProps }: Props) {
   }
 
   return (
-    <WidgetShell title={L("Notas", "Notes")} color="var(--c-task)" glyph="note" {...shellProps}>
+    <WidgetShell title={L("Notas", "Notes")} color="var(--c-notes)" glyph="note" {...shellProps}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {loading ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -51,7 +51,7 @@ export default function NotesWidget({ onNavigate, ...shellProps }: Props) {
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    background: note.pinned ? "var(--c-task)" : "transparent",
+                    background: note.pinned ? "var(--c-notes)" : "transparent",
                     flexShrink: 0,
                   }}
                 />

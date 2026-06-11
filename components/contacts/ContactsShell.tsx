@@ -21,7 +21,7 @@ import PendingReviewPanel from './PendingReviewPanel'
 
 function Avatar({ contact, size = 38 }: { contact: Contact; size?: number }) {
   const initials = getContactInitials(contact)
-  const color = contact.tags[0] ? TAG_META[contact.tags[0]]?.color ?? 'var(--c-task)' : 'var(--c-task)'
+  const color = contact.tags[0] ? TAG_META[contact.tags[0]]?.color ?? 'var(--c-contacts)' : 'var(--c-contacts)'
 
   if (contact.photo_url) {
     return (
@@ -51,7 +51,7 @@ const INTERACTION_META = {
   email:   { icon: 'mail' as const,     color: 'var(--c-mail)' },
   call:    { icon: 'activity' as const, color: 'var(--c-health)' },
   meeting: { icon: 'cal' as const,      color: 'var(--c-cal)' },
-  note:    { icon: 'note' as const,     color: 'var(--c-task)' },
+  note:    { icon: 'note' as const,     color: 'var(--c-notes)' },
 }
 
 // ─── ContactDetail ────────────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ function ContactDetail({
               width: '100%', background: 'var(--bg-inset)', border: '1px solid var(--edge)',
               borderRadius: 'var(--radius-sm)', color: 'var(--ink)', fontSize: 13,
               padding: '9px 12px', outline: 'none', resize: 'vertical', minHeight: 72,
-              '--accent': 'var(--c-task)',
+              '--accent': 'var(--c-contacts)',
             } as any}
           />
         </div>
@@ -287,7 +287,7 @@ function ContactDetail({
                   {L('Cancelar', 'Cancel')}
                 </button>
                 <button type="submit" className="btn btn-accent" disabled={logSaving}
-                  style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-task)' } as any}>
+                  style={{ fontSize: 12, padding: '6px 12px', '--accent': 'var(--c-contacts)' } as any}>
                   {logSaving ? '...' : L('Guardar', 'Save')}
                 </button>
               </div>
@@ -349,7 +349,7 @@ function InfoRow({ icon, value, href }: { icon: any; value: string; href?: strin
       <span style={{ color: 'var(--ink-faint)', flexShrink: 0 }}>
         <Icon name={icon} size={13} />
       </span>
-      <span style={{ fontSize: 13, color: href ? 'var(--c-task)' : 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: 13, color: href ? 'var(--c-contacts)' : 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {value}
       </span>
     </div>
@@ -434,7 +434,7 @@ export default function ContactsShell() {
             width: '100%', background: 'var(--bg-inset)', border: '1px solid var(--edge)',
             borderRadius: 'var(--radius-sm)', color: 'var(--ink)', fontSize: 12.5,
             padding: '7px 10px 7px 30px', outline: 'none',
-            '--accent': 'var(--c-task)',
+            '--accent': 'var(--c-contacts)',
           } as any}
         />
       </div>
@@ -522,8 +522,8 @@ export default function ContactsShell() {
                 style={{
                   display: 'flex', gap: 12, padding: '10px 14px', cursor: 'pointer',
                   borderRadius: 8, margin: '0 6px 2px', minHeight: 56,
-                  background: active ? 'color-mix(in oklab, var(--c-task) 10%, transparent)' : 'transparent',
-                  borderLeft: active ? '2px solid var(--c-task)' : '2px solid transparent',
+                  background: active ? 'color-mix(in oklab, var(--c-contacts) 10%, transparent)' : 'transparent',
+                  borderLeft: active ? '2px solid var(--c-contacts)' : '2px solid transparent',
                   transition: 'background .12s',
                 }}
               >

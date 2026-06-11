@@ -83,9 +83,9 @@ export default function FoodsView() {
           onClick={() => setMyFoods(v => !v)}
           style={{
             fontSize: 12,
-            background: myFoods ? 'var(--c-cal-dim)' : undefined,
-            color: myFoods ? 'var(--c-cal)' : undefined,
-            borderColor: myFoods ? 'var(--c-cal)' : undefined,
+            background: myFoods ? 'var(--c-nutrition-dim)' : undefined,
+            color: myFoods ? 'var(--c-nutrition)' : undefined,
+            borderColor: myFoods ? 'var(--c-nutrition)' : undefined,
             whiteSpace: 'nowrap',
           }}
         >
@@ -131,7 +131,7 @@ export default function FoodsView() {
                     <span style={{ color: 'var(--pos)', fontSize: 11 }}>✓</span>
                   )}
                   {food.user_id && (
-                    <span style={{ fontSize: 10, color: 'var(--c-cal)', background: 'var(--c-cal-dim)', padding: '1px 5px', borderRadius: 4 }}>
+                    <span style={{ fontSize: 10, color: 'var(--c-nutrition)', background: 'var(--c-nutrition-dim)', padding: '1px 5px', borderRadius: 4 }}>
                       {L('meu', 'mine')}
                     </span>
                   )}

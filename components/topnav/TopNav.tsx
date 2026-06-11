@@ -110,8 +110,8 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
             >
               {/* Icon with optional unread badge for mail */}
               <div style={{ position: "relative" }}>
-                <Icon name={sys.icon as Parameters<typeof Icon>[0]["name"]} size={14} />
-                {sys.id === "email" && inboxUnread > 0 && (
+                <Icon name={sys.glyph as Parameters<typeof Icon>[0]["name"]} size={14} />
+                {sys.id === "mail" && inboxUnread > 0 && (
                   <span style={{
                     position: "absolute",
                     top: -5, right: -6,
@@ -160,7 +160,7 @@ export default function TopNav({ active, onNavigate, onLock, onSettings, user }:
                 whiteSpace: "nowrap",
               }}
             >
-              <Icon name={co.icon as Parameters<typeof Icon>[0]["name"]} size={14} />
+              <Icon name={co.glyph as Parameters<typeof Icon>[0]["name"]} size={14} />
               <span>{co.label}</span>
             </button>
           )

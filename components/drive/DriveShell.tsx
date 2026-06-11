@@ -183,7 +183,7 @@ export default function DriveShell() {
                 width: "100%", padding: "7px 9px 7px 28px", borderRadius: "var(--radius-sm)",
                 border: "1px solid var(--edge)", background: "var(--bg-inset)",
                 color: "var(--ink)", fontSize: 12, outline: "none",
-                "--accent": "var(--c-task)",
+                "--accent": "var(--c-drive)",
               } as React.CSSProperties}
             />
           </div>

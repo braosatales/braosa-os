@@ -3,6 +3,28 @@ import { useState, useEffect, useRef } from 'react'
 import { Icon } from '@/components/ui'
 import { MOBILE_APPS } from '@/lib/mobile-apps'
 import { useLang } from '@/lib/i18n'
+import { AppIcon } from './AppIcon'
+import {
+  IconDashboard, IconFinances, IconTasks, IconNotes, IconHealth,
+  IconNutrition, IconMail, IconCalendar, IconContacts, IconDrive,
+  IconAI, IconBraosa, IconVerum,
+} from './AppIcons'
+
+const APP_ICON_MAP: Record<string, React.ComponentType> = {
+  dashboard: IconDashboard,
+  finances:  IconFinances,
+  tasks:     IconTasks,
+  notes:     IconNotes,
+  health:    IconHealth,
+  nutrition: IconNutrition,
+  mail:      IconMail,
+  calendar:  IconCalendar,
+  contacts:  IconContacts,
+  drive:     IconDrive,
+  ai:        IconAI,
+  braosa:    IconBraosa,
+  verum:     IconVerum,
+}
 
 function useGreeting() {
   const [greeting, setGreeting] = useState('')
@@ -130,7 +152,11 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       onTouchMove={handleTouchMove}
       style={{
         minHeight: '100vh',
-        background: 'radial-gradient(120% 100% at 50% 0%, oklch(0.205 0.007 70), var(--bg-void))',
+        background: `
+          radial-gradient(ellipse 80% 40% at 20% 10%, oklch(0.25 0.04 290 / 0.4), transparent 60%),
+          radial-gradient(ellipse 60% 30% at 80% 80%, oklch(0.22 0.03 195 / 0.3), transparent 50%),
+          radial-gradient(120% 100% at 50% 0%, oklch(0.205 0.007 70), var(--bg-void))
+        `,
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)',
         overflowY: 'auto',
@@ -190,6 +216,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         {visibleApps.map(app => {
           const label = lang === 'pt' ? app.label_pt : app.label_en
           const isPressed = pressedApp === app.id
+          const IconComponent = APP_ICON_MAP[app.id]
           return (
             <div
               key={app.id}
@@ -201,23 +228,15 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
               <div
                 className={editMode ? 'icon-jiggle' : undefined}
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 16,
-                  background: `color-mix(in oklch, ${app.color} 20%, var(--bg-raised))`,
-                  border: `1px solid color-mix(in oklch, ${app.color} 30%, transparent)`,
-                  boxShadow: '0 4px 16px -4px oklch(0 0 0 / 0.5)',
-                  display: 'grid',
-                  placeItems: 'center',
                   transform: isPressed ? 'scale(0.85)' : 'scale(1)',
                   transition: 'transform .1s',
                   userSelect: 'none',
                   WebkitUserSelect: 'none',
                 }}
               >
-                <span style={{ color: app.color }}>
-                  <Icon name={app.glyph as any} size={26} />
-                </span>
+                <AppIcon appId={app.id} color={app.color} size={60}>
+                  {IconComponent && <IconComponent />}
+                </AppIcon>
               </div>
               <span style={{
                 fontSize: 10,

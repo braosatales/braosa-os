@@ -35,7 +35,7 @@ export default function QuickNoteWidget(props: ShellProps) {
   }
 
   return (
-    <WidgetShell title={L("Nota Rápida", "Quick Note")} color="var(--c-task)" glyph="note" {...props}>
+    <WidgetShell title={L("Nota Rápida", "Quick Note")} color="var(--c-notes)" glyph="note" {...props}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 10 }}>
         <textarea
           value={input}
