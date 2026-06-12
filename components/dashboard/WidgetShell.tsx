@@ -2,6 +2,7 @@
 
 import { Icon } from "@/components/ui"
 import type { IconName } from "@/lib/icons"
+import { useIsMobile } from "@/lib/hooks/useIsMobile"
 
 type Props = {
   title: string
@@ -30,6 +31,7 @@ export default function WidgetShell({
   onResizeDown,
   onRemove,
 }: Props) {
+  const isMobile = useIsMobile()
   const accent = color
 
   let boxShadow = "var(--shadow-card)"
@@ -121,25 +123,29 @@ export default function WidgetShell({
       )}
 
       {/* Drag handle */}
-      <div
-        className="drag-handle"
-        onPointerDown={onHandleDown}
-      >
-        <Icon name="drag" size={13} />
-      </div>
+      {!isMobile && (
+        <div
+          className="drag-handle"
+          onPointerDown={onHandleDown}
+        >
+          <Icon name="drag" size={13} />
+        </div>
+      )}
 
       {/* Resize grip */}
-      <div
-        className="resize-grip"
-        style={{ color: "var(--ink-faint)" }}
-        onPointerDown={(e) => onResizeDown?.(e, "se")}
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <line x1="13" y1="1"  x2="1"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="13" y1="5"  x2="5"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="13" y1="9"  x2="9"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
+      {!isMobile && (
+        <div
+          className="resize-grip"
+          style={{ color: "var(--ink-faint)" }}
+          onPointerDown={(e) => onResizeDown?.(e, "se")}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <line x1="13" y1="1"  x2="1"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="5"  x2="5"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="13" y1="9"  x2="9"  y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
 
       {/* Size badge (shown during drag/resize) */}
       {sizeBadge && <div className="size-badge">{sizeBadge}</div>}

@@ -17,8 +17,8 @@ export type MobileApp = {
 export const MOBILE_APPS: MobileApp[] = [
   {
     id: 'dashboard',
-    label_pt: 'Início',
-    label_en: 'Home',
+    label_pt: 'Dashboard',
+    label_en: 'Dashboard',
     color: '#E8E0D5',
     glyph: 'grid',
   },

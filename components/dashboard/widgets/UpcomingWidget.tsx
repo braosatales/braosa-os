@@ -55,8 +55,16 @@ export default function UpcomingWidget(props: ShellProps) {
     <WidgetShell title={L("Próximos Eventos", "Upcoming Events")} color="var(--c-cal)" glyph="calendar" {...props}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 0" }}>
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 60 }}>
-            <span style={{ fontSize: 11, color: "var(--ink-faint)" }}>…</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 0' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{
+                height: 14, borderRadius: 4,
+                background: 'var(--bg-raised-2, var(--bg-raised))',
+                animation: 'pulse 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+                opacity: 0.6,
+              }} />
+            ))}
           </div>
         ) : events.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 60, gap: 6 }}>

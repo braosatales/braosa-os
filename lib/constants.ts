@@ -1,3 +1,5 @@
+export const APP_VERSION = '1.0.1'
+
 export const SYSTEMS = [
   { id: "dashboard",  label: "Dashboard",  labelPt: "Painel",     color: "var(--c-dash)",      dim: "var(--c-dash-dim)",      glyph: "grid"      },
   { id: "finances",   label: "Finances",   labelPt: "Finanças",   color: "var(--c-fin)",       dim: "var(--c-fin-dim)",       glyph: "coins"     },

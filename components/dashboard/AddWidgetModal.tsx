@@ -43,10 +43,13 @@ export default function AddWidgetModal({ open, onClose, visible, onToggle, onReo
             {L("Widgets", "Widgets")}
           </div>
           <div style={{ fontSize: 13, color: "var(--ink-faint)", marginTop: 3 }}>
-            {L(
-              `${activeWidgets.length} ativos · ${availableWidgets.length} disponíveis`,
-              `${activeWidgets.length} active · ${availableWidgets.length} available`,
-            )}
+            {availableWidgets.length === 0
+              ? L(`${activeWidgets.length} widgets ativos`, `${activeWidgets.length} widgets active`)
+              : L(
+                  `${activeWidgets.length} ativos · ${availableWidgets.length} disponíveis`,
+                  `${activeWidgets.length} active · ${availableWidgets.length} available`,
+                )
+            }
           </div>
         </div>
         <button
@@ -98,21 +101,25 @@ export default function AddWidgetModal({ open, onClose, visible, onToggle, onReo
         </div>
 
         {/* Available section */}
-        {availableWidgets.length > 0 && (
-          <>
-            <div
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 9.5,
-                color: "var(--ink-faint)",
-                letterSpacing: "0.16em",
-                marginBottom: 10,
-                marginTop: 20,
-                textTransform: "uppercase",
-              }}
-            >
-              {L("DISPONÍVEIS", "AVAILABLE")}
+        <>
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 9.5,
+              color: "var(--ink-faint)",
+              letterSpacing: "0.16em",
+              marginBottom: 10,
+              marginTop: 20,
+              textTransform: "uppercase",
+            }}
+          >
+            {L("DISPONÍVEIS", "AVAILABLE")}
+          </div>
+          {availableWidgets.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--ink-faint)', fontSize: 13 }}>
+              All widgets are active
             </div>
+          ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
               {availableWidgets.map(w => (
                 <WidgetCard
@@ -123,8 +130,8 @@ export default function AddWidgetModal({ open, onClose, visible, onToggle, onReo
                 />
               ))}
             </div>
-          </>
-        )}
+          )}
+        </>
 
         {/* ORDER section — mobile only */}
         {isMobile && activeWidgets.length > 0 && onReorder && (

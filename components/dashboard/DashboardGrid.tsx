@@ -39,6 +39,9 @@ import { L } from "@/lib/i18n"
 const CELL_SIZE = 160
 const GRID_GAP = 16
 const GRID_PADDING = 20
+const MOBILE_COLS = 2
+const MOBILE_GRID_GAP = 12
+const MOBILE_GRID_PADDING = 12
 
 interface DashboardGridProps {
   device: 'desktop' | 'mobile'
@@ -157,7 +160,7 @@ export default function DashboardGrid({ device, onNavigate }: DashboardGridProps
     if (!el) return
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width
-      const size = (w - GRID_GAP - GRID_PADDING * 2) / MOBILE_GRID_COLS
+      const size = Math.floor((w - (MOBILE_GRID_PADDING * 2) - MOBILE_GRID_GAP) / MOBILE_COLS)
       setMobileCellSize(Math.max(120, size))
     })
     ro.observe(el)
@@ -431,15 +434,19 @@ export default function DashboardGrid({ device, onNavigate }: DashboardGridProps
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto' }}>
         <div
           ref={mobileOuterRef}
-          style={{ width: '100%', position: 'relative' }}
+          style={{ width: '100%', position: 'relative', overflowX: 'hidden', maxWidth: '100vw' }}
         >
           {savedBadge}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${MOBILE_GRID_COLS}, 1fr)`,
-              gap: GRID_GAP,
-              padding: GRID_PADDING,
+              gridTemplateColumns: `repeat(2, ${mobileCellSize}px)`,
+              gridAutoRows: `${mobileCellSize}px`,
+              gap: `${MOBILE_GRID_GAP}px`,
+              padding: `${MOBILE_GRID_PADDING}px`,
+              width: `${mobileCellSize * 2 + MOBILE_GRID_GAP + MOBILE_GRID_PADDING * 2}px`,
+              margin: '0 auto',
+              overflowX: 'hidden',
             }}
           >
             {visible.map((id) => {
@@ -453,7 +460,7 @@ export default function DashboardGrid({ device, onNavigate }: DashboardGridProps
                 },
               }
               return (
-                <div key={id} style={{ minHeight: mobileCellSize }}>
+                <div key={id} style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
                   {renderWidget(id, shellProps, nav)}
                 </div>
               )

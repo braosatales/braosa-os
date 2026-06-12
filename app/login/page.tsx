@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { APP_VERSION } from '@/lib/constants'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -250,17 +251,9 @@ export default function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 9.5,
-            color: 'var(--ink-faint)',
-            textAlign: 'center',
-            marginTop: 28,
-          }}
-        >
-          BraosaOS · Acesso privado
-        </div>
+        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: 'var(--ink-faint)', textAlign: 'center', marginTop: 28 }}>
+          BraosaOS · v{APP_VERSION} · Alpha
+        </p>
       </div>
     </div>
   )

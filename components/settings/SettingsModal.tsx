@@ -8,6 +8,7 @@ import { getLang, setLang, type Lang } from "@/lib/i18n"
 import { hasLockPassword, setLockPassword, removeLockPassword } from "@/lib/lockscreen"
 import { useTweaks } from "@/lib/tweaks"
 import GoogleConnectionSection from "./GoogleConnectionSection"
+import { APP_VERSION } from "@/lib/constants"
 
 type Props = {
   open: boolean
@@ -390,17 +391,10 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
       </div>
 
       {/* Footer */}
-      <div
-        style={{
-          textAlign: "center",
-          padding: "12px 20px",
-          borderTop: "1px solid var(--edge-soft)",
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          color: "var(--ink-faint)",
-        }}
-      >
-        BraosaOS · v0.1
+      <div style={{ textAlign: "center", padding: "12px 20px", borderTop: "1px solid var(--edge-soft)" }}>
+        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: 'var(--ink-faint)', textAlign: 'center' }}>
+          BraosaOS · v{APP_VERSION} · Alpha
+        </p>
       </div>
     </Modal>
   )
