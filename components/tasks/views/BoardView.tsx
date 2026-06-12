@@ -63,11 +63,14 @@ export default function BoardView({ tasks, onSelect }: Props) {
   return (
     <div style={isMobile ? {
       width: '100%',
+      maxWidth: '100%',
       padding: '16px',
-      boxSizing: 'border-box',
+      boxSizing: 'border-box' as 'border-box',
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'column' as 'column',
+      alignItems: 'stretch',
       gap: '12px',
+      overflowX: 'hidden',
       overflowY: 'auto',
       background: '#161310',
     } : {
@@ -128,7 +131,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
           <div
             key={col.id}
             style={isMobile
-              ? { width: '100%', display: 'block', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520', marginBottom: 0 }
+              ? { width: 'calc(100% - 0px)', maxWidth: '100%', display: 'block', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520', marginBottom: 0, boxSizing: 'border-box' as 'border-box' }
               : { flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column' }
             }
             onPointerEnter={() => { if (draggingId) setOverColumn(col.id) }}

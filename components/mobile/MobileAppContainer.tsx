@@ -112,7 +112,6 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             right: 0,
             zIndex: 100,
             background: '#1a1714',
-            borderTop: '1px solid var(--edge)',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}>
           {longPressTab && (() => {
