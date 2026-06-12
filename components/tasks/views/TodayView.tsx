@@ -168,11 +168,11 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
   const hasAny = overdue.length + todayTasks.length + thisWeek.length + noDate.length > 0
 
   return (
-    <div style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: 'transparent' }}>
+    <div style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#161310' }}>
       {!hasAny && (
         isMobile ? (
-          <div style={{ marginTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px', width: '100%' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
               <Icon name="target" size={40} />
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, color: '#E8E0D5', textAlign: 'center' }}>

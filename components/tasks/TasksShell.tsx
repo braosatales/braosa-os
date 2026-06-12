@@ -242,7 +242,7 @@ export default function TasksShell() {
       )}
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #1a1714 0%, #141210 100%)', minHeight: '100%' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column', background: '#161310', minHeight: '100%' }}>
         {activeView === 'today' && (
           <TodayView tasks={filteredTasks} onSelect={setSelectedTask} onToggleDone={handleToggleDone} onToggleFav={handleToggleFav} />
         )}

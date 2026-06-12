@@ -241,16 +241,3 @@ body { overflow: hidden; }
   -webkit-touch-callout: none;
 }
 
-.app-bottom-nav {
-  background: #1a1714;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.app-bottom-nav::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * env(safe-area-inset-bottom));
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-bottom);
-  background: #1a1714;
-}

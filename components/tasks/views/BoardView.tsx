@@ -61,16 +61,25 @@ export default function BoardView({ tasks, onSelect }: Props) {
   const ghostTask = draggingId ? tasks.find(t => t.id === draggingId) : null
 
   return (
-    <div style={{
+    <div style={isMobile ? {
+      width: '100%',
+      padding: '16px',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      overflowY: 'auto',
+      background: '#161310',
+    } : {
       display: 'flex',
       gap: 16,
-      padding: isMobile ? '16px' : '20px',
-      overflowX: isMobile ? 'hidden' : 'auto',
-      overflowY: isMobile ? 'auto' : 'hidden',
+      padding: '20px',
+      overflowX: 'auto',
+      overflowY: 'hidden',
       height: '100%',
       alignItems: 'flex-start',
-      flexDirection: isMobile ? 'column' : 'row',
-      background: 'transparent',
+      flexDirection: 'row',
+      background: '#161310',
     }}>
       {/* Mobile move bottom sheet */}
       {isMobile && moveSheetTask && (
@@ -119,7 +128,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
           <div
             key={col.id}
             style={isMobile
-              ? { width: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520' }
+              ? { width: '100%', display: 'block', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520', marginBottom: 0 }
               : { flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column' }
             }
             onPointerEnter={() => { if (draggingId) setOverColumn(col.id) }}

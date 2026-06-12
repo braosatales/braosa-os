@@ -96,27 +96,36 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingBottom: hasSubTabs ? 'calc(56px + env(safe-area-inset-bottom))' : undefined,
+        background: '#161310',
+        paddingBottom: hasSubTabs ? 'calc(56px + env(safe-area-inset-bottom) + 8px)' : undefined,
       }}>
         {children}
       </div>
 
       {/* Per-app bottom nav */}
       {hasSubTabs && (
+        <>
+        {/* Safe area filler — sits behind/below the nav */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 'env(safe-area-inset-bottom)',
+          background: '#1a1714',
+          zIndex: 99,
+        }} />
         <div
-          className="app-bottom-nav"
           style={{
             position: 'fixed',
-            bottom: 0,
+            bottom: 'env(safe-area-inset-bottom)',
             left: 0,
             right: 0,
-            height: 'calc(56px + env(safe-area-inset-bottom))',
-            paddingBottom: 'env(safe-area-inset-bottom)',
+            height: 56,
             background: '#1a1714',
             borderTop: '1px solid var(--edge)',
-            backdropFilter: 'blur(12px)',
             display: 'flex',
-            zIndex: 10,
+            zIndex: 100,
           }}>
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
@@ -192,25 +201,28 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                 }}
                 style={{
                   flex: 1,
+                  height: 56,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 3,
+                  gap: 4,
+                  padding: 0,
                   border: 'none',
                   background: 'transparent',
                   cursor: 'pointer',
-                  color: isActive ? app.color : 'var(--ink-faint)',
+                  color: isActive ? app.color : '#4a4540',
                 }}
               >
-                <Icon name={tab.glyph as any} size={20} />
-                <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.04em' }}>
+                <Icon name={tab.glyph as any} size={22} />
+                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.03em' }}>
                   {tabLabel}
                 </span>
               </button>
             )
           })}
         </div>
+        </>
       )}
     </div>
   )

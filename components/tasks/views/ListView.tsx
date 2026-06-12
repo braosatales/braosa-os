@@ -100,7 +100,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
   }, [sorted, groupBy, projects])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', background: 'transparent' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', background: '#161310' }}>
       {/* Toolbar */}
       {!isMobile && (
         <>
@@ -260,8 +260,8 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
 
         {tasks.length === 0 && (
           isMobile ? (
-            <div style={{ marginTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px', width: '100%' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
                 <Icon name="list" size={40} />
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, color: '#E8E0D5', textAlign: 'center' }}>
