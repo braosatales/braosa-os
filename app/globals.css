@@ -234,3 +234,9 @@ body { overflow: hidden; }
 }
 
 .widget { user-select: none; }
+
+.mobile-home-icon {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}

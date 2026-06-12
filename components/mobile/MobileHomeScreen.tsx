@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { Icon } from '@/components/ui'
-import { MOBILE_APPS } from '@/lib/mobile-apps'
+import { MOBILE_APPS, type MobileApp } from '@/lib/mobile-apps'
 import { useLang } from '@/lib/i18n'
 import { AppIcon } from './AppIcon'
 import {
@@ -26,6 +26,16 @@ const APP_ICON_MAP: Record<string, React.ComponentType> = {
   verum:     IconVerum,
 }
 
+type Shortcut = {
+  id: string
+  appId: string
+  subTabId: string
+  label_pt: string
+  label_en: string
+  color: string
+  glyph: string
+}
+
 function useGreeting() {
   const [greeting, setGreeting] = useState('')
   useEffect(() => {
@@ -47,7 +57,7 @@ function setHiddenApps(ids: string[]) {
 }
 
 interface Props {
-  onOpenApp: (appId: string) => void
+  onOpenApp: (appId: string, subTabId?: string) => void
 }
 
 export default function MobileHomeScreen({ onOpenApp }: Props) {
@@ -59,9 +69,26 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const [hiddenApps, setHiddenAppsState] = useState<string[]>([])
   const [showMore, setShowMore] = useState(false)
   const [swipeToast, setSwipeToast] = useState(false)
+  const [appOrder, setAppOrder] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return MOBILE_APPS.map(a => a.id)
+    const saved = localStorage.getItem('braosa-app-order')
+    return saved ? JSON.parse(saved) : MOBILE_APPS.map(a => a.id)
+  })
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [shortcuts, setShortcuts] = useState<Shortcut[]>(() => {
+    if (typeof window === 'undefined') return []
+    const saved = localStorage.getItem('braosa-shortcuts')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [wipVisible, setWipVisible] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem('braosa-wip-visible') !== 'false'
+  })
   const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
+  const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setHiddenAppsState(getHiddenApps())
@@ -142,7 +169,16 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     setHiddenAppsState(updated)
   }
 
-  const visibleApps = MOBILE_APPS.filter(a => !hiddenApps.includes(a.id))
+  function removeShortcut(id: string) {
+    const updated = shortcuts.filter(s => s.id !== id)
+    setShortcuts(updated)
+    localStorage.setItem('braosa-shortcuts', JSON.stringify(updated))
+  }
+
+  const visibleApps = appOrder
+    .map(id => MOBILE_APPS.find(a => a.id === id))
+    .filter((a): a is MobileApp => !!a && !hiddenApps.includes(a.id))
+
   const hiddenAppObjs = MOBILE_APPS.filter(a => hiddenApps.includes(a.id))
 
   return (
@@ -152,11 +188,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       onTouchMove={handleTouchMove}
       style={{
         minHeight: '100vh',
-        background: `
-          radial-gradient(ellipse 80% 40% at 20% 10%, oklch(0.25 0.04 290 / 0.4), transparent 60%),
-          radial-gradient(ellipse 60% 30% at 80% 80%, oklch(0.22 0.03 195 / 0.3), transparent 50%),
-          radial-gradient(120% 100% at 50% 0%, oklch(0.205 0.007 70), var(--bg-void))
-        `,
+        background: 'radial-gradient(ellipse 80% 40% at 20% 10%, #3d1f6e40, transparent 60%), radial-gradient(ellipse 60% 30% at 80% 80%, #0d4a4440, transparent 50%), linear-gradient(180deg, #1a1714, #141210)',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)',
         overflowY: 'auto',
@@ -165,17 +197,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       {/* Swipe-down toast */}
       {swipeToast && (
         <div style={{
-          position: 'fixed',
-          top: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'var(--bg-raised)',
-          color: 'var(--ink)',
-          borderRadius: 12,
-          padding: '8px 16px',
-          fontSize: 13,
-          zIndex: 200,
-          pointerEvents: 'none',
+          position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--bg-raised)', color: 'var(--ink)', borderRadius: 12,
+          padding: '8px 16px', fontSize: 13, zIndex: 200, pointerEvents: 'none',
           animation: 'toast-slide-up 0.3s ease both',
         }}>
           Search coming soon
@@ -185,68 +209,116 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 40, paddingTop: 32 }}>
         <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(48px, 12vw, 64px)',
-          fontWeight: 600,
-          color: 'var(--ink)',
-          fontVariantNumeric: 'tabular-nums',
-          fontFeatureSettings: '"tnum"',
-          lineHeight: 1,
-          marginBottom: 8,
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(48px, 12vw, 64px)',
+          fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums',
+          fontFeatureSettings: '"tnum"', lineHeight: 1, marginBottom: 8,
         }}>
           {timeStr}
         </div>
-        <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 4 }}>
-          {dateStr}
-        </div>
+        <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 4 }}>{dateStr}</div>
         {greeting && (
-          <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 32 }}>
-            {greeting}
-          </div>
+          <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 32 }}>{greeting}</div>
         )}
       </div>
 
       {/* App grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 20,
-        padding: '0 24px',
-      }}>
-        {visibleApps.map(app => {
+      <div
+        ref={gridRef}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, padding: '0 24px' }}
+        onPointerMove={(e) => {
+          if (dragIndex === null || !gridRef.current) return
+          const rect = gridRef.current.getBoundingClientRect()
+          const x = e.clientX - rect.left
+          const y = e.clientY - rect.top
+          const col = Math.floor(x / (rect.width / 4))
+          const row = Math.floor(y / (rect.height / Math.ceil(visibleApps.length / 4)))
+          const idx = Math.min(row * 4 + col, visibleApps.length - 1)
+          if (idx >= 0) setDragOverIndex(idx)
+        }}
+        onPointerUp={() => {
+          if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
+            const newOrder = [...appOrder]
+            const [moved] = newOrder.splice(dragIndex, 1)
+            newOrder.splice(dragOverIndex, 0, moved)
+            setAppOrder(newOrder)
+            localStorage.setItem('braosa-app-order', JSON.stringify(newOrder))
+          }
+          setDragIndex(null)
+          setDragOverIndex(null)
+        }}
+      >
+        {visibleApps.map((app, visIdx) => {
           const label = lang === 'pt' ? app.label_pt : app.label_en
           const isPressed = pressedApp === app.id
           const IconComponent = APP_ICON_MAP[app.id]
+          const isDragging = dragIndex === visIdx
+          const isDragTarget = dragOverIndex === visIdx && dragIndex !== visIdx
           return (
             <div
               key={app.id}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}
-              onPointerDown={e => { e.stopPropagation(); handlePointerDown(app.id) }}
-              onPointerUp={e => { e.stopPropagation(); handlePointerUp(app.id) }}
-              onPointerCancel={handlePointerCancel}
+              className="mobile-home-icon"
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                cursor: 'pointer', position: 'relative',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
+                ...(isDragging ? { opacity: 0.5, zIndex: 100 } : {}),
+                ...(isDragTarget ? { outline: `2px dashed ${app.color}66`, borderRadius: 16 } : {}),
+              } as React.CSSProperties}
+              onContextMenu={(e) => e.preventDefault()}
+              onClick={(e) => { if (editMode) e.stopPropagation() }}
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                if (editMode) {
+                  e.preventDefault()
+                  setDragIndex(visIdx)
+                } else {
+                  handlePointerDown(app.id)
+                }
+              }}
+              onPointerUp={(e) => {
+                if (!editMode) {
+                  e.stopPropagation()
+                  handlePointerUp(app.id)
+                }
+              }}
+              onPointerCancel={() => {
+                if (editMode) {
+                  setDragIndex(null)
+                  setDragOverIndex(null)
+                } else {
+                  handlePointerCancel()
+                }
+              }}
             >
               <div
                 className={editMode ? 'icon-jiggle' : undefined}
                 style={{
-                  transform: isPressed ? 'scale(0.85)' : 'scale(1)',
+                  transform: isPressed ? 'scale(0.85)' : isDragging ? 'scale(1.1)' : 'scale(1)',
                   transition: 'transform .1s',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
+                  position: 'relative',
                 }}
               >
                 <AppIcon appId={app.id} color={app.color} size={60}>
                   {IconComponent && <IconComponent />}
                 </AppIcon>
+                {wipVisible && (
+                  <div style={{
+                    position: 'absolute', top: -4, right: -4, zIndex: 10,
+                    background: '#D4A843', color: '#1a1410',
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 7, fontWeight: 700, letterSpacing: '0.08em',
+                    padding: '2px 5px', borderRadius: 4, pointerEvents: 'none',
+                  }}>
+                    WIP
+                  </div>
+                )}
               </div>
               <span style={{
-                fontSize: 10,
-                fontWeight: 500,
-                color: 'var(--ink-dim)',
-                textAlign: 'center',
-                maxWidth: 64,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                fontSize: 10, fontWeight: 500, color: 'var(--ink-dim)',
+                textAlign: 'center', maxWidth: 64, overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {label}
               </span>
@@ -254,6 +326,91 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           )
         })}
       </div>
+
+      {/* Shortcuts */}
+      {shortcuts.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <div style={{
+            padding: '0 24px 12px',
+            fontSize: 9, fontFamily: 'Space Mono, monospace',
+            letterSpacing: '0.18em', color: 'var(--ink-faint)',
+            textTransform: 'uppercase',
+          }}>
+            Shortcuts
+          </div>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 20, padding: '0 24px',
+          }}>
+            {shortcuts.map((sc) => {
+              const IconComp = APP_ICON_MAP[sc.appId]
+              return (
+                <div
+                  key={sc.id}
+                  className="mobile-home-icon"
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    position: 'relative', cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    if (editMode) { e.stopPropagation(); return }
+                    onOpenApp(sc.appId, sc.subTabId)
+                  }}
+                >
+                  {editMode && (
+                    <button
+                      style={{
+                        position: 'absolute', top: -6, left: -6, zIndex: 10,
+                        width: 20, height: 20, borderRadius: '50%',
+                        background: 'var(--neg)', border: '2px solid var(--bg)',
+                        color: '#fff', fontSize: 11, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', lineHeight: 1,
+                      }}
+                      onClick={(e) => { e.stopPropagation(); removeShortcut(sc.id) }}
+                    >×</button>
+                  )}
+                  <div style={{ position: 'relative' }}>
+                    <AppIcon appId={sc.appId} color={sc.color} size={60}>
+                      {IconComp && <IconComp />}
+                    </AppIcon>
+                    {wipVisible && (
+                      <div style={{
+                        position: 'absolute', top: -4, right: -4, zIndex: 10,
+                        background: '#D4A843', color: '#1a1410',
+                        fontFamily: 'Space Mono, monospace',
+                        fontSize: 7, fontWeight: 700, letterSpacing: '0.08em',
+                        padding: '2px 5px', borderRadius: 4, pointerEvents: 'none',
+                      }}>
+                        WIP
+                      </div>
+                    )}
+                    <div style={{
+                      position: 'absolute', bottom: -3, right: -3,
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: sc.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '2px solid var(--bg)',
+                    }}>
+                      <span style={{ fontSize: 8, color: '#fff', fontWeight: 700 }}>→</span>
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: 10, color: 'var(--ink-dim)', textAlign: 'center',
+                    maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {sc.label_en}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* More apps */}
       {hiddenAppObjs.length > 0 && (
@@ -269,11 +426,8 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
             <div
               onClick={e => e.stopPropagation()}
               style={{
-                margin: '12px 24px 0',
-                background: 'var(--bg-raised)',
-                border: '1px solid var(--edge)',
-                borderRadius: 12,
-                padding: '8px 0',
+                margin: '12px 24px 0', background: 'var(--bg-raised)',
+                border: '1px solid var(--edge)', borderRadius: 12, padding: '8px 0',
               }}
             >
               {hiddenAppObjs.map(app => (
@@ -297,6 +451,54 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Edit mode footer */}
+      {editMode && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            margin: '24px 24px 0',
+            background: 'var(--bg-raised)',
+            border: '1px solid var(--edge)',
+            borderRadius: 12,
+            padding: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 12, color: 'var(--ink-dim)', flex: 1 }}>Show WIP badges</span>
+            <button
+              onClick={() => {
+                const next = !wipVisible
+                setWipVisible(next)
+                localStorage.setItem('braosa-wip-visible', String(next))
+              }}
+              style={{
+                width: 44, height: 26, borderRadius: 13,
+                background: wipVisible ? '#E8E0D5' : 'var(--bg-raised)',
+                border: '1px solid var(--edge)',
+                position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
+              }}
+            >
+              <div style={{
+                position: 'absolute', top: 3, left: wipVisible ? 21 : 3,
+                width: 20, height: 20, borderRadius: '50%',
+                background: '#fff', transition: 'left 0.2s',
+              }} />
+            </button>
+          </div>
+          <button
+            onClick={() => setEditMode(false)}
+            style={{
+              marginTop: 12, width: '100%', padding: '8px',
+              background: 'var(--bg-raised-2)', border: '1px solid var(--edge)',
+              borderRadius: 8, cursor: 'pointer', fontSize: 13,
+              color: 'var(--ink-dim)', fontWeight: 500,
+            }}
+          >
+            Done
+          </button>
         </div>
       )}
     </div>

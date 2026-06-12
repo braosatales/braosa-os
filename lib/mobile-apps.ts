@@ -19,14 +19,14 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'dashboard',
     label_pt: 'Início',
     label_en: 'Home',
-    color: 'var(--c-dash)',
+    color: '#E8E0D5',
     glyph: 'grid',
   },
   {
     id: 'finances',
     label_pt: 'Finanças',
     label_en: 'Finances',
-    color: 'var(--c-fin)',
+    color: '#D4A843',
     glyph: 'coins',
     subTabs: [
       { id: 'overview',  label_pt: 'Resumo',    label_en: 'Overview', glyph: 'chart-line'   },
@@ -40,7 +40,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'tasks',
     label_pt: 'Tarefas',
     label_en: 'Tasks',
-    color: 'var(--c-task)',
+    color: '#8B5CF6',
     glyph: 'check',
     subTabs: [
       { id: 'today', label_pt: 'Hoje',   label_en: 'Today', glyph: 'target' },
@@ -52,14 +52,14 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'notes',
     label_pt: 'Notas',
     label_en: 'Notes',
-    color: 'var(--c-notes)',
+    color: '#2DD4BF',
     glyph: 'note',
   },
   {
     id: 'health',
     label_pt: 'Saúde',
     label_en: 'Health',
-    color: 'var(--c-health)',
+    color: '#E05C3A',
     glyph: 'activity',
     subTabs: [
       { id: 'overview',  label_pt: 'Resumo',    label_en: 'Overview',  glyph: 'activity'   },
@@ -73,7 +73,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'nutrition',
     label_pt: 'Nutrição',
     label_en: 'Nutrition',
-    color: 'var(--c-nutrition)',
+    color: '#4ADE80',
     glyph: 'nutrition',
     subTabs: [
       { id: 'diary',    label_pt: 'Diário',    label_en: 'Diary',    glyph: 'calendar'    },
@@ -86,14 +86,14 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'ai',
     label_pt: 'Braosa AI',
     label_en: 'Braosa AI',
-    color: 'var(--c-ai)',
+    color: '#22D3EE',
     glyph: 'wand',
   },
   {
     id: 'mail',
     label_pt: 'Mail',
     label_en: 'Mail',
-    color: 'var(--c-mail)',
+    color: '#60A5FA',
     glyph: 'mail',
     subTabs: [
       { id: 'smart',  label_pt: 'Smart',     label_en: 'Smart',   glyph: 'wand'  },
@@ -106,7 +106,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'calendar',
     label_pt: 'Calendário',
     label_en: 'Calendar',
-    color: 'var(--c-cal)',
+    color: '#A855F7',
     glyph: 'cal',
     subTabs: [
       { id: 'day',   label_pt: 'Dia',    label_en: 'Day',   glyph: 'clock'    },
@@ -118,14 +118,14 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'contacts',
     label_pt: 'Contactos',
     label_en: 'Contacts',
-    color: 'var(--c-contacts)',
+    color: '#FB923C',
     glyph: 'users',
   },
   {
     id: 'drive',
     label_pt: 'Drive',
     label_en: 'Drive',
-    color: 'var(--c-drive)',
+    color: '#6366F1',
     glyph: 'file',
     subTabs: [
       { id: 'rrr',             label_pt: 'RRR',    label_en: 'RRR',    glyph: 'file' },
@@ -136,7 +136,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'braosa',
     label_pt: 'Braosa',
     label_en: 'Braosa',
-    color: 'var(--c-braosa)',
+    color: '#7C3AED',
     glyph: 'wand',
     subTabs: [
       { id: 'dashboard', label_pt: 'Dashboard', label_en: 'Dashboard', glyph: 'grid' },
@@ -148,7 +148,7 @@ export const MOBILE_APPS: MobileApp[] = [
     id: 'verum',
     label_pt: 'Verum',
     label_en: 'Verum',
-    color: 'var(--c-verum)',
+    color: '#64748B',
     glyph: 'shield',
     subTabs: [
       { id: 'dashboard',  label_pt: 'Dashboard',  label_en: 'Dashboard',  glyph: 'grid'     },

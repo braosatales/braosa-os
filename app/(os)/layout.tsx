@@ -239,14 +239,18 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     setActive(id)
   }, [])
 
-  const handleOpenApp = useCallback((appId: string) => {
+  const handleOpenApp = useCallback((appId: string, subTabId?: string) => {
     const app = MOBILE_APPS.find(a => a.id === appId)
     const firstSubTab = app?.subTabs?.[0]?.id || ''
     let subTab = firstSubTab
-    try {
-      const saved = localStorage.getItem(`braosa-subtab-${appId}`)
-      if (saved) subTab = saved
-    } catch {}
+    if (subTabId) {
+      subTab = subTabId
+    } else {
+      try {
+        const saved = localStorage.getItem(`braosa-subtab-${appId}`)
+        if (saved) subTab = saved
+      } catch {}
+    }
     setMobileSubTab(subTab)
     setMobileOpenApp(appId)
     setActive(appId)
