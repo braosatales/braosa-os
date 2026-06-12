@@ -7,7 +7,7 @@ import { AppIcon } from './AppIcon'
 import {
   IconDashboard, IconFinances, IconTasks, IconNotes, IconHealth,
   IconNutrition, IconMail, IconCalendar, IconContacts, IconDrive,
-  IconAI, IconBraosa, IconVerum,
+  IconAI, IconBraosa, IconVerum, IconSettings,
 } from './AppIcons'
 
 const APP_ICON_MAP: Record<string, React.ComponentType> = {
@@ -24,6 +24,7 @@ const APP_ICON_MAP: Record<string, React.ComponentType> = {
   ai:        IconAI,
   braosa:    IconBraosa,
   verum:     IconVerum,
+  settings:  IconSettings,
 }
 
 type Shortcut = {

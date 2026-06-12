@@ -157,4 +157,19 @@ export const MOBILE_APPS: MobileApp[] = [
       { id: 'financials', label_pt: 'Financeiro', label_en: 'Financials', glyph: 'coins'    },
     ],
   },
+  {
+    id: 'settings',
+    label_pt: 'Definições',
+    label_en: 'Settings',
+    color: '#94A3B8',
+    glyph: 'cog',
+    subTabs: [
+      { id: 'profile',     label_pt: 'Perfil',    label_en: 'Profile',     glyph: 'user'  },
+      { id: 'appearance',  label_pt: 'Aparência', label_en: 'Appearance',  glyph: 'wand'  },
+      { id: 'security',    label_pt: 'Segurança', label_en: 'Security',    glyph: 'lock'  },
+      { id: 'connections', label_pt: 'Ligações',  label_en: 'Connections', glyph: 'link'  },
+      { id: 'account',     label_pt: 'Conta',     label_en: 'Account',     glyph: 'user'  },
+      { id: 'version',     label_pt: 'Versões',   label_en: 'Versions',    glyph: 'clock' },
+    ],
+  },
 ]

@@ -431,7 +431,7 @@ export default function DashboardGrid({ device, onNavigate }: DashboardGridProps
   // Mobile layout — 2 col grid, no drag
   if (device === 'mobile') {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', maxWidth: '100vw' }}>
         <div
           ref={mobileOuterRef}
           style={{ width: '100%', position: 'relative', overflowX: 'hidden', maxWidth: '100vw' }}

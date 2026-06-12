@@ -37,6 +37,7 @@ const AIPage         = dynamic(() => import("./ai/page"),         { ssr: false }
 const HealthPage     = dynamic(() => import("./health/page"),     { ssr: false })
 const ContactsPage   = dynamic(() => import("./contacts/page"),   { ssr: false })
 const MailPage       = dynamic(() => import("./mail/page"),       { ssr: false })
+const SettingsPage   = dynamic(() => import("./settings/page"),   { ssr: false })
 const CalendarShell  = dynamic(() => import("@/components/calendar/CalendarShell"), { ssr: false })
 const DriveShell     = dynamic(() => import("@/components/drive/DriveShell"),     { ssr: false })
 const BraosaShell    = dynamic(() => import("@/components/braosa/BraosaShell"),   { ssr: false })
@@ -85,7 +86,7 @@ const GOOGLE_TAB_META: Record<string, { tabName: string; description: string; ic
 
 // ─── renderActive ────────────────────────────────────────────────────────────
 
-function renderActive(active: string, googleConnected: boolean | null) {
+function renderActive(active: string, googleConnected: boolean | null, isMobile?: boolean) {
   const googleMeta = GOOGLE_TAB_META[active]
   if (googleMeta && googleConnected === false) {
     return <GoogleConnectPrompt {...googleMeta} />
@@ -106,6 +107,7 @@ function renderActive(active: string, googleConnected: boolean | null) {
     case "braosa":    return <BraosaShell />
     case "verum":     return <VerumShell />
     case "nutrition": return <NutritionShell />
+    case "settings":  return isMobile ? <SettingsPage /> : <ComingOnlinePage id={active} />
     default:          return <ComingOnlinePage id={active} />
   }
 }
@@ -297,7 +299,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
               onClose={handleCloseApp}
             >
               <ErrorBoundary>
-                {renderActive(mobileOpenApp, googleConnected)}
+                {renderActive(mobileOpenApp, googleConnected, true)}
               </ErrorBoundary>
             </MobileAppContainer>
           </MobileSubTabContext.Provider>

@@ -143,3 +143,12 @@ export function IconVerum() {
     </svg>
   )
 }
+
+export function IconSettings() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
+      <circle cx="12" cy="12" r="3" fill="white"/>
+      <path d="M12 2L13.5 5.5L17 4L16 7.5L19.5 8L17.5 11L20 13.5L16.5 14L16 17.5L13 16L12 19.5L11 16L8 17.5L7.5 14L4 13.5L6.5 11L4.5 8L8 7.5L7 4L10.5 5.5Z" stroke="white" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
+    </svg>
+  )
+}
