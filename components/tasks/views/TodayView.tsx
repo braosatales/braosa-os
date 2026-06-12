@@ -168,10 +168,10 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
   const hasAny = overdue.length + todayTasks.length + thisWeek.length + noDate.length > 0
 
   return (
-    <div style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#161310' }}>
+    <div style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#161310', ...(isMobile ? { minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' } : {}) }}>
       {!hasAny && (
         isMobile ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%' }}>
             <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
               <Icon name="target" size={40} />
             </div>

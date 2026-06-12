@@ -133,7 +133,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
       )}
 
       {/* Rows */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', ...(isMobile ? { display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)' } : {}) }}>
         {groups.map(group => (
           <div key={group.key}>
             {groupBy !== 'none' && (
@@ -260,7 +260,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
 
         {tasks.length === 0 && (
           isMobile ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 32px', width: '100%' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%' }}>
               <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
                 <Icon name="list" size={40} />
               </div>

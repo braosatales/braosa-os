@@ -104,28 +104,16 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
       {/* Per-app bottom nav */}
       {hasSubTabs && (
-        <>
-        {/* Safe area filler — sits behind/below the nav */}
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 'env(safe-area-inset-bottom)',
-          background: '#1a1714',
-          zIndex: 99,
-        }} />
         <div
           style={{
             position: 'fixed',
-            bottom: 'env(safe-area-inset-bottom)',
+            bottom: 0,
             left: 0,
             right: 0,
-            height: 56,
+            zIndex: 100,
             background: '#1a1714',
             borderTop: '1px solid var(--edge)',
-            display: 'flex',
-            zIndex: 100,
+            paddingBottom: 'env(safe-area-inset-bottom)',
           }}>
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
@@ -133,7 +121,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             return (
               <div
                 style={{
-                  position: 'absolute', bottom: 70, left: 0, right: 0,
+                  position: 'absolute', bottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)', left: 0, right: 0,
                   display: 'flex', justifyContent: 'center',
                   zIndex: 200,
                 }}
@@ -182,47 +170,48 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          {app.subTabs!.map(tab => {
-            const isActive = subTabId === tab.id
-            const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
-            return (
-              <button
-                key={tab.id}
-                onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
-                onPointerDown={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
-                }}
-                onPointerUp={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                }}
-                onPointerLeave={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                }}
-                style={{
-                  flex: 1,
-                  height: 56,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                  padding: 0,
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: isActive ? app.color : '#4a4540',
-                }}
-              >
-                <Icon name={tab.glyph as any} size={22} />
-                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.03em' }}>
-                  {tabLabel}
-                </span>
-              </button>
-            )
-          })}
+          <div style={{ height: 56, display: 'flex' }}>
+            {app.subTabs!.map(tab => {
+              const isActive = subTabId === tab.id
+              const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
+                  onPointerDown={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                    longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
+                  }}
+                  onPointerUp={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                  }}
+                  onPointerLeave={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 56,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    padding: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: isActive ? app.color : '#4a4540',
+                  }}
+                >
+                  <Icon name={tab.glyph as any} size={22} />
+                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.03em' }}>
+                    {tabLabel}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
-        </>
       )}
     </div>
   )

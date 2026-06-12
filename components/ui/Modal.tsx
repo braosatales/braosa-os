@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import Icon from './Icon';
 
 type ModalProps = {
   open: boolean;
@@ -9,9 +10,11 @@ type ModalProps = {
   children: React.ReactNode;
   width?: number;
   fullScreen?: boolean;
+  fullScreenMobile?: boolean;
+  title?: string;
 };
 
-export default function Modal({ open, onClose, children, width = 520, fullScreen = false }: ModalProps) {
+export default function Modal({ open, onClose, children, width = 520, fullScreen = false, fullScreenMobile = false, title }: ModalProps) {
   const isMobile = useIsMobile();
 
   const handleKey = useCallback(
@@ -30,6 +33,61 @@ export default function Modal({ open, onClose, children, width = 520, fullScreen
   if (!open) return null;
 
   const mobileFullScreen = isMobile && fullScreen;
+  const mobileFSNew = isMobile && fullScreenMobile;
+
+  if (mobileFSNew) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 200,
+          background: '#161310',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {title !== undefined && (
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #2a2520',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}>
+              <div style={{ width: 44 }} />
+              <div style={{
+                flex: 1,
+                textAlign: 'center',
+                fontFamily: 'var(--font-display)',
+                fontSize: 16,
+                fontWeight: 600,
+                color: '#E8E0D5',
+              }}>
+                {title}
+              </div>
+              <button
+                onClick={onClose}
+                style={{
+                  width: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: '#94A3B8',
+                  padding: 0,
+                }}
+              >
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+          )}
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   const cardStyle = mobileFullScreen ? {
     position: 'fixed' as const,

@@ -97,7 +97,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   }
 
   return (
-    <Modal open={true} onClose={onClose} width={560}>
+    <Modal open={true} onClose={onClose} width={560} fullScreenMobile title={live.title || L("Tarefa", "Task")}>
       <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Title */}
         <input
