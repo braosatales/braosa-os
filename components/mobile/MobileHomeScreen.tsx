@@ -1,17 +1,17 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useContext } from 'react'
 import { Icon } from '@/components/ui'
 import { MOBILE_APPS, type MobileApp } from '@/lib/mobile-apps'
 import { useLang } from '@/lib/i18n'
 import { AppIcon } from './AppIcon'
 import {
-  IconDashboard, IconFinances, IconTasks, IconNotes, IconHealth,
+  IconFinances, IconTasks, IconNotes, IconHealth,
   IconNutrition, IconMail, IconCalendar, IconContacts, IconDrive,
-  IconAI, IconBraosa, IconVerum, IconSettings,
+  IconAI, IconBraosa, IconVerum,
 } from './AppIcons'
+import { NotificationsContext, type NotificationCounts } from '@/lib/notifications'
 
 const APP_ICON_MAP: Record<string, React.ComponentType> = {
-  dashboard: IconDashboard,
   finances:  IconFinances,
   tasks:     IconTasks,
   notes:     IconNotes,
@@ -24,7 +24,6 @@ const APP_ICON_MAP: Record<string, React.ComponentType> = {
   ai:        IconAI,
   braosa:    IconBraosa,
   verum:     IconVerum,
-  settings:  IconSettings,
 }
 
 type Shortcut = {
@@ -44,6 +43,25 @@ function useGreeting() {
     setGreeting(hour < 12 ? 'Bom dia, João! ☀️' : hour < 18 ? 'Boa tarde, João! 🌤️' : 'Boa noite, João! 🌙')
   }, [])
   return greeting
+}
+
+function formatBadgeText(value: number | boolean): string {
+  if (typeof value === 'boolean') return '!'
+  if (value >= 100) return '99+'
+  return String(value)
+}
+
+function getBadgeContent(appId: string, counts: NotificationCounts): string | null {
+  switch (appId) {
+    case 'mail':      return counts.mail > 0      ? formatBadgeText(counts.mail)      : null
+    case 'contacts':  return counts.contacts > 0  ? formatBadgeText(counts.contacts)  : null
+    case 'tasks':     return counts.tasks > 0     ? formatBadgeText(counts.tasks)     : null
+    case 'calendar':  return counts.calendar > 0  ? formatBadgeText(counts.calendar)  : null
+    case 'health':    return counts.health        ? '!'                                : null
+    case 'nutrition': return counts.nutrition     ? '!'                                : null
+    case 'verum':     return counts.verum         ? '!'                                : null
+    default:          return null
+  }
 }
 
 const HIDDEN_APPS_KEY = 'braosa-hidden-apps'
@@ -90,6 +108,8 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
   const gridRef = useRef<HTMLDivElement>(null)
+
+  const { counts } = useContext(NotificationsContext)
 
   useEffect(() => {
     setHiddenAppsState(getHiddenApps())
@@ -254,6 +274,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           const IconComponent = APP_ICON_MAP[app.id]
           const isDragging = dragIndex === visIdx
           const isDragTarget = dragOverIndex === visIdx && dragIndex !== visIdx
+          const badgeText = counts !== null ? getBadgeContent(app.id, counts) : null
           return (
             <div
               key={app.id}
@@ -313,6 +334,22 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                     padding: '2px 5px', borderRadius: 4, pointerEvents: 'none',
                   }}>
                     WIP
+                  </div>
+                )}
+                {badgeText !== null && (
+                  <div style={{
+                    position: 'absolute', top: -4, right: -4, zIndex: 20,
+                    background: '#EF4444', color: '#fff',
+                    minWidth: 18, height: 18,
+                    borderRadius: 9,
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 9, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '0 4px',
+                    border: '1.5px solid #141210',
+                    pointerEvents: 'none',
+                  }}>
+                    {badgeText}
                   </div>
                 )}
               </div>

@@ -28,6 +28,7 @@ import MobileHomeScreen from "@/components/mobile/MobileHomeScreen"
 import MobileAppContainer from "@/components/mobile/MobileAppContainer"
 import { MOBILE_APPS } from "@/lib/mobile-apps"
 import { MobileSubTabContext } from "@/lib/mobile-context"
+import { useNotifications, NotificationsContext } from "@/lib/notifications"
 
 const DashboardPage  = dynamic(() => import("./dashboard/page"),  { ssr: false })
 const FinancesPage   = dynamic(() => import("./finances/page"),   { ssr: false })
@@ -157,6 +158,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   const [mobileSubTab, setMobileSubTab] = useState<string>('')
   const contentRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
+  const { counts: notifCounts, refetch: refetchNotifs } = useNotifications()
 
   const refreshGoogleStatus = useCallback(() => {
     fetch('/api/google/status')
@@ -310,12 +312,14 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     return (
       <LockContext.Provider value={{ lock: doLock }}>
         <NavigationContext.Provider value={{ active, navigate, googleConnected, refreshGoogleStatus }}>
-          {mobileContent}
-          <SettingsModal
-            open={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-            onLock={doLock}
-          />
+          <NotificationsContext.Provider value={{ counts: notifCounts, refetch: refetchNotifs }}>
+            {mobileContent}
+            <SettingsModal
+              open={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              onLock={doLock}
+            />
+          </NotificationsContext.Provider>
         </NavigationContext.Provider>
       </LockContext.Provider>
     )

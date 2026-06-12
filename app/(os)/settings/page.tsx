@@ -14,6 +14,23 @@ import { useLock } from "@/app/(os)/layout"
 
 const VERSION_HISTORY = [
   {
+    version: '1.1.0',
+    date: 'Jun 2026',
+    group: 'Mobile Home Screen — Dashboard Removed + Notifications',
+    entries: [
+      'Dashboard removed from mobile home screen (desktop-only feature)',
+      'Settings removed from mobile home screen (desktop-only)',
+      'Notification badges added per app on home screen',
+      'Mail: unread count badge',
+      'Contacts: pending review count badge',
+      'Tasks: overdue count badge',
+      'Calendar: today events count badge',
+      'Health: ! badge if workout planned but not logged today',
+      'Nutrition: ! badge if no meals logged today after 13:00',
+      'Verum: ! badge if any milestone overdue',
+    ]
+  },
+  {
     version: '1.0.2',
     date: 'Jun 2026',
     group: 'Mobile Dashboard + Settings App',

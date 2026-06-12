@@ -16,13 +16,6 @@ export type MobileApp = {
 
 export const MOBILE_APPS: MobileApp[] = [
   {
-    id: 'dashboard',
-    label_pt: 'Dashboard',
-    label_en: 'Dashboard',
-    color: '#E8E0D5',
-    glyph: 'grid',
-  },
-  {
     id: 'finances',
     label_pt: 'Finanças',
     label_en: 'Finances',
@@ -155,21 +148,6 @@ export const MOBILE_APPS: MobileApp[] = [
       { id: 'projects',   label_pt: 'Projetos',   label_en: 'Projects',   glyph: 'building' },
       { id: 'team',       label_pt: 'Equipa',     label_en: 'Team',       glyph: 'users'    },
       { id: 'financials', label_pt: 'Financeiro', label_en: 'Financials', glyph: 'coins'    },
-    ],
-  },
-  {
-    id: 'settings',
-    label_pt: 'Definições',
-    label_en: 'Settings',
-    color: '#94A3B8',
-    glyph: 'cog',
-    subTabs: [
-      { id: 'profile',     label_pt: 'Perfil',    label_en: 'Profile',     glyph: 'user'  },
-      { id: 'appearance',  label_pt: 'Aparência', label_en: 'Appearance',  glyph: 'wand'  },
-      { id: 'security',    label_pt: 'Segurança', label_en: 'Security',    glyph: 'lock'  },
-      { id: 'connections', label_pt: 'Ligações',  label_en: 'Connections', glyph: 'link'  },
-      { id: 'account',     label_pt: 'Conta',     label_en: 'Account',     glyph: 'user'  },
-      { id: 'version',     label_pt: 'Versões',   label_en: 'Versions',    glyph: 'clock' },
     ],
   },
 ]

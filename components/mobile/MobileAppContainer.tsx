@@ -1,8 +1,9 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useContext } from 'react'
 import { Icon } from '@/components/ui'
 import { useLang } from '@/lib/i18n'
 import type { MobileApp } from '@/lib/mobile-apps'
+import { NotificationsContext } from '@/lib/notifications'
 
 interface Props {
   appId: string
@@ -19,11 +20,13 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
   const [longPressTab, setLongPressTab] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { refetch } = useContext(NotificationsContext)
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
 
   const handleClose = () => {
     setIsClosing(true)
+    refetch()
     closeTimer.current = setTimeout(onClose, 280)
   }
 
