@@ -5,7 +5,7 @@ import Modal from "@/components/ui/Modal"
 import { Icon } from "@/components/ui"
 import { getUser, type OSUser } from "@/lib/user"
 import { getLang, setLang, type Lang } from "@/lib/i18n"
-import { getLockPassword, setLockPassword } from "@/lib/lockscreen"
+import { hasLockPassword, setLockPassword, removeLockPassword } from "@/lib/lockscreen"
 import { useTweaks } from "@/lib/tweaks"
 import GoogleConnectionSection from "./GoogleConnectionSection"
 
@@ -114,7 +114,7 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
       setName(u?.name ?? "")
     })
     setLangState(getLang())
-    setHasPw(getLockPassword() !== null)
+    hasLockPassword().then(setHasPw)
     setPwInput("")
     setChangingPw(false)
   }, [open])
@@ -133,16 +133,16 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
     setLangState(l)
   }
 
-  function handleSetPassword() {
+  async function handleSetPassword() {
     if (!pwInput.trim()) return
-    setLockPassword(pwInput.trim())
+    await setLockPassword(pwInput.trim())
     setHasPw(true)
     setPwInput("")
     setChangingPw(false)
   }
 
-  function handleRemovePassword() {
-    localStorage.removeItem("braosa-lock-pw")
+  async function handleRemovePassword() {
+    await removeLockPassword()
     setHasPw(false)
     setPwInput("")
   }

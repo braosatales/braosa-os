@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useLang } from "@/lib/i18n"
-import { getLockPassword, unlock as doUnlock } from "@/lib/lockscreen"
+import { hasLockPassword, verifyAndUnlock, unlockSession } from "@/lib/lockscreen"
 import { useIsMobile } from "@/lib/hooks/useIsMobile"
 
 interface Props {
@@ -24,9 +24,17 @@ export default function LockScreen({ onUnlock }: Props) {
   const [now, setNow] = useState<Date | null>(null)
   const [pw, setPw] = useState("")
   const [exiting, setExiting] = useState(false)
+  const [checking, setChecking] = useState(true)
+  const [hasPw, setHasPw] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputWrapRef = useRef<HTMLDivElement>(null)
-  const hasPassword = getLockPassword() !== null
+
+  useEffect(() => {
+    hasLockPassword().then(has => {
+      setHasPw(has)
+      setChecking(false)
+    })
+  }, [])
 
   useEffect(() => {
     setNow(new Date())
@@ -39,12 +47,14 @@ export default function LockScreen({ onUnlock }: Props) {
     setTimeout(onUnlock, 320)
   }, [onUnlock])
 
-  const attemptUnlock = useCallback(() => {
-    if (!hasPassword) {
+  const attemptUnlock = useCallback(async () => {
+    if (!hasPw) {
+      unlockSession()
       doExit()
       return
     }
-    if (doUnlock(pw)) {
+    const ok = await verifyAndUnlock(pw)
+    if (ok) {
       doExit()
     } else {
       setPw("")
@@ -55,7 +65,7 @@ export default function LockScreen({ onUnlock }: Props) {
         wrap.classList.add("lock-shake")
       }
     }
-  }, [pw, hasPassword, doExit])
+  }, [pw, hasPw, doExit])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") attemptUnlock()
@@ -70,6 +80,22 @@ export default function LockScreen({ onUnlock }: Props) {
       ? `${PT_DAYS[now.getDay()]}, ${now.getDate()} de ${PT_MONTHS[now.getMonth()]}`
       : `${EN_DAYS[now.getDay()]}, ${EN_MONTHS[now.getMonth()]} ${now.getDate()}`
     : ""
+
+  if (checking) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          background: "var(--bg-void)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      />
+    )
+  }
 
   return (
     <div
@@ -142,7 +168,7 @@ export default function LockScreen({ onUnlock }: Props) {
           {dateStr}
         </span>
 
-        {hasPassword ? (
+        {hasPw ? (
           <>
             <div
               ref={inputWrapRef}

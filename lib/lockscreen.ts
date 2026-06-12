@@ -1,30 +1,55 @@
-const LOCK_PW_KEY = "braosa-lock-pw"
-const UNLOCKED_KEY = "braosa-unlocked"
-
-export function getLockPassword(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem(LOCK_PW_KEY)
+export async function hasLockPassword(): Promise<boolean> {
+  const res = await fetch('/api/user/lock-password')
+  if (!res.ok) return false
+  const data = await res.json()
+  return data.hasPassword ?? false
 }
 
-export function setLockPassword(pw: string): void {
-  localStorage.setItem(LOCK_PW_KEY, pw)
+export async function setLockPassword(pw: string): Promise<void> {
+  await fetch('/api/user/lock-password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw }),
+  })
 }
 
-export function isLocked(): boolean {
-  if (typeof window === "undefined") return false
-  if (getLockPassword() === null) return false
-  return sessionStorage.getItem(UNLOCKED_KEY) !== "1"
+export async function removeLockPassword(): Promise<void> {
+  await fetch('/api/user/lock-password', { method: 'DELETE' })
 }
 
-export function unlock(pw: string): boolean {
-  const stored = getLockPassword()
-  if (stored === null) return false
-  if (pw !== stored) return false
-  sessionStorage.setItem(UNLOCKED_KEY, "1")
-  return true
+export function isLockedSync(): boolean {
+  if (typeof window === 'undefined') return false
+  return sessionStorage.getItem('braosa-unlocked') !== '1'
 }
 
-export function lock(): void {
-  if (typeof window === "undefined") return
-  sessionStorage.removeItem(UNLOCKED_KEY)
+export async function isLocked(): Promise<boolean> {
+  const has = await hasLockPassword()
+  if (!has) return false
+  return isLockedSync()
+}
+
+export function unlockSession(): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('braosa-unlocked', '1')
+  }
+}
+
+export function lockSession(): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('braosa-unlocked')
+  }
+}
+
+export async function verifyAndUnlock(pw: string): Promise<boolean> {
+  const res = await fetch('/api/user/lock-password/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw }),
+  })
+  const data = await res.json()
+  if (data.valid) {
+    unlockSession()
+    return true
+  }
+  return false
 }

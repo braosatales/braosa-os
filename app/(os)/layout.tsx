@@ -12,7 +12,7 @@ import dynamic from "next/dynamic"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
 import SettingsModal from "@/components/settings/SettingsModal"
-import { isLocked, lock } from "@/lib/lockscreen"
+import { isLocked, lockSession, unlockSession } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
 import { SYSTEMS, COMPANIES } from "@/lib/constants"
@@ -145,6 +145,7 @@ export function useNavigation(): NavigationContextValue {
 // ─── Shell ───────────────────────────────────────────────────────────────────
 
 export default function OsLayout({ children: _children }: { children: React.ReactNode }) {
+  const [lockChecking, setLockChecking] = useState(true)
   const [locked, setLocked] = useState(false)
   const [active, setActive] = useState("dashboard")
   const [user, setUser] = useState<OSUser | null>(null)
@@ -163,7 +164,10 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   }, [])
 
   useEffect(() => {
-    setLocked(isLocked())
+    isLocked().then(locked => {
+      setLocked(locked)
+      setLockChecking(false)
+    })
     getUser().then(setUser)
     saveTweaks(getTweaks())
     TaskStore.fetch()
@@ -222,11 +226,12 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   }, [active])
 
   const handleUnlock = useCallback(() => {
+    unlockSession()
     setLocked(false)
   }, [])
 
   const doLock = useCallback(() => {
-    lock()
+    lockSession()
     setLocked(true)
   }, [])
 
@@ -252,11 +257,18 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     try { localStorage.removeItem('braosa-last-app') } catch {}
   }, [])
 
-  const blurStyle = {
-    filter: "blur(15px) brightness(0.68)",
-    transform: "scale(1.025)",
-    pointerEvents: "none" as const,
-    transition: "filter .3s, transform .3s",
+  // ─── Lock guard ─────────────────────────────────────────────────────────────
+
+  if (lockChecking) {
+    return <div style={{ position: "fixed", inset: 0, background: "var(--bg-void)" }} />
+  }
+
+  if (locked) {
+    return (
+      <LockContext.Provider value={{ lock: doLock }}>
+        <LockScreen onUnlock={handleUnlock} />
+      </LockContext.Provider>
+    )
   }
 
   // ─── Mobile render ──────────────────────────────────────────────────────────
@@ -292,10 +304,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     return (
       <LockContext.Provider value={{ lock: doLock }}>
         <NavigationContext.Provider value={{ active, navigate, googleConnected, refreshGoogleStatus }}>
-          <div style={locked ? blurStyle : {}}>
-            {mobileContent}
-          </div>
-          {locked && <LockScreen onUnlock={handleUnlock} />}
+          {mobileContent}
           <SettingsModal
             open={settingsOpen}
             onClose={() => setSettingsOpen(false)}
@@ -317,7 +326,6 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             flexDirection: "column",
             height: "100vh",
             overflow: "hidden",
-            ...(locked ? blurStyle : {}),
           }}
         >
           <TopNav
@@ -336,7 +344,6 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             </ErrorBoundary>
           </div>
         </div>
-        {locked && <LockScreen onUnlock={handleUnlock} />}
         <SettingsModal
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
