@@ -242,7 +242,7 @@ export default function TasksShell() {
       )}
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column', background: '#161310', minHeight: '100%' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column', background: '#0F1117', minHeight: '100%' }}>
         {activeView === 'today' && (
           <TodayView tasks={filteredTasks} onSelect={setSelectedTask} onToggleDone={handleToggleDone} onToggleFav={handleToggleFav} />
         )}
@@ -278,7 +278,7 @@ export default function TasksShell() {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 0 30px -6px #8B5CF6',
+            boxShadow: '0 8px 24px -6px #8B5CF680',
           }}
         >
           <Icon name="plus" size={22} />

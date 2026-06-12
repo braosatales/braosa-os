@@ -9,10 +9,10 @@ import { TaskStore } from '@/lib/task-store'
 import AddTaskModal from '@/components/tasks/AddTaskModal'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
-const COLUMNS: { id: TaskStatus; color: string; labelPt: string; labelEn: string }[] = [
-  { id: 'todo',  color: 'var(--c-task)', labelPt: 'A Fazer',      labelEn: 'To Do'       },
-  { id: 'doing', color: 'var(--c-fin)',  labelPt: 'Em Progresso', labelEn: 'In Progress' },
-  { id: 'done',  color: 'var(--pos)',    labelPt: 'Concluído',    labelEn: 'Done'        },
+const COLUMNS: { id: TaskStatus; dot: string; labelPt: string; labelEn: string }[] = [
+  { id: 'todo',  dot: '#8B909E', labelPt: 'A Fazer',      labelEn: 'To Do'       },
+  { id: 'doing', dot: '#F59E0B', labelPt: 'Em Progresso', labelEn: 'In Progress' },
+  { id: 'done',  dot: '#22C55E', labelPt: 'Concluído',    labelEn: 'Done'        },
 ]
 
 type Props = {
@@ -20,7 +20,12 @@ type Props = {
   onSelect: (task: Task) => void
 }
 
-function PriorityBadge({ p }: { p: number }) {
+function PriorityBadge({ p, mobile }: { p: number; mobile?: boolean }) {
+  if (mobile) {
+    const bg = p === 1 ? '#EF444415' : p === 2 ? '#F59E0B15' : '#8B5CF615'
+    const color = p === 1 ? '#EF4444' : p === 2 ? '#F59E0B' : '#8B5CF6'
+    return <span style={{ fontSize: 11, color, fontWeight: 600, background: bg, borderRadius: 6, padding: '2px 8px' }}>P{p}</span>
+  }
   const color = p === 1 ? 'var(--p1)' : p === 2 ? 'var(--p2)' : 'var(--p3)'
   return <span style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>P{p}</span>
 }
@@ -63,16 +68,14 @@ export default function BoardView({ tasks, onSelect }: Props) {
   return (
     <div style={isMobile ? {
       width: '100%',
-      maxWidth: '100%',
       padding: '16px',
-      boxSizing: 'border-box' as 'border-box',
+      boxSizing: 'border-box' as const,
       display: 'flex',
-      flexDirection: 'column' as 'column',
-      alignItems: 'stretch',
+      flexDirection: 'column' as const,
       gap: '12px',
       overflowX: 'hidden',
       overflowY: 'auto',
-      background: '#161310',
+      background: '#0F1117',
     } : {
       display: 'flex',
       gap: 16,
@@ -81,24 +84,25 @@ export default function BoardView({ tasks, onSelect }: Props) {
       overflowY: 'hidden',
       height: '100%',
       alignItems: 'flex-start',
-      flexDirection: 'row',
-      background: '#161310',
+      flexDirection: 'row' as const,
+      background: '#0F1117',
     }}>
       {/* Mobile move bottom sheet */}
       {isMobile && moveSheetTask && (
         <div
           onClick={() => setMoveSheetTask(null)}
-          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'oklch(0 0 0 / 0.5)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.6)' }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
               position: 'absolute', bottom: 0, left: 0, right: 0,
-              background: 'var(--bg-raised)', borderRadius: '16px 16px 0 0',
-              padding: '20px 20px 32px',
+              background: '#1C1E26', borderRadius: '16px 16px 0 0',
+              border: '1px solid #2A2D3A',
+              padding: '20px 20px 40px',
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#F0F1F4', marginBottom: 16 }}>
               {L('Mover para...', 'Move to...')}
             </div>
             {COLUMNS.filter(c => c.id !== moveSheetTask.status).map(col => (
@@ -111,11 +115,11 @@ export default function BoardView({ tasks, onSelect }: Props) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   width: '100%', padding: '14px 0', background: 'none', border: 'none',
-                  borderBottom: '1px solid var(--edge-soft)', cursor: 'pointer',
-                  fontSize: 14, color: col.color, fontWeight: 500,
+                  borderBottom: '1px solid #2A2D3A', cursor: 'pointer',
+                  fontSize: 14, color: col.dot, fontWeight: 500,
                 }}
               >
-                <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color }} />
+                <span style={{ width: 8, height: 8, borderRadius: 99, background: col.dot }} />
                 {L(col.labelPt, col.labelEn)}
               </button>
             ))}
@@ -131,18 +135,29 @@ export default function BoardView({ tasks, onSelect }: Props) {
           <div
             key={col.id}
             style={isMobile
-              ? { width: 'calc(100% - 0px)', maxWidth: '100%', display: 'block', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520', marginBottom: 0, boxSizing: 'border-box' as 'border-box' }
+              ? {
+                  width: '100%',
+                  boxSizing: 'border-box' as const,
+                  background: '#1C1E26',
+                  border: '1px solid #2A2D3A',
+                  borderRadius: 14,
+                }
               : { flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column' }
             }
             onPointerEnter={() => { if (draggingId) setOverColumn(col.id) }}
           >
             {/* Column header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 0 : 12, padding: isMobile ? '12px 14px' : '0 2px', borderBottom: isMobile ? '1px solid #2a2520' : 'none' }}>
-              <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color, flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 14 : 13, fontWeight: 600, color: 'var(--ink)', flex: 1 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: isMobile ? '14px 16px' : '0 2px',
+              marginBottom: isMobile ? 0 : 12,
+              borderBottom: isMobile ? '1px solid #2A2D3A' : 'none',
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: 99, background: col.dot, flexShrink: 0 }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#F0F1F4', flex: 1 }}>
                 {L(col.labelPt, col.labelEn)}
               </span>
-              <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', background: 'var(--bg-raised-2)', borderRadius: 99, padding: '1px 6px' }}>
+              <span style={{ fontSize: 11, color: '#8B909E', fontFamily: 'var(--font-mono)', background: '#252830', borderRadius: 99, padding: '1px 6px' }}>
                 {colTasks.length}
               </span>
             </div>
@@ -150,20 +165,60 @@ export default function BoardView({ tasks, onSelect }: Props) {
             {/* Cards container */}
             <div style={{
               flex: 1, display: 'flex', flexDirection: 'column', gap: 8,
-              overflowY: 'auto', minHeight: 80, padding: isMobile ? '10px 12px' : '4px 0',
-              borderRadius: isMobile ? '0 0 12px 12px' : 10,
-              background: isOver ? 'oklch(0.70 0.125 292 / 0.06)' : 'transparent',
+              overflowY: 'auto', minHeight: 80, padding: isMobile ? '10px' : '4px 0',
+              borderRadius: isMobile ? '0 0 14px 14px' : 10,
+              background: isOver ? 'rgba(139,92,246,0.06)' : 'transparent',
               transition: 'background .15s',
             }}>
               {colTasks.map(task => {
                 const dl = dueLabel(task.due)
                 const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
                 const isBeingDragged = draggingId === task.id
+
+                if (isMobile) {
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => { if (!draggingId) onSelect(task) }}
+                      style={{
+                        background: '#252830',
+                        border: '1px solid #2A2D3A',
+                        borderRadius: 10,
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <PriorityBadge p={task.priority} mobile />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <button
+                            onClick={e => { e.stopPropagation(); setMoveSheetTask(task) }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555968', padding: '2px 4px', fontSize: 14 }}
+                          >
+                            •••
+                          </button>
+                          <span onClick={e => e.stopPropagation()}>
+                            <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: '#F0F1F4', lineHeight: 1.4 }}>
+                        {task.title}
+                      </div>
+                      {dl && (
+                        <div style={{ marginTop: 8, fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>
+                          {dl.text}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
                 return (
                   <div
                     key={task.id}
                     onClick={() => { if (!draggingId) onSelect(task) }}
-                    onPointerDown={isMobile ? undefined : e => {
+                    onPointerDown={e => {
                       setDraggingId(task.id)
                       setDraggingFrom(task.status)
                       setOverColumn(task.status)
@@ -194,19 +249,9 @@ export default function BoardView({ tasks, onSelect }: Props) {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <PriorityBadge p={task.priority} />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {isMobile && (
-                          <button
-                            onClick={e => { e.stopPropagation(); setMoveSheetTask(task) }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-faint)', padding: '2px 4px', fontSize: 14 }}
-                          >
-                            •••
-                          </button>
-                        )}
-                        <span onClick={e => { e.stopPropagation() }}>
-                          <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
-                        </span>
-                      </div>
+                      <span onClick={e => e.stopPropagation()}>
+                        <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
+                      </span>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4, marginTop: 6 }}>
                       {task.title}
@@ -222,14 +267,38 @@ export default function BoardView({ tasks, onSelect }: Props) {
                   </div>
                 )
               })}
+
+              {colTasks.length === 0 && isMobile && (
+                <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 13, color: '#555968' }}>
+                  {L('Sem tarefas', 'No tasks')}
+                </div>
+              )}
             </div>
 
             {/* Add button */}
             <button
               type="button"
-              className="btn"
               onClick={() => setAddForStatus(col.id)}
-              style={{ marginTop: 8, width: '100%', fontSize: 12, justifyContent: 'center', gap: 6, ...(isMobile ? { margin: '0 12px 12px', width: 'calc(100% - 24px)' } : {}) }}
+              style={isMobile ? {
+                width: '100%',
+                height: 44,
+                border: '1px dashed #363A4A',
+                borderRadius: 10,
+                background: 'transparent',
+                color: '#8B909E',
+                fontSize: 13,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                margin: '0 0 10px',
+              } : {
+                marginTop: 8, width: '100%', fontSize: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '8px', borderRadius: 8, border: '1px dashed var(--edge)',
+                background: 'transparent', color: 'var(--ink-faint)', cursor: 'pointer',
+              }}
             >
               <Icon name="plus" size={13} />
               {L("Adicionar", "Add")}

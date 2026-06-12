@@ -55,8 +55,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         paddingLeft: 16,
         paddingRight: 16,
         gap: 8,
-        background: `color-mix(in oklch, ${app.color} 8%, var(--bg-raised))`,
-        borderBottom: '1px solid var(--edge-soft)',
+        background: '#0F1117',
+        borderBottom: '1px solid #2A2D3A',
       }}>
         {/* Back button */}
         <button
@@ -67,10 +67,10 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             padding: '6px 4px', minWidth: 60,
           }}
         >
-          <span style={{ color: 'var(--ink-dim)' }}>
+          <span style={{ color: '#8B909E' }}>
             <Icon name="chevron-left" size={20} />
           </span>
-          <span style={{ fontSize: 13, color: 'var(--ink-dim)', fontWeight: 500 }}>
+          <span style={{ fontSize: 13, color: '#8B909E', fontWeight: 500 }}>
             {lang === 'pt' ? 'Início' : 'Home'}
           </span>
         </button>
@@ -80,7 +80,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           flex: 1,
           textAlign: 'center',
           fontFamily: 'var(--font-display)',
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: 600,
           color: app.color,
         }}>
@@ -96,7 +96,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        background: '#161310',
+        background: '#0F1117',
         paddingBottom: hasSubTabs ? 'calc(56px + env(safe-area-inset-bottom) + 8px)' : undefined,
       }}>
         {children}
@@ -111,7 +111,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             left: 0,
             right: 0,
             zIndex: 100,
-            background: '#1a1714',
+            background: '#0F1117',
+            borderTop: '1px solid #2A2D3A',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}>
           {longPressTab && (() => {
@@ -199,7 +200,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                     border: 'none',
                     background: 'transparent',
                     cursor: 'pointer',
-                    color: isActive ? app.color : '#4a4540',
+                    color: isActive ? app.color : '#555968',
                   }}
                 >
                   <Icon name={tab.glyph as any} size={22} />

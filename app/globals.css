@@ -76,6 +76,8 @@ html, body {
 
 body { overflow: hidden; }
 
+@media (max-width: 768px) { body { background: #0F1117 !important; } }
+
 ::selection { background: oklch(0.80 0.115 80 / 0.3); }
 
 *::-webkit-scrollbar { width: 10px; height: 10px; }

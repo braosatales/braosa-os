@@ -87,7 +87,6 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
         return { key: k, label: proj?.name ?? L('Sem Projeto', 'No Project'), items }
       })
     }
-    // groupBy === 'system'
     const map = new Map<string, Task[]>()
     for (const t of sorted) {
       const k = t.system ?? '__none'
@@ -100,7 +99,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
   }, [sorted, groupBy, projects])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', background: '#161310' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', background: '#0F1117' }}>
       {/* Toolbar */}
       {!isMobile && (
         <>
@@ -133,11 +132,11 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
       )}
 
       {/* Rows */}
-      <div style={{ flex: 1, overflowY: 'auto', ...(isMobile ? { display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)' } : {}) }}>
+      <div style={{ flex: 1, overflowY: 'auto', ...(isMobile ? { display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)', padding: '12px 12px 0' } : {}) }}>
         {groups.map(group => (
           <div key={group.key}>
             {groupBy !== 'none' && (
-              <div style={{ padding: '12px 16px 4px', fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+              <div style={{ padding: '12px 16px 4px', fontSize: 10.5, fontFamily: 'var(--font-mono)', color: isMobile ? '#555968' : 'var(--ink-faint)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                 {group.label}
               </div>
             )}
@@ -148,40 +147,42 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
               const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
 
               if (isMobile) {
-                const pBg = task.priority === 1 ? '#E05C3A20' : task.priority === 2 ? '#D4A84320' : '#8B5CF620'
-                const pColor = task.priority === 1 ? '#E05C3A' : task.priority === 2 ? '#D4A843' : '#8B5CF6'
+                const pBg = task.priority === 1 ? '#EF444415' : task.priority === 2 ? '#F59E0B15' : '#8B5CF615'
+                const pColor = task.priority === 1 ? '#EF4444' : task.priority === 2 ? '#F59E0B' : '#8B5CF6'
                 return (
                   <div
                     key={task.id}
                     onClick={() => onSelect(task)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '12px 16px', margin: '0 12px 8px',
+                      padding: '14px 16px',
+                      marginBottom: 8,
                       minHeight: 52,
-                      background: '#1e1b18', border: '1px solid #2a2520',
-                      borderRadius: 10, cursor: 'pointer',
+                      background: '#1C1E26', border: '1px solid #2A2D3A',
+                      borderRadius: 12, cursor: 'pointer',
                     }}
                   >
                     <button
                       type="button"
                       onClick={e => { e.stopPropagation(); onToggleDone(task.id, e) }}
                       style={{
-                        width: 32, height: 32, borderRadius: 8, border: isDone ? 'none' : '1.5px solid #3a3530',
-                        background: isDone ? '#8B5CF6' : 'transparent',
+                        width: 26, height: 26, borderRadius: 99,
+                        border: isDone ? '2px solid #22C55E' : '2px solid #363A4A',
+                        background: isDone ? '#22C55E' : 'transparent',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: 'white', flexShrink: 0,
                       }}
                     >
-                      {isDone && <Icon name="check" size={14} stroke={3} />}
+                      {isDone && <Icon name="check" size={13} stroke={3} />}
                     </button>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: isDone ? '#94A3B8' : '#E8E0D5', textDecoration: isDone ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: isDone ? '#555968' : '#F0F1F4', textDecoration: isDone ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {task.title}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                        <span style={{ fontSize: 10, color: pColor, fontWeight: 600, fontFamily: 'var(--font-mono)', background: pBg, borderRadius: 99, padding: '2px 6px' }}>P{task.priority}</span>
-                        {proj && <span style={{ fontSize: 10, color: '#94A3B8' }}>{proj.name}</span>}
-                        {dl && <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: dl.over ? '#E05C3A' : '#94A3B8' }}>{dl.text}</span>}
+                        <span style={{ fontSize: 11, color: pColor, fontWeight: 600, background: pBg, borderRadius: 6, padding: '2px 8px' }}>P{task.priority}</span>
+                        {proj && <span style={{ fontSize: 11, color: '#8B909E' }}>{proj.name}</span>}
+                        {dl && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>{dl.text}</span>}
                       </div>
                     </div>
                     <span onClick={e => e.stopPropagation()}>
@@ -199,7 +200,6 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-raised-2)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
                 >
-                  {/* Check */}
                   <button
                     type="button"
                     onClick={e => { e.stopPropagation(); onToggleDone(task.id, e) }}
@@ -213,7 +213,6 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                     {isDone && <Icon name="check" size={11} stroke={3} />}
                   </button>
 
-                  {/* Title + tags */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, overflow: 'hidden' }}>
                     <span style={{ fontSize: 13, color: isDone ? 'var(--ink-faint)' : 'var(--ink-soft)', textDecoration: isDone ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {task.title}
@@ -225,12 +224,10 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                     )}
                   </div>
 
-                  {/* Project */}
                   <span style={{ fontSize: 11, color: 'var(--ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {proj?.name ?? '—'}
                   </span>
 
-                  {/* System */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     {task.system && <span style={{ width: 6, height: 6, borderRadius: 99, background: systemColor, flexShrink: 0 }} />}
                     <span style={{ fontSize: 11, color: 'var(--ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -238,17 +235,14 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                     </span>
                   </div>
 
-                  {/* Priority */}
                   <PriorityBadge p={task.priority} />
 
-                  {/* Due */}
                   {dl ? (
                     <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: dl.over ? 'var(--neg)' : dl.now ? 'var(--c-fin)' : 'var(--ink-faint)' }}>
                       {dl.text}
                     </span>
                   ) : <span />}
 
-                  {/* Fav */}
                   <span onClick={e => e.stopPropagation()}>
                     <FavStar on={task.fav} onClick={() => onToggleFav(task.id)} size={13} />
                   </span>
@@ -260,14 +254,14 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
 
         {tasks.length === 0 && (
           isMobile ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
-                <Icon name="list" size={40} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%', minHeight: 'calc(100vh - 200px)' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: '#1C1E26', border: '1px solid #2A2D3A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
+                <Icon name="list" size={32} />
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, color: '#E8E0D5', textAlign: 'center' }}>
+              <div style={{ fontSize: 17, fontWeight: 600, color: '#F0F1F4', textAlign: 'center', marginBottom: 8 }}>
                 {L("Nenhuma tarefa", "No tasks")}
               </div>
-              <div style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: '#8B909E', textAlign: 'center' }}>
                 {L("Adiciona uma tarefa com o +", "Add a task with the +")}
               </div>
             </div>

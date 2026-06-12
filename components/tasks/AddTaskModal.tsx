@@ -19,9 +19,9 @@ const ALL_SYSTEMS = [
 ]
 
 const PRIORITY_OPTS = [
-  { v: 1 as TaskPriority, label: 'P1', border: '#E05C3A', activeBg: '#E05C3A20', color: '#E05C3A' },
-  { v: 2 as TaskPriority, label: 'P2', border: '#D4A843', activeBg: '#D4A84320', color: '#D4A843' },
-  { v: 3 as TaskPriority, label: 'P3', border: '#8B5CF6', activeBg: '#8B5CF620', color: '#8B5CF6' },
+  { v: 1 as TaskPriority, label: '▲ P1', border: '#EF4444', activeBg: '#EF444420', color: '#EF4444' },
+  { v: 2 as TaskPriority, label: '● P2', border: '#F59E0B', activeBg: '#F59E0B20', color: '#F59E0B' },
+  { v: 3 as TaskPriority, label: '▽ P3', border: '#8B5CF6', activeBg: '#8B5CF620', color: '#8B5CF6' },
 ]
 
 export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: Props) {
@@ -36,6 +36,7 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
   const [fav, setFav] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [titleFocused, setTitleFocused] = useState(false)
 
   async function doSave() {
     if (!title.trim()) return
@@ -78,7 +79,7 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
           position: 'fixed',
           inset: 0,
           zIndex: 200,
-          background: '#1e1b18',
+          background: '#0F1117',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -91,9 +92,11 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
             paddingTop: 'env(safe-area-inset-top)',
             display: 'flex',
             alignItems: 'center',
-            paddingLeft: 4,
+            justifyContent: 'space-between',
+            paddingLeft: 16,
             paddingRight: 16,
-            background: '#1e1b18',
+            background: '#0F1117',
+            borderBottom: '1px solid #2A2D3A',
           }}
         >
           {/* X close */}
@@ -109,7 +112,7 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: '#94A3B8',
+              color: '#8B909E',
               flexShrink: 0,
             }}
           >
@@ -118,12 +121,10 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
           {/* Title */}
           <div
             style={{
-              flex: 1,
-              textAlign: 'center',
               fontFamily: 'var(--font-display)',
               fontSize: 16,
               fontWeight: 600,
-              color: '#E8E0D5',
+              color: '#F0F1F4',
             }}
           >
             {L("Nova Tarefa", "New Task")}
@@ -137,7 +138,7 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               background: 'none',
               border: 'none',
               cursor: !title.trim() || saving ? 'not-allowed' : 'pointer',
-              color: !title.trim() || saving ? '#5a4a7e' : '#8B5CF6',
+              color: !title.trim() || saving ? '#555968' : '#8B5CF6',
               fontSize: 15,
               fontWeight: 600,
               padding: '0 4px',
@@ -151,22 +152,24 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
         {/* Scrollable content */}
         <form
           onSubmit={handleSubmit}
-          style={{ flex: 1, overflowY: 'auto', padding: '24px' }}
+          style={{ flex: 1, overflowY: 'auto', padding: '24px 20px' }}
         >
           {/* Task name */}
           <input
             autoFocus
             value={title}
             onChange={e => setTitle(e.target.value)}
+            onFocus={() => setTitleFocused(true)}
+            onBlur={() => setTitleFocused(false)}
             placeholder={L("O que precisas fazer?", "What do you need to do?")}
             style={{
               width: '100%',
               fontSize: 20,
               fontWeight: 500,
               border: 'none',
-              borderBottom: '1px solid #2a2520',
+              borderBottom: titleFocused ? '1px solid #8B5CF6' : '1px solid #2A2D3A',
               background: 'transparent',
-              color: '#E8E0D5',
+              color: '#F0F1F4',
               padding: '12px 0',
               outline: 'none',
               fontFamily: 'inherit',
@@ -181,26 +184,27 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '16px 0',
-              borderBottom: '1px solid #1e1b18',
+              borderBottom: '1px solid #2A2D3A',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: '#94A3B8', display: 'flex' }}><Icon name="calendar" size={16} /></span>
-              <span style={{ fontSize: 14, color: '#94A3B8' }}>{L("Data limite", "Due date")}</span>
+              <span style={{ color: '#8B909E', display: 'flex' }}><Icon name="calendar" size={16} /></span>
+              <span style={{ fontSize: 14, color: '#8B909E' }}>{L("Data limite", "Due date")}</span>
             </div>
             <input
               type="date"
               value={due}
               onChange={e => setDue(e.target.value)}
               style={{
-                background: '#2a2520',
+                background: '#252830',
                 border: 'none',
                 borderRadius: 8,
                 padding: '8px 12px',
-                color: '#E8E0D5',
+                color: '#F0F1F4',
                 fontSize: 14,
                 outline: 'none',
                 fontFamily: 'inherit',
+                colorScheme: 'dark',
               }}
             />
           </div>
@@ -212,22 +216,22 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '16px 0',
-              borderBottom: '1px solid #1e1b18',
+              borderBottom: '1px solid #2A2D3A',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: '#94A3B8', display: 'flex' }}><Icon name="flag" size={16} /></span>
-              <span style={{ fontSize: 14, color: '#94A3B8' }}>{L("Prioridade", "Priority")}</span>
+              <span style={{ color: '#8B909E', display: 'flex' }}><Icon name="flag" size={16} /></span>
+              <span style={{ fontSize: 14, color: '#8B909E' }}>{L("Prioridade", "Priority")}</span>
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               {PRIORITY_OPTS.map(opt => (
                 <button
                   key={opt.v}
                   type="button"
                   onClick={() => setPriority(opt.v)}
                   style={{
-                    padding: '6px 14px',
-                    borderRadius: 20,
+                    padding: '6px 12px',
+                    borderRadius: 16,
                     border: `1.5px solid ${opt.border}`,
                     background: priority === opt.v ? opt.activeBg : 'transparent',
                     color: opt.color,
@@ -256,12 +260,12 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: '#94A3B8',
+              color: '#8B909E',
               fontSize: 13,
-              borderBottom: '1px solid #1e1b18',
+              borderBottom: '1px solid #2A2D3A',
             }}
           >
-            <span style={{ color: '#94A3B8', display: 'flex' }}><Icon name={showMoreOptions ? 'chevron-up' : 'chevron-down'} size={14} /></span>
+            <span style={{ color: '#8B909E', display: 'flex' }}><Icon name={showMoreOptions ? 'chevron-up' : 'chevron-down'} size={14} /></span>
             {showMoreOptions ? L('Menos opções', 'Fewer options') : L('Mais opções', 'More options')}
           </button>
 
@@ -274,22 +278,23 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 0',
-                  borderBottom: '1px solid #1e1b18',
+                  borderBottom: '1px solid #2A2D3A',
                 }}
               >
-                <span style={{ fontSize: 14, color: '#94A3B8' }}>{L("Sistema", "System")}</span>
+                <span style={{ fontSize: 14, color: '#8B909E' }}>{L("Sistema", "System")}</span>
                 <select
                   value={system}
                   onChange={e => setSystem(e.target.value)}
                   style={{
-                    background: '#2a2520',
+                    background: '#252830',
                     border: 'none',
-                    borderRadius: 8,
-                    padding: '8px 12px',
-                    color: system ? '#E8E0D5' : '#94A3B8',
+                    borderRadius: 10,
+                    padding: '12px',
+                    color: '#F0F1F4',
                     fontSize: 14,
                     outline: 'none',
                     fontFamily: 'inherit',
+                    colorScheme: 'dark',
                   }}
                 >
                   <option value="">—</option>
@@ -298,8 +303,8 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               </div>
 
               {/* Description */}
-              <div style={{ padding: '16px 0', borderBottom: '1px solid #1e1b18' }}>
-                <span style={{ fontSize: 14, color: '#94A3B8', display: 'block', marginBottom: 10 }}>{L("Descrição", "Description")}</span>
+              <div style={{ padding: '16px 0', borderBottom: '1px solid #2A2D3A' }}>
+                <span style={{ fontSize: 14, color: '#8B909E', display: 'block', marginBottom: 10 }}>{L("Descrição", "Description")}</span>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -310,8 +315,8 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
                     fontSize: 14,
                     border: 'none',
                     borderRadius: 10,
-                    background: '#2a2520',
-                    color: '#E8E0D5',
+                    background: '#252830',
+                    color: '#F0F1F4',
                     padding: '12px',
                     outline: 'none',
                     resize: 'none',
@@ -331,14 +336,14 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
                 }}
               >
                 <FavStar on={fav} onClick={() => setFav(f => !f)} size={20} />
-                <span style={{ fontSize: 13, color: '#94A3B8' }}>
+                <span style={{ fontSize: 13, color: '#8B909E' }}>
                   {fav ? L("Favorito", "Favourite") : L("Adicionar aos favoritos", "Add to favourites")}
                 </span>
               </div>
             </div>
           )}
 
-          {error && <div style={{ color: '#E05C3A', fontSize: 12, marginTop: 12 }}>{error}</div>}
+          {error && <div style={{ color: '#EF4444', fontSize: 12, marginTop: 12 }}>{error}</div>}
         </form>
       </div>
     )
