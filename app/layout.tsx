@@ -25,12 +25,18 @@ const monoFont = Space_Mono({
 
 export const metadata: Metadata = {
   title: 'BraosaOS',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'BraosaOS',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: '#211e1a',
 }
 
 export default function RootLayout({
@@ -43,6 +49,14 @@ export default function RootLayout({
       lang="en"
       className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
     >
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="BraosaOS" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#211e1a" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
     </html>
   )
