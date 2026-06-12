@@ -103,19 +103,21 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
       {/* Per-app bottom nav */}
       {hasSubTabs && (
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 'calc(56px + env(safe-area-inset-bottom))',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          background: 'var(--bg-raised)',
-          borderTop: '1px solid var(--edge)',
-          backdropFilter: 'blur(12px)',
-          display: 'flex',
-          zIndex: 10,
-        }}>
+        <div
+          className="app-bottom-nav"
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 'calc(56px + env(safe-area-inset-bottom))',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+            background: '#1a1714',
+            borderTop: '1px solid var(--edge)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            zIndex: 10,
+          }}>
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
             if (!tab) return null

@@ -242,7 +242,7 @@ export default function TasksShell() {
       )}
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minWidth: 0, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #1a1714 0%, #141210 100%)', minHeight: '100%' }}>
         {activeView === 'today' && (
           <TodayView tasks={filteredTasks} onSelect={setSelectedTask} onToggleDone={handleToggleDone} onToggleFav={handleToggleFav} />
         )}
@@ -265,20 +265,20 @@ export default function TasksShell() {
           onClick={() => setShowAddTask(true)}
           style={{
             position: 'fixed',
-            bottom: 80,
+            bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
             right: 20,
-            zIndex: 200,
+            zIndex: 50,
             width: 52,
             height: 52,
             borderRadius: 99,
-            background: 'var(--c-task)',
-            color: 'oklch(0.18 0.01 80)',
+            background: '#8B5CF6',
+            color: '#fff',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 0 calc(30px * var(--glow)) -6px var(--c-task)',
+            boxShadow: '0 0 30px -6px #8B5CF6',
           }}
         >
           <Icon name="plus" size={22} />

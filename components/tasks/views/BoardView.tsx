@@ -64,11 +64,13 @@ export default function BoardView({ tasks, onSelect }: Props) {
     <div style={{
       display: 'flex',
       gap: 16,
-      padding: 20,
-      overflowX: 'auto',
+      padding: isMobile ? '16px' : '20px',
+      overflowX: isMobile ? 'hidden' : 'auto',
+      overflowY: isMobile ? 'auto' : 'hidden',
       height: '100%',
       alignItems: 'flex-start',
-      ...(isMobile ? { scrollSnapType: 'x mandatory' } : {}),
+      flexDirection: isMobile ? 'column' : 'row',
+      background: 'transparent',
     }}>
       {/* Mobile move bottom sheet */}
       {isMobile && moveSheetTask && (
@@ -116,13 +118,16 @@ export default function BoardView({ tasks, onSelect }: Props) {
         return (
           <div
             key={col.id}
-            style={{ flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column', ...(isMobile ? { scrollSnapAlign: 'start' } : {}) }}
+            style={isMobile
+              ? { width: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, background: '#1e1b18', border: '1px solid #2a2520' }
+              : { flex: '0 0 280px', minWidth: 280, display: 'flex', flexDirection: 'column' }
+            }
             onPointerEnter={() => { if (draggingId) setOverColumn(col.id) }}
           >
             {/* Column header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '0 2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isMobile ? 0 : 12, padding: isMobile ? '12px 14px' : '0 2px', borderBottom: isMobile ? '1px solid #2a2520' : 'none' }}>
               <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color, flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--ink)', flex: 1 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 14 : 13, fontWeight: 600, color: 'var(--ink)', flex: 1 }}>
                 {L(col.labelPt, col.labelEn)}
               </span>
               <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'var(--font-mono)', background: 'var(--bg-raised-2)', borderRadius: 99, padding: '1px 6px' }}>
@@ -133,8 +138,8 @@ export default function BoardView({ tasks, onSelect }: Props) {
             {/* Cards container */}
             <div style={{
               flex: 1, display: 'flex', flexDirection: 'column', gap: 8,
-              overflowY: 'auto', minHeight: 80, padding: '4px 0',
-              borderRadius: 10,
+              overflowY: 'auto', minHeight: 80, padding: isMobile ? '10px 12px' : '4px 0',
+              borderRadius: isMobile ? '0 0 12px 12px' : 10,
               background: isOver ? 'oklch(0.70 0.125 292 / 0.06)' : 'transparent',
               transition: 'background .15s',
             }}>
@@ -212,7 +217,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
               type="button"
               className="btn"
               onClick={() => setAddForStatus(col.id)}
-              style={{ marginTop: 8, width: '100%', fontSize: 12, justifyContent: 'center', gap: 6 }}
+              style={{ marginTop: 8, width: '100%', fontSize: 12, justifyContent: 'center', gap: 6, ...(isMobile ? { margin: '0 12px 12px', width: 'calc(100% - 24px)' } : {}) }}
             >
               <Icon name="plus" size={13} />
               {L("Adicionar", "Add")}

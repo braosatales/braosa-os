@@ -14,6 +14,14 @@ import { useLock } from "@/app/(os)/layout"
 
 const VERSION_HISTORY = [
   {
+    version: '1.1.1',
+    date: 'Jun 2026',
+    group: 'Tasks Mobile Polish',
+    entries: [
+      'Tasks mobile: background, typography, FAB positioning, safe area fixes',
+    ]
+  },
+  {
     version: '1.1.0',
     date: 'Jun 2026',
     group: 'Mobile Home Screen — Dashboard Removed + Notifications',
