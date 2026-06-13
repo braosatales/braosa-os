@@ -174,7 +174,7 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
     >
       {!hasAny && (
         isMobile ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%', minHeight: 'calc(100vh - 200px)' }}>
+          <div style={{ height: '100%', minHeight: 'calc(100dvh - 52px - 48px - env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%' }}>
             <div style={{ width: 64, height: 64, borderRadius: 16, background: '#1C1E26', border: '1px solid #2A2D3A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6', margin: '0 auto 20px' }}>
               <Icon name="target" size={32} />
             </div>

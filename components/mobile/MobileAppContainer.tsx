@@ -39,38 +39,39 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
     >
       {/* Top bar — flex-shrink: 0 */}
       <div style={{
+        position: 'relative',
         flexShrink: 0,
         height: `calc(52px + env(safe-area-inset-top))`,
         paddingTop: 'env(safe-area-inset-top)',
         display: 'flex',
         alignItems: 'center',
-        paddingLeft: 16,
-        paddingRight: 16,
-        gap: 8,
+        justifyContent: 'center',
         background: '#0F1117',
         borderBottom: '1px solid #2A2D3A',
       }}>
-        {/* Back button */}
+        {/* Back button — chevron only */}
         <button
           onClick={handleClose}
           style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            border: 'none', background: 'transparent', cursor: 'pointer',
-            padding: '6px 4px', minWidth: 60,
+            position: 'absolute',
+            left: 0,
+            width: 44,
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
           }}
         >
-          <span style={{ color: '#8B909E' }}>
-            <Icon name="chevron-left" size={20} />
-          </span>
-          <span style={{ fontSize: 13, color: '#8B909E', fontWeight: 500 }}>
-            {lang === 'pt' ? 'Início' : 'Home'}
-          </span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18L9 12L15 6" stroke="#8B909E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
 
-        {/* App name */}
+        {/* App name — centered */}
         <div style={{
-          flex: 1,
-          textAlign: 'center',
           fontFamily: 'var(--font-display)',
           fontSize: 15,
           fontWeight: 600,
@@ -79,8 +80,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           {appLabel}
         </div>
 
-        {/* Right spacer */}
-        <div style={{ minWidth: 60 }} />
+        {/* Right placeholder */}
+        <div style={{ position: 'absolute', right: 0, width: 44 }} />
       </div>
 
       {/* Content — flex: 1, overflow-y: auto, min-height: 0 */}
@@ -102,11 +103,9 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       {hasSubTabs && (
         <nav style={{
           flexShrink: 0,
-          height: 48,
           paddingBottom: 'env(safe-area-inset-bottom)',
           background: '#0F1117',
           borderTop: '1px solid #2A2D3A',
-          display: 'flex',
           position: 'relative',
         }}>
           {/* Long-press tab tooltip — position fixed so it floats above the nav */}
@@ -169,45 +168,47 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          {app.subTabs!.map(tab => {
-            const isActive = subTabId === tab.id
-            const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
-            return (
-              <button
-                key={tab.id}
-                onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
-                onPointerDown={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
-                }}
-                onPointerUp={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                }}
-                onPointerLeave={() => {
-                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                }}
-                style={{
-                  flex: 1,
-                  height: 48,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 3,
-                  padding: 0,
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  color: isActive ? app.color : '#555968',
-                }}
-              >
-                <Icon name={tab.glyph as any} size={20} />
-                <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
-                  {tabLabel}
-                </span>
-              </button>
-            )
-          })}
+          <div style={{ height: 48, display: 'flex' }}>
+            {app.subTabs!.map(tab => {
+              const isActive = subTabId === tab.id
+              const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
+                  onPointerDown={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                    longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
+                  }}
+                  onPointerUp={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                  }}
+                  onPointerLeave={() => {
+                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 3,
+                    padding: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: isActive ? app.color : '#555968',
+                  }}
+                >
+                  <Icon name={tab.glyph as any} size={20} />
+                  <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
+                    {tabLabel}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </nav>
       )}
     </div>
