@@ -35,17 +35,9 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
   return (
     <div
-      className={isClosing ? 'app-close' : 'app-open'}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 50,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--bg-base)',
-      }}
+      className={`mobile-app-root ${isClosing ? 'app-close' : 'app-open'}`}
     >
-      {/* Top bar */}
+      {/* Top bar — flex-shrink: 0 */}
       <div style={{
         flexShrink: 0,
         height: `calc(52px + env(safe-area-inset-top))`,
@@ -91,38 +83,41 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         <div style={{ minWidth: 60 }} />
       </div>
 
-      {/* Content */}
+      {/* Content — flex: 1, overflow-y: auto, min-height: 0 */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
+        minHeight: 0,
         background: '#0F1117',
-        paddingBottom: hasSubTabs ? 'calc(48px + env(safe-area-inset-bottom) + 8px)' : undefined,
       }}>
         {children}
       </div>
 
-      {/* Per-app bottom nav */}
+      {/* Bottom nav — flex-shrink: 0, NOT position fixed */}
       {hasSubTabs && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            background: '#0F1117',
-            borderTop: '1px solid #2A2D3A',
-            paddingBottom: 'env(safe-area-inset-bottom)',
-          }}>
+        <nav style={{
+          flexShrink: 0,
+          height: 48,
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          background: '#0F1117',
+          borderTop: '1px solid #2A2D3A',
+          display: 'flex',
+          position: 'relative',
+        }}>
+          {/* Long-press tab tooltip — position fixed so it floats above the nav */}
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
             if (!tab) return null
             return (
               <div
                 style={{
-                  position: 'absolute', bottom: 'calc(48px + env(safe-area-inset-bottom) + 8px)', left: 0, right: 0,
-                  display: 'flex', justifyContent: 'center',
+                  position: 'fixed',
+                  bottom: 'calc(48px + env(safe-area-inset-bottom) + 8px)',
+                  left: 0,
+                  right: 0,
+                  display: 'flex',
+                  justifyContent: 'center',
                   zIndex: 200,
                 }}
                 onClick={() => setLongPressTab(null)}
@@ -170,48 +165,46 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 48, display: 'flex' }}>
-            {app.subTabs!.map(tab => {
-              const isActive = subTabId === tab.id
-              const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
-                  onPointerDown={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                    longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
-                  }}
-                  onPointerUp={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  }}
-                  onPointerLeave={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  }}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 3,
-                    padding: 0,
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    color: isActive ? app.color : '#555968',
-                  }}
-                >
-                  <Icon name={tab.glyph as any} size={20} />
-                  <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
-                    {tabLabel}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+          {app.subTabs!.map(tab => {
+            const isActive = subTabId === tab.id
+            const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
+                onPointerDown={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                  longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
+                }}
+                onPointerUp={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                }}
+                onPointerLeave={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                }}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 3,
+                  padding: 0,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: isActive ? app.color : '#555968',
+                }}
+              >
+                <Icon name={tab.glyph as any} size={20} />
+                <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
+                  {tabLabel}
+                </span>
+              </button>
+            )
+          })}
+        </nav>
       )}
     </div>
   )
