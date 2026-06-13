@@ -89,12 +89,23 @@ button, [role="button"], .btn, .app-icon, .task-row, .note-card {
   cursor: pointer;
 }
 
-html, body {
+html {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
-  background: #0F1117;
+  background: #FFFFFF !important;
+  overscroll-behavior: none;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #FF00FF !important;
   overscroll-behavior: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -102,9 +113,10 @@ html, body {
 
 #__next {
   height: 100%;
+  background: #00FFFF !important;
 }
 
-@media (max-width: 768px) { body { background: #0F1117 !important; } }
+@media (max-width: 768px) { body { background: #FF00FF !important; } }
 
 @supports (height: 100dvh) {
   .mobile-app-root { height: 100dvh; }
