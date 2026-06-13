@@ -35,28 +35,36 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
   return (
     <div
-      className={`mobile-app-root ${isClosing ? 'app-close' : 'app-open'}`}
+      className={isClosing ? 'app-close' : 'app-open'}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100dvh',
+        maxHeight: '100dvh',
+        background: '#0F1117',
+        overflow: 'hidden',
+      }}
     >
-      {/* Top bar — flex-shrink: 0 */}
+
+      {/* TOP BAR — flex-shrink 0 */}
       <div style={{
-        position: 'relative',
         flexShrink: 0,
-        height: `calc(52px + env(safe-area-inset-top))`,
-        paddingTop: 'env(safe-area-inset-top)',
+        height: 52,
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0F1117',
         borderBottom: '1px solid #2A2D3A',
+        background: '#0F1117',
       }}>
-        {/* Back button — chevron only */}
+        {/* Back button — chevron only, absolute left */}
         <button
           onClick={handleClose}
           style={{
             position: 'absolute',
             left: 0,
             width: 44,
-            height: 44,
+            height: 52,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -66,49 +74,44 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="#8B909E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 18L9 12L15 6" stroke="#8B909E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
 
-        {/* App name — centered */}
-        <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 15,
+        {/* App title — centered */}
+        <span style={{
+          fontSize: 16,
           fontWeight: 600,
           color: app.color,
+          fontFamily: 'Outfit, sans-serif',
         }}>
           {appLabel}
-        </div>
-
-        {/* Right placeholder */}
-        <div style={{ position: 'absolute', right: 0, width: 44 }} />
+        </span>
       </div>
 
-      {/* Content — flex: 1, overflow-y: auto, min-height: 0 */}
+      {/* CONTENT AREA — the only scroll container */}
       <div
         className="mobile-content-area"
         style={{
           flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
           minHeight: 0,
-          background: '#0F1117',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
+          background: '#0F1117',
         }}
       >
         {children}
       </div>
 
-      {/* Bottom nav — flex-shrink: 0, NOT position fixed */}
+      {/* BOTTOM NAV — flex child, NOT position fixed */}
       {hasSubTabs && (
-        <nav style={{
+        <div style={{
           flexShrink: 0,
-          paddingBottom: 'env(safe-area-inset-bottom)',
           background: '#0F1117',
           borderTop: '1px solid #2A2D3A',
-          position: 'relative',
+          paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
-          {/* Long-press tab tooltip — position fixed so it floats above the nav */}
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
             if (!tab) return null
@@ -116,7 +119,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
               <div
                 style={{
                   position: 'fixed',
-                  bottom: 'calc(48px + env(safe-area-inset-bottom) + 8px)',
+                  bottom: 'calc(52px + env(safe-area-inset-bottom) + 8px)',
                   left: 0,
                   right: 0,
                   display: 'flex',
@@ -168,7 +171,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 48, display: 'flex' }}>
+          <div style={{ height: 52, display: 'flex' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
@@ -188,29 +191,34 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                   }}
                   style={{
                     flex: 1,
-                    height: 48,
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 3,
-                    padding: 0,
-                    border: 'none',
                     background: 'transparent',
+                    border: 'none',
                     cursor: 'pointer',
                     color: isActive ? app.color : '#555968',
                   }}
                 >
                   <Icon name={tab.glyph as any} size={20} />
-                  <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
+                  <span style={{
+                    fontSize: 9,
+                    fontWeight: 500,
+                    letterSpacing: '0.03em',
+                    fontFamily: 'DM Sans, sans-serif',
+                  }}>
                     {tabLabel}
                   </span>
                 </button>
               )
             })}
           </div>
-        </nav>
+        </div>
       )}
+
     </div>
   )
 }
