@@ -46,47 +46,53 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       }}
     >
 
-      {/* TOP BAR — flex-shrink 0 */}
+      {/* TOP BAR — flex-shrink 0, outer handles safe-area-inset-top */}
       <div style={{
         flexShrink: 0,
-        height: 52,
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottom: '1px solid #2A2D3A',
+        paddingTop: 'env(safe-area-inset-top)',
         background: '#0F1117',
+        borderBottom: '1px solid #2A2D3A',
+        position: 'relative',
       }}>
-        {/* Back button — chevron only, absolute left */}
-        <button
-          onClick={handleClose}
-          style={{
-            position: 'absolute',
-            left: 0,
-            width: 44,
-            height: 52,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="#8B909E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-
-        {/* App title — centered */}
-        <span style={{
-          fontSize: 16,
-          fontWeight: 600,
-          color: app.color,
-          fontFamily: 'Outfit, sans-serif',
+        {/* Inner bar — fixed 52px height with content */}
+        <div style={{
+          height: 52,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          {appLabel}
-        </span>
+          {/* Back button — chevron only, absolute left */}
+          <button
+            onClick={handleClose}
+            style={{
+              position: 'absolute',
+              left: 0,
+              width: 44,
+              height: 52,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18L9 12L15 6" stroke="#8B909E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {/* App title — centered */}
+          <span style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: app.color,
+            fontFamily: 'Outfit, sans-serif',
+          }}>
+            {appLabel}
+          </span>
+        </div>
       </div>
 
       {/* CONTENT AREA — the only scroll container */}
