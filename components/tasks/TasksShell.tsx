@@ -265,7 +265,7 @@ export default function TasksShell() {
           onClick={() => setShowAddTask(true)}
           style={{
             position: 'fixed',
-            bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
+            bottom: 'calc(48px + env(safe-area-inset-bottom) + 16px)',
             right: 20,
             zIndex: 50,
             width: 52,

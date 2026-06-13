@@ -97,7 +97,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         overflowY: 'auto',
         overflowX: 'hidden',
         background: '#0F1117',
-        paddingBottom: hasSubTabs ? 'calc(56px + env(safe-area-inset-bottom) + 8px)' : undefined,
+        paddingBottom: hasSubTabs ? 'calc(48px + env(safe-area-inset-bottom) + 8px)' : undefined,
       }}>
         {children}
       </div>
@@ -121,7 +121,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             return (
               <div
                 style={{
-                  position: 'absolute', bottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)', left: 0, right: 0,
+                  position: 'absolute', bottom: 'calc(48px + env(safe-area-inset-bottom) + 8px)', left: 0, right: 0,
                   display: 'flex', justifyContent: 'center',
                   zIndex: 200,
                 }}
@@ -170,7 +170,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 56, display: 'flex' }}>
+          <div style={{ height: 48, display: 'flex' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
@@ -190,12 +190,12 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                   }}
                   style={{
                     flex: 1,
-                    height: 56,
+                    height: 48,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 4,
+                    gap: 3,
                     padding: 0,
                     border: 'none',
                     background: 'transparent',
@@ -203,8 +203,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                     color: isActive ? app.color : '#555968',
                   }}
                 >
-                  <Icon name={tab.glyph as any} size={22} />
-                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.03em' }}>
+                  <Icon name={tab.glyph as any} size={20} />
+                  <span style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.03em' }}>
                     {tabLabel}
                   </span>
                 </button>

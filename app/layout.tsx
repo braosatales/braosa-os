@@ -36,7 +36,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#211e1a',
+  themeColor: '#0F1117',
 }
 
 export default function RootLayout({
@@ -54,7 +54,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="BraosaOS" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#211e1a" />
+        <meta name="theme-color" content="#0F1117" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
