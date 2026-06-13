@@ -99,7 +99,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
   }, [sorted, groupBy, projects])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', background: '#0F1117' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box', margin: 0, height: '100%', overflowY: 'auto', overscrollBehavior: 'contain' }}>
       {/* Toolbar */}
       {!isMobile && (
         <>

@@ -94,7 +94,7 @@ html {
   padding: 0;
   height: 100%;
   overflow: hidden;
-  background: #FFFFFF !important;
+  background: #0F1117;
   overscroll-behavior: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -105,7 +105,7 @@ body {
   padding: 0;
   height: 100%;
   overflow: hidden;
-  background: #FF00FF !important;
+  background: #0F1117;
   overscroll-behavior: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -113,10 +113,10 @@ body {
 
 #__next {
   height: 100%;
-  background: #00FFFF !important;
+  background: #0F1117;
 }
 
-@media (max-width: 768px) { body { background: #FF00FF !important; } }
+@media (max-width: 768px) { body { background: #0F1117; } }
 
 @supports (height: 100dvh) {
   .mobile-app-root { height: 100dvh; }

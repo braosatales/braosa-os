@@ -41,7 +41,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         flexDirection: 'column',
         height: '100dvh',
         maxHeight: '100dvh',
-        background: '#FF0000',
+        background: '#0F1117',
         overflow: 'hidden',
       }}
     >
@@ -50,7 +50,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       <div style={{
         flexShrink: 0,
         paddingTop: 'env(safe-area-inset-top)',
-        background: '#FFA500',
+        background: '#0F1117',
         borderBottom: '1px solid #2A2D3A',
         position: 'relative',
       }}>
@@ -104,7 +104,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
-          background: '#00FF00',
+          background: '#0F1117',
         }}
       >
         {children}
@@ -114,9 +114,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       {hasSubTabs && (
         <div style={{
           flexShrink: 0,
-          background: '#0000FF',
+          background: '#0F1117',
           borderTop: '1px solid #2A2D3A',
-          paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
@@ -177,7 +176,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 52, display: 'flex', background: '#800080' }}>
+          <div style={{ height: 52, display: 'flex' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
@@ -222,6 +221,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
               )
             })}
           </div>
+          {/* Safe area spacer — same color as nav, seamless */}
+          <div style={{ height: 'env(safe-area-inset-bottom)', background: '#0F1117' }} />
         </div>
       )}
 

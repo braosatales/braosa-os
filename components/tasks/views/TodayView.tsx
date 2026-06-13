@@ -170,7 +170,25 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
   return (
     <div
       className={isMobile ? 'mobile-page' : undefined}
-      style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#FFC0CB', overscrollBehavior: 'contain', ...(isMobile ? { minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' } : {}) }}
+      style={isMobile ? {
+        padding: '16px 12px',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box' as const,
+        margin: 0,
+        overflowY: 'auto',
+        flex: 1,
+        overscrollBehavior: 'contain',
+        minHeight: 'calc(100vh - 120px)',
+        display: 'flex',
+        flexDirection: 'column' as const,
+      } : {
+        padding: '16px 20px',
+        maxWidth: 720,
+        overflowY: 'auto',
+        flex: 1,
+        overscrollBehavior: 'contain',
+      }}
     >
       {!hasAny && (
         isMobile ? (

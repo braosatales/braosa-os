@@ -334,9 +334,11 @@ export default function OsLayout({ children: _children }: { children: React.Reac
           style={{
             display: "flex",
             flexDirection: "column",
-            height: "100vh",
+            height: "100dvh",
+            margin: 0,
+            padding: 0,
             overflow: "hidden",
-            background: "#FFFF00",
+            background: "#0F1117",
           }}
         >
           <TopNav
