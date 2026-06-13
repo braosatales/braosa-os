@@ -64,19 +64,43 @@
   --shadow-pop: 0 30px 80px -24px oklch(0 0 0 / 0.85);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img {
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
+
+a {
+  -webkit-touch-callout: none;
+}
+
+a img, button img, .tappable img {
+  pointer-events: auto;
+}
+
+button, [role="button"], .btn, .app-icon, .task-row, .note-card {
+  cursor: pointer;
+}
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+  position: fixed;
+  overflow: hidden;
   background: var(--bg-void);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
-body { overflow: hidden; }
 
 @media (max-width: 768px) { body { background: #0F1117 !important; } }
 
@@ -89,6 +113,12 @@ body { overflow: hidden; }
   flex-direction: column;
   background: #0F1117;
   overflow: hidden;
+}
+
+.mobile-content-area {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 ::selection { background: oklch(0.80 0.115 80 / 0.3); }
@@ -254,5 +284,50 @@ body { overflow: hidden; }
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* === btn-icon-mobile: icon+text on desktop, icon-only on mobile === */
+.btn-icon-mobile {
+  /* default: show icon and label */
+}
+
+@media (max-width: 768px) {
+  .btn-icon-mobile .btn-label {
+    display: none;
+  }
+  .btn-icon-mobile {
+    padding: 8px;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* === mobile-page: consistent padding and width for view root divs === */
+@media (max-width: 768px) {
+  .mobile-content-area > * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .mobile-page {
+    padding: 16px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+}
+
+/* === focus: no outline on mobile, styled border on inputs === */
+@media (max-width: 768px) {
+  *:focus {
+    outline: none;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent-color, #8B5CF6) !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  }
 }
 

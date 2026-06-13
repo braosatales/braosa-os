@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.1.7'
+export const APP_VERSION = '1.1.8'
 
 export const SYSTEMS = [
   { id: "dashboard",  label: "Dashboard",  labelPt: "Painel",     color: "var(--c-dash)",      dim: "var(--c-dash-dim)",      glyph: "grid"      },

@@ -99,7 +99,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
   }, [sorted, groupBy, projects])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', background: '#0F1117' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', overscrollBehavior: 'contain', background: '#0F1117' }}>
       {/* Toolbar */}
       {!isMobile && (
         <>
@@ -132,7 +132,10 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
       )}
 
       {/* Rows */}
-      <div style={{ flex: 1, overflowY: 'auto', ...(isMobile ? { display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)', padding: '12px 12px 0' } : {}) }}>
+      <div
+        className={isMobile ? 'mobile-page' : undefined}
+        style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', ...(isMobile ? { display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)', padding: '12px 12px 0' } : {}) }}
+      >
         {groups.map(group => (
           <div key={group.key}>
             {groupBy !== 'none' && (

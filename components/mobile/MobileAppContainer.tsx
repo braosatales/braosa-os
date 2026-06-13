@@ -84,13 +84,17 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       </div>
 
       {/* Content — flex: 1, overflow-y: auto, min-height: 0 */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        minHeight: 0,
-        background: '#0F1117',
-      }}>
+      <div
+        className="mobile-content-area"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          minHeight: 0,
+          background: '#0F1117',
+          overscrollBehavior: 'contain',
+        }}
+      >
         {children}
       </div>
 

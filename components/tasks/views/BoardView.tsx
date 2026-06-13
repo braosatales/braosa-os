@@ -66,17 +66,20 @@ export default function BoardView({ tasks, onSelect }: Props) {
   const ghostTask = draggingId ? tasks.find(t => t.id === draggingId) : null
 
   return (
-    <div style={isMobile ? {
-      width: '100%',
-      padding: '16px',
-      boxSizing: 'border-box' as const,
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '12px',
-      overflowX: 'hidden',
-      overflowY: 'auto',
-      background: '#0F1117',
-    } : {
+    <div
+      className={isMobile ? 'mobile-page' : undefined}
+      style={isMobile ? {
+        width: '100%',
+        padding: '16px',
+        boxSizing: 'border-box' as const,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '12px',
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        background: '#0F1117',
+      } : {
       display: 'flex',
       gap: 16,
       padding: '20px',
@@ -165,7 +168,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
             {/* Cards container */}
             <div style={{
               flex: 1, display: 'flex', flexDirection: 'column', gap: 8,
-              overflowY: 'auto', minHeight: 80, padding: isMobile ? '10px' : '4px 0',
+              overflowY: 'auto', overscrollBehavior: 'contain', minHeight: 80, padding: isMobile ? '10px' : '4px 0',
               borderRadius: isMobile ? '0 0 14px 14px' : 10,
               background: isOver ? 'rgba(139,92,246,0.06)' : 'transparent',
               transition: 'background .15s',
@@ -278,6 +281,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
             {/* Add button */}
             <button
               type="button"
+              className="btn-icon-mobile"
               onClick={() => setAddForStatus(col.id)}
               style={isMobile ? {
                 width: '100%',
@@ -301,7 +305,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
               }}
             >
               <Icon name="plus" size={13} />
-              {L("Adicionar", "Add")}
+              <span className="btn-label">{L("Adicionar", "Add")}</span>
             </button>
           </div>
         )

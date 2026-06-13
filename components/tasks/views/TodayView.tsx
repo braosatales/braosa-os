@@ -168,7 +168,10 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
   const hasAny = overdue.length + todayTasks.length + thisWeek.length + noDate.length > 0
 
   return (
-    <div style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#0F1117', ...(isMobile ? { minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' } : {}) }}>
+    <div
+      className={isMobile ? 'mobile-page' : undefined}
+      style={{ padding: isMobile ? '16px 12px' : '16px 20px', maxWidth: 720, overflowY: 'auto', flex: 1, background: '#0F1117', overscrollBehavior: 'contain', ...(isMobile ? { minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' } : {}) }}
+    >
       {!hasAny && (
         isMobile ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '32px', width: '100%', minHeight: 'calc(100vh - 200px)' }}>
