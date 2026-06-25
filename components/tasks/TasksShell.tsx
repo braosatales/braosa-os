@@ -115,7 +115,7 @@ export default function TasksShell() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', height: '100%', background: '#FF00FF', width: '100%', maxWidth: 'none', flex: '1 1 auto', alignSelf: 'stretch', minWidth: 0 }}>
 
       {/* Desktop left sidebar */}
       {!isMobile && (

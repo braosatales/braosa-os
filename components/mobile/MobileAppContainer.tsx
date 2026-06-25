@@ -40,6 +40,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         display: 'flex',
         flexDirection: 'column',
         height: '100dvh',
+        minHeight: '100dvh',
         maxHeight: '100dvh',
         overflow: 'hidden',
         background: '#FF0000',

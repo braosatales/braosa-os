@@ -265,7 +265,7 @@ body {
 }
 
 .app-open {
-  animation: slideInFromRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: slideInFromRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .app-close {
