@@ -104,12 +104,20 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     if (typeof window === 'undefined') return true
     return localStorage.getItem('braosa-wip-visible') !== 'false'
   })
+  const rootRef = useRef<HTMLDivElement>(null)
   const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
   const gridRef = useRef<HTMLDivElement>(null)
 
   const { counts } = useContext(NotificationsContext)
+
+  useEffect(() => {
+    console.log('HOMESCREEN innerHeight:', window.innerHeight)
+    console.log('HOMESCREEN clientHeight:', document.documentElement.clientHeight)
+    console.log('HOMESCREEN visualViewport:', window.visualViewport?.height)
+    console.log('HOMESCREEN rootHeight:', rootRef.current?.offsetHeight)
+  }, [])
 
   useEffect(() => {
     setHiddenAppsState(getHiddenApps())
@@ -204,15 +212,22 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
 
   return (
     <div
+      ref={rootRef}
       onClick={handleContainerClick}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       style={{
+        background: '#ADFF2F',
+        height: '100dvh',
         minHeight: '100dvh',
-        background: 'radial-gradient(ellipse 80% 40% at 20% 10%, #3d1f6e40, transparent 60%), radial-gradient(ellipse 60% 30% at 80% 80%, #0d4a4440, transparent 50%), linear-gradient(180deg, #1a1714, #141210)',
         paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         overflowY: 'auto',
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
       }}
     >
       {/* Swipe-down toast */}

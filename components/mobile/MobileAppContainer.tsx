@@ -42,6 +42,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         height: '100dvh',
         maxHeight: '100dvh',
         overflow: 'hidden',
+        background: '#FF0000',
       }}
     >
 
@@ -49,7 +50,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       <div style={{
         flexShrink: 0,
         paddingTop: 'env(safe-area-inset-top)',
-        background: '#0F1117',
+        background: '#FFA500',
         borderBottom: '1px solid #2A2D3A',
         position: 'relative',
       }}>
@@ -103,6 +104,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
+          alignItems: 'stretch',
+          background: '#00FF00',
         }}
       >
         {children}
@@ -112,7 +115,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       {hasSubTabs && (
         <div style={{
           flexShrink: 0,
-          background: '#0F1117',
+          background: '#0000FF',
           borderTop: '1px solid #2A2D3A',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
@@ -175,7 +178,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 52, display: 'flex' }}>
+          <div style={{ height: 52, display: 'flex', background: '#800080' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en

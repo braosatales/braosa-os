@@ -338,7 +338,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
             margin: 0,
             padding: 0,
             overflow: "hidden",
-            background: "#0F1117",
+            background: '#FFFF00',
           }}
         >
           <TopNav

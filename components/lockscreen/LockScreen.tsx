@@ -30,6 +30,13 @@ export default function LockScreen({ onUnlock }: Props) {
   const inputWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    console.log('LOCKSCREEN innerHeight:', window.innerHeight)
+    console.log('LOCKSCREEN clientHeight:', document.documentElement.clientHeight)
+    console.log('LOCKSCREEN visualViewport:', window.visualViewport?.height)
+    console.log('LOCKSCREEN rootHeight:', wrapperRef.current?.offsetHeight)
+  }, [])
+
+  useEffect(() => {
     hasLockPassword().then(has => {
       setHasPw(has)
       setChecking(false)
@@ -104,12 +111,14 @@ export default function LockScreen({ onUnlock }: Props) {
         position: "fixed",
         inset: 0,
         zIndex: 100,
+        height: "100dvh",
         minHeight: "100dvh",
+        paddingBottom: "env(safe-area-inset-bottom)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "radial-gradient(120% 100% at 50% 0%, oklch(0.205 0.007 70), var(--bg-void))",
+        background: '#FF1493',
         animation: exiting
           ? "lock-zoom .35s ease forwards"
           : "fade-in .4s ease both",

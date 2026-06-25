@@ -171,13 +171,16 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
     <div
       className={isMobile ? 'mobile-page' : undefined}
       style={isMobile ? {
+        background: '#FFC0CB',
         padding: '16px 12px',
         width: '100%',
+        minWidth: '100%',
         maxWidth: 'none',
         boxSizing: 'border-box' as const,
         margin: 0,
+        alignSelf: 'stretch',
         overflowY: 'auto',
-        flex: 1,
+        flex: '1 1 100%',
         overscrollBehavior: 'contain',
         minHeight: 'calc(100vh - 120px)',
         display: 'flex',
