@@ -70,7 +70,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
       className={isMobile ? 'mobile-page' : undefined}
       style={isMobile ? {
         width: '100%',
-        maxWidth: '100%',
+        maxWidth: 'none',
         boxSizing: 'border-box' as const,
         margin: 0,
         padding: '16px',
@@ -80,7 +80,6 @@ export default function BoardView({ tasks, onSelect }: Props) {
         overflowX: 'hidden',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
-        background: '#00CED1',
       } : {
       display: 'flex',
       gap: 16,
@@ -90,7 +89,10 @@ export default function BoardView({ tasks, onSelect }: Props) {
       height: '100%',
       alignItems: 'flex-start',
       flexDirection: 'row' as const,
-      background: '#00CED1',
+      width: '100%',
+      maxWidth: 'none',
+      boxSizing: 'border-box' as const,
+      margin: 0,
     }}>
       {/* Mobile move bottom sheet */}
       {isMobile && moveSheetTask && (

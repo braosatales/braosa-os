@@ -104,6 +104,7 @@ export default function LockScreen({ onUnlock }: Props) {
         position: "fixed",
         inset: 0,
         zIndex: 100,
+        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

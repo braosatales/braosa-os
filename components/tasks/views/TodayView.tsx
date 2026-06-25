@@ -173,7 +173,7 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
       style={isMobile ? {
         padding: '16px 12px',
         width: '100%',
-        maxWidth: '100%',
+        maxWidth: 'none',
         boxSizing: 'border-box' as const,
         margin: 0,
         overflowY: 'auto',
@@ -182,14 +182,15 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
         minHeight: 'calc(100vh - 120px)',
         display: 'flex',
         flexDirection: 'column' as const,
-        background: '#FFC0CB',
       } : {
         padding: '16px 20px',
-        maxWidth: 720,
+        width: '100%',
+        maxWidth: 'none',
+        boxSizing: 'border-box' as const,
+        margin: 0,
         overflowY: 'auto',
         flex: 1,
         overscrollBehavior: 'contain',
-        background: '#FFC0CB',
       }}
     >
       {!hasAny && (

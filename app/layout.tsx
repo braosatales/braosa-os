@@ -59,7 +59,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#0F1117" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body style={{ fontFamily: 'var(--font-body)' }}>{children}</body>
+      <body style={{ fontFamily: 'var(--font-body)', minHeight: '100dvh' }}>{children}</body>
     </html>
   )
 }

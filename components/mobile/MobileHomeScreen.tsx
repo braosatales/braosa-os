@@ -208,7 +208,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: 'radial-gradient(ellipse 80% 40% at 20% 10%, #3d1f6e40, transparent 60%), radial-gradient(ellipse 60% 30% at 80% 80%, #0d4a4440, transparent 50%), linear-gradient(180deg, #1a1714, #141210)',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)',
