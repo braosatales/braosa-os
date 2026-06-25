@@ -80,6 +80,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
         overflowX: 'hidden',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
+        background: '#00CED1',
       } : {
       display: 'flex',
       gap: 16,
@@ -89,6 +90,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
       height: '100%',
       alignItems: 'flex-start',
       flexDirection: 'row' as const,
+      background: '#00CED1',
     }}>
       {/* Mobile move bottom sheet */}
       {isMobile && moveSheetTask && (

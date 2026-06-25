@@ -182,12 +182,14 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
         minHeight: 'calc(100vh - 120px)',
         display: 'flex',
         flexDirection: 'column' as const,
+        background: '#FFC0CB',
       } : {
         padding: '16px 20px',
         maxWidth: 720,
         overflowY: 'auto',
         flex: 1,
         overscrollBehavior: 'contain',
+        background: '#FFC0CB',
       }}
     >
       {!hasAny && (
