@@ -132,7 +132,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         {children}
       </div>
 
-      {/* BOTTOM NAV — flex child, NOT position fixed */}
+      {/* BOTTOM NAV — position:fixed, pinned to viewport bottom */}
       {hasSubTabs && (
         <div style={{
           position: 'fixed',
