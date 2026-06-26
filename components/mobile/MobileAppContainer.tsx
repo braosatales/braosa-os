@@ -57,11 +57,10 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       ref={containerRef}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
         height: '100lvh',
         maxHeight: '100lvh',
-        minHeight: '100lvh',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
         background: '#FF0000',
       }}
@@ -127,6 +126,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           overscrollBehavior: 'contain',
           alignItems: 'stretch',
           background: '#00FF00',
+          paddingBottom: 'calc(56px + env(safe-area-inset-bottom))',
         }}
       >
         {children}
@@ -135,8 +135,13 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       {/* BOTTOM NAV — flex child, NOT position fixed */}
       {hasSubTabs && (
         <div style={{
-          flexShrink: 0,
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
           background: '#0000FF',
+          borderTop: '1px solid #2A2D3A',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
           {longPressTab && (() => {
@@ -146,7 +151,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
               <div
                 style={{
                   position: 'fixed',
-                  bottom: 'calc(52px + env(safe-area-inset-bottom) + 8px)',
+                  bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
                   left: 0,
                   right: 0,
                   display: 'flex',
@@ -198,7 +203,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 52, display: 'flex', background: '#800080' }}>
+          <div style={{ height: 56, display: 'flex', alignItems: 'center', background: '#800080' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en

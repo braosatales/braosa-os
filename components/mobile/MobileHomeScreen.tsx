@@ -226,17 +226,16 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        minHeight: '100lvh',
         background: '#ADFF2F',
-        height: '100lvh',
-        minHeight: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         overflowY: 'auto',
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
       }}
     >
       {/* Swipe-down toast */}
