@@ -21,8 +21,27 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { refetch } = useContext(NotificationsContext)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
+
+  useEffect(() => {
+    const root = containerRef.current
+    console.log('APPCONTAINER root.offsetHeight (100lvh):', root?.offsetHeight)
+    console.log('APPCONTAINER window.innerHeight:', window.innerHeight)
+    console.log('APPCONTAINER visualViewport.height:', window.visualViewport?.height)
+    console.log('APPCONTAINER document.documentElement.clientHeight:', document.documentElement.clientHeight)
+
+    // Probe the 4 viewport units
+    const units = ['100lvh', '100dvh', '100vh', '100%'] as const
+    units.forEach(unit => {
+      const probe = document.createElement('div')
+      probe.style.cssText = `position:absolute;visibility:hidden;top:0;left:0;width:1px;height:${unit};pointer-events:none;`
+      document.body.appendChild(probe)
+      console.log(`APPCONTAINER probe ${unit} =`, probe.offsetHeight, 'px')
+      document.body.removeChild(probe)
+    })
+  }, [])
 
   const handleClose = () => {
     setIsClosing(true)
@@ -35,12 +54,14 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
   return (
     <div
+      ref={containerRef}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100dvh',
-        maxHeight: '100dvh',
+        height: '100lvh',
+        maxHeight: '100lvh',
+        minHeight: '100lvh',
         overflow: 'hidden',
         background: '#FF0000',
       }}
