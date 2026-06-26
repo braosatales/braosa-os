@@ -113,10 +113,19 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const { counts } = useContext(NotificationsContext)
 
   useEffect(() => {
-    console.log('HOMESCREEN innerHeight:', window.innerHeight)
+    const el = rootRef.current
+    console.log('HOMESCREEN window.innerHeight:', window.innerHeight)
+    console.log('HOMESCREEN visualViewport.height:', window.visualViewport?.height)
     console.log('HOMESCREEN clientHeight:', document.documentElement.clientHeight)
-    console.log('HOMESCREEN visualViewport:', window.visualViewport?.height)
-    console.log('HOMESCREEN rootHeight:', rootRef.current?.offsetHeight)
+    console.log('HOMESCREEN root.offsetHeight (current):', el?.offsetHeight)
+    if (el) {
+      const prev = el.style.height
+      el.style.height = '100lvh'
+      requestAnimationFrame(() => {
+        console.log('HOMESCREEN root.offsetHeight with 100lvh:', el?.offsetHeight)
+        el.style.height = prev
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -218,7 +227,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       onTouchMove={handleTouchMove}
       style={{
         background: '#ADFF2F',
-        height: '100dvh',
+        height: '100lvh',
         minHeight: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',

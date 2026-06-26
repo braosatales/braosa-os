@@ -40,7 +40,6 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         display: 'flex',
         flexDirection: 'column',
         height: '100dvh',
-        minHeight: '100dvh',
         maxHeight: '100dvh',
         overflow: 'hidden',
         background: '#FF0000',
@@ -100,7 +99,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       <div
         className="mobile-content-area"
         style={{
-          flex: 1,
+          flex: '1 1 0',
           minHeight: 0,
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
@@ -117,7 +116,6 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         <div style={{
           flexShrink: 0,
           background: '#0000FF',
-          borderTop: '1px solid #2A2D3A',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
           {longPressTab && (() => {

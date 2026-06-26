@@ -30,10 +30,19 @@ export default function LockScreen({ onUnlock }: Props) {
   const inputWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('LOCKSCREEN innerHeight:', window.innerHeight)
+    const el = wrapperRef.current
+    console.log('LOCKSCREEN window.innerHeight:', window.innerHeight)
+    console.log('LOCKSCREEN visualViewport.height:', window.visualViewport?.height)
     console.log('LOCKSCREEN clientHeight:', document.documentElement.clientHeight)
-    console.log('LOCKSCREEN visualViewport:', window.visualViewport?.height)
-    console.log('LOCKSCREEN rootHeight:', wrapperRef.current?.offsetHeight)
+    console.log('LOCKSCREEN root.offsetHeight (current):', el?.offsetHeight)
+    if (el) {
+      const prev = el.style.height
+      el.style.height = '100lvh'
+      requestAnimationFrame(() => {
+        console.log('LOCKSCREEN root.offsetHeight with 100lvh:', el?.offsetHeight)
+        el.style.height = prev
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -111,7 +120,7 @@ export default function LockScreen({ onUnlock }: Props) {
         position: "fixed",
         inset: 0,
         zIndex: 100,
-        height: "100dvh",
+        height: "100lvh",
         minHeight: "100dvh",
         paddingBottom: "env(safe-area-inset-bottom)",
         display: "flex",
