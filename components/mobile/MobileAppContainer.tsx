@@ -57,8 +57,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       ref={containerRef}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
-        height: '100lvh',
-        maxHeight: '100lvh',
+        height: '100dvh',
+        maxHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
