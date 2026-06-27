@@ -22,6 +22,33 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { refetch } = useContext(NotificationsContext)
   const containerRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLDivElement>(null)
+  const tabRowRef = useRef<HTMLDivElement>(null)
+
+  const [debugInfo, setDebugInfo] = useState<{
+    innerHeight: number | null
+    clientHeight: number | null
+    visualViewportHeight: number | null
+    rootHeight: number | null
+    rootBottom: number | null
+    navTop: number | null
+    navBottom: number | null
+    navHeight: number | null
+    tabBottom: number | null
+    safeAreaBottom: string | null
+  }>({
+    innerHeight: null,
+    clientHeight: null,
+    visualViewportHeight: null,
+    rootHeight: null,
+    rootBottom: null,
+    navTop: null,
+    navBottom: null,
+    navHeight: null,
+    tabBottom: null,
+    safeAreaBottom: null,
+  })
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
 
@@ -43,6 +70,41 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
     })
   }, [])
 
+  const measureAll = () => {
+    const rootRect = rootRef.current?.getBoundingClientRect()
+    const navRect = navRef.current?.getBoundingClientRect()
+    const tabRect = tabRowRef.current?.getBoundingClientRect()
+
+    const safeEl = document.createElement('div')
+    safeEl.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;padding-bottom:env(safe-area-inset-bottom);pointer-events:none;visibility:hidden;'
+    document.body.appendChild(safeEl)
+    const safeAreaBottom = getComputedStyle(safeEl).paddingBottom
+    document.body.removeChild(safeEl)
+
+    setDebugInfo({
+      innerHeight: window.innerHeight,
+      clientHeight: document.documentElement.clientHeight,
+      visualViewportHeight: window.visualViewport?.height ?? null,
+      rootHeight: rootRect?.height ?? null,
+      rootBottom: rootRect?.bottom ?? null,
+      navTop: navRect?.top ?? null,
+      navBottom: navRect?.bottom ?? null,
+      navHeight: navRect?.height ?? null,
+      tabBottom: tabRect?.bottom ?? null,
+      safeAreaBottom,
+    })
+  }
+
+  useEffect(() => {
+    measureAll()
+    window.addEventListener('resize', measureAll)
+    window.addEventListener('orientationchange', measureAll)
+    return () => {
+      window.removeEventListener('resize', measureAll)
+      window.removeEventListener('orientationchange', measureAll)
+    }
+  }, [])
+
   const handleClose = () => {
     setIsClosing(true)
     refetch()
@@ -54,7 +116,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
   return (
     <div
-      ref={containerRef}
+      ref={(el) => { containerRef.current = el; rootRef.current = el }}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
         height: '100dvh',
@@ -65,6 +127,29 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         background: '#FF0000',
       }}
     >
+
+      {/* DEBUG OVERLAY */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+        background: 'black',
+        color: 'white',
+        fontSize: 9,
+        fontFamily: 'monospace',
+        padding: '4px 6px',
+        pointerEvents: 'none',
+        maxWidth: '60vw',
+      }}>
+        win.ih: {debugInfo.innerHeight}<br/>
+        doc.ch: {debugInfo.clientHeight}<br/>
+        vvp.h: {debugInfo.visualViewportHeight ?? 'n/a'}<br/>
+        root.h: {debugInfo.rootHeight} bot: {debugInfo.rootBottom}<br/>
+        nav.top: {debugInfo.navTop} bot: {debugInfo.navBottom} h: {debugInfo.navHeight}<br/>
+        tab.bot: {debugInfo.tabBottom}<br/>
+        safeBot: {debugInfo.safeAreaBottom}
+      </div>
 
       {/* TOP BAR — flex-shrink 0, outer handles safe-area-inset-top */}
       <div style={{
@@ -134,16 +219,19 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
       {/* BOTTOM NAV — position:fixed, pinned to viewport bottom */}
       {hasSubTabs && (
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          background: '#0000FF',
-          borderTop: '1px solid #2A2D3A',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}>
+        <div
+          ref={navRef}
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            background: '#0000FF',
+            borderTop: '1px solid #2A2D3A',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}
+        >
           {longPressTab && (() => {
             const tab = app.subTabs?.find(t => t.id === longPressTab)
             if (!tab) return null
@@ -203,7 +291,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div style={{ height: 56, display: 'flex', alignItems: 'center', background: '#800080' }}>
+          <div ref={tabRowRef} style={{ height: 56, display: 'flex', alignItems: 'center', background: '#800080' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
