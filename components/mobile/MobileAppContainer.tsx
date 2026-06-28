@@ -211,22 +211,17 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           overscrollBehavior: 'contain',
           alignItems: 'stretch',
           background: '#00FF00',
-          paddingBottom: 'calc(56px + env(safe-area-inset-bottom))',
         }}
       >
         {children}
       </div>
 
-      {/* BOTTOM NAV — position:fixed, pinned to viewport bottom */}
+      {/* BOTTOM NAV — in-flow flex sibling */}
       {hasSubTabs && (
         <div
           ref={navRef}
           style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
+            flexShrink: 0,
             background: '#0000FF',
             borderTop: '1px solid #2A2D3A',
           }}

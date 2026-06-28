@@ -413,7 +413,7 @@ export default function AIPage() {
         </div>
 
         {/* Input */}
-        <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '12px 18px', flexShrink: 0, paddingBottom: isMobile && keyboardHeight > 0 ? 12 + keyboardHeight : 12 }}>
+        <div style={{ borderTop: '1px solid var(--edge-soft)', padding: '12px 18px', flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {input.length > 200 && (
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-faint)', textAlign: 'right', marginBottom: 4 }}>
               {input.length} chars
