@@ -222,7 +222,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           ref={navRef}
           style={{
             flexShrink: 0,
-            background: '#0000FF',
+            background: '#800080',
             borderTop: '1px solid #2A2D3A',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
@@ -286,7 +286,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div ref={tabRowRef} style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: '#800080' }}>
+          <div ref={tabRowRef} style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: 'transparent' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
