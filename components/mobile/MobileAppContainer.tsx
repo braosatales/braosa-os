@@ -286,7 +286,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div ref={tabRowRef} style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: '#800080' }}>
+          <div ref={tabRowRef} style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: '#800080' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
