@@ -119,8 +119,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       ref={(el) => { containerRef.current = el; rootRef.current = el }}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
-        height: '100dvh',
-        maxHeight: '100dvh',
+        height: 'calc(100dvh + env(safe-area-inset-bottom))',
+        maxHeight: 'calc(100dvh + env(safe-area-inset-bottom))',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -224,6 +224,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             flexShrink: 0,
             background: '#0000FF',
             borderTop: '1px solid #2A2D3A',
+            paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
           {longPressTab && (() => {
@@ -285,7 +286,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
             )
           })()}
 
-          <div ref={tabRowRef} style={{ height: 56, display: 'flex', alignItems: 'center', background: '#800080', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div ref={tabRowRef} style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: '#800080' }}>
             {app.subTabs!.map(tab => {
               const isActive = subTabId === tab.id
               const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
