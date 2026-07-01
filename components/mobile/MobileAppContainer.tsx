@@ -25,6 +25,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
   const rootRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
   const tabRowRef = useRef<HTMLDivElement>(null)
+  const fillerRef = useRef<HTMLDivElement>(null)
 
   const [debugInfo, setDebugInfo] = useState<{
     innerHeight: number | null
@@ -37,6 +38,9 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
     navHeight: number | null
     tabBottom: number | null
     safeAreaBottom: string | null
+    navBgClip: string
+    navOverflow: string
+    fillerBottom: number | null
   }>({
     innerHeight: null,
     clientHeight: null,
@@ -48,6 +52,9 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
     navHeight: null,
     tabBottom: null,
     safeAreaBottom: null,
+    navBgClip: '',
+    navOverflow: '',
+    fillerBottom: null,
   })
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
@@ -81,6 +88,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
     const safeAreaBottom = getComputedStyle(safeEl).paddingBottom
     document.body.removeChild(safeEl)
 
+    const fillerRect = fillerRef.current?.getBoundingClientRect()
+
     setDebugInfo({
       innerHeight: window.innerHeight,
       clientHeight: document.documentElement.clientHeight,
@@ -92,6 +101,9 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       navHeight: navRect?.height ?? null,
       tabBottom: tabRect?.bottom ?? null,
       safeAreaBottom,
+      navBgClip: navRef.current?.style.backgroundClip ?? '',
+      navOverflow: navRef.current ? getComputedStyle(navRef.current).overflow : 'n/a',
+      fillerBottom: fillerRect?.bottom ?? null,
     })
   }
 
@@ -148,7 +160,10 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
         root.h: {debugInfo.rootHeight} bot: {debugInfo.rootBottom}<br/>
         nav.top: {debugInfo.navTop} bot: {debugInfo.navBottom} h: {debugInfo.navHeight}<br/>
         tab.bot: {debugInfo.tabBottom}<br/>
-        safeBot: {debugInfo.safeAreaBottom}
+        safeBot: {debugInfo.safeAreaBottom}<br/>
+        nav.bgClip: {debugInfo.navBgClip}<br/>
+        nav.overflow: {debugInfo.navOverflow}<br/>
+        filler.bot: {debugInfo.fillerBottom ?? 'n/a'}
       </div>
 
       {/* TOP BAR — flex-shrink 0, outer handles safe-area-inset-top */}
@@ -223,6 +238,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           style={{
             flexShrink: 0,
             background: '#800080',
+            backgroundClip: 'border-box',
             borderTop: '1px solid #2A2D3A',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
@@ -331,6 +347,15 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
               )
             })}
           </div>
+          {/* DIAGNOSTIC: safe-area filler — remove after debug */}
+          <div
+            ref={fillerRef}
+            style={{
+              height: 'env(safe-area-inset-bottom)',
+              background: '#00FFFF',
+              flexShrink: 0,
+            }}
+          />
         </div>
       )}
 
