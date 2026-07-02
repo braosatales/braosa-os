@@ -25,6 +25,10 @@ const monoFont = Space_Mono({
 
 export const metadata: Metadata = {
   title: 'BraosaOS',
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
