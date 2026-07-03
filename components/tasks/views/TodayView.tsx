@@ -171,7 +171,7 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
     <div
       className={isMobile ? 'mobile-page' : undefined}
       style={isMobile ? {
-        background: '#FFC0CB',
+        background: 'transparent',
         padding: '16px 12px',
         width: '100%',
         minWidth: '100%',

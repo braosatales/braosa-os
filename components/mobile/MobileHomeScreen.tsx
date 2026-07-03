@@ -232,7 +232,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         right: 0,
         bottom: 0,
         minHeight: '100lvh',
-        background: '#ADFF2F',
+        background: '#0F1117',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         overflowY: 'auto',
