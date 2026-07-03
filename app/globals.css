@@ -94,7 +94,7 @@ html {
   padding: 0;
   height: 100%;
   overflow: hidden;
-  background: #FFFFFF !important;
+  background: #0F1117 !important;
   overscroll-behavior: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -113,7 +113,6 @@ body {
 
 #__next {
   min-height: calc(100dvh + env(safe-area-inset-bottom));
-  background: #00FFFF !important;
 }
 
 @media (max-width: 768px) { body { background: #0F1117 !important; } }

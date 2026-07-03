@@ -126,7 +126,7 @@ export default function LockScreen({ onUnlock }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: '#FF1493',
+        background: '#0F1117',
         animation: exiting
           ? "lock-zoom .35s ease forwards"
           : "fade-in .4s ease both",

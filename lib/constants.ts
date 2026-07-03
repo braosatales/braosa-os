@@ -1,4 +1,8 @@
-export const APP_VERSION = '1.1.14'
+export const APP_VERSION = '1.1.15'
+
+export const VERSION_HISTORY: Record<string, string> = {
+  "1.1.15": "Mobile bottom nav fixed: eliminated double-counted safe-area gap (nav wrapper padding + filler div were both claiming the safe-area inset, stacking instead of overlapping). Safe area is now owned solely by an in-flow filler div. Nav paints flush to the true physical bottom on all pages with a sub-nav. Removed all layout debug colors and the diagnostic overlay. Structure locked with a do-not-modify comment.",
+}
 
 export const SYSTEMS = [
   { id: "dashboard",  label: "Dashboard",  labelPt: "Painel",     color: "var(--c-dash)",      dim: "var(--c-dash-dim)",      glyph: "grid"      },

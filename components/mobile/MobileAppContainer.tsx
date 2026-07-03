@@ -22,100 +22,8 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { refetch } = useContext(NotificationsContext)
   const containerRef = useRef<HTMLDivElement>(null)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const navRef = useRef<HTMLDivElement>(null)
-  const tabRowRef = useRef<HTMLDivElement>(null)
-  const fillerRef = useRef<HTMLDivElement>(null)
-
-  const [debugInfo, setDebugInfo] = useState<{
-    innerHeight: number | null
-    clientHeight: number | null
-    visualViewportHeight: number | null
-    rootHeight: number | null
-    rootBottom: number | null
-    navTop: number | null
-    navBottom: number | null
-    navHeight: number | null
-    tabBottom: number | null
-    safeAreaBottom: string | null
-    navBgClip: string
-    navOverflow: string
-    fillerBottom: number | null
-  }>({
-    innerHeight: null,
-    clientHeight: null,
-    visualViewportHeight: null,
-    rootHeight: null,
-    rootBottom: null,
-    navTop: null,
-    navBottom: null,
-    navHeight: null,
-    tabBottom: null,
-    safeAreaBottom: null,
-    navBgClip: '',
-    navOverflow: '',
-    fillerBottom: null,
-  })
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
-
-  useEffect(() => {
-    const root = containerRef.current
-    console.log('APPCONTAINER root.offsetHeight (100lvh):', root?.offsetHeight)
-    console.log('APPCONTAINER window.innerHeight:', window.innerHeight)
-    console.log('APPCONTAINER visualViewport.height:', window.visualViewport?.height)
-    console.log('APPCONTAINER document.documentElement.clientHeight:', document.documentElement.clientHeight)
-
-    // Probe the 4 viewport units
-    const units = ['100lvh', '100dvh', '100vh', '100%'] as const
-    units.forEach(unit => {
-      const probe = document.createElement('div')
-      probe.style.cssText = `position:absolute;visibility:hidden;top:0;left:0;width:1px;height:${unit};pointer-events:none;`
-      document.body.appendChild(probe)
-      console.log(`APPCONTAINER probe ${unit} =`, probe.offsetHeight, 'px')
-      document.body.removeChild(probe)
-    })
-  }, [])
-
-  const measureAll = () => {
-    const rootRect = rootRef.current?.getBoundingClientRect()
-    const navRect = navRef.current?.getBoundingClientRect()
-    const tabRect = tabRowRef.current?.getBoundingClientRect()
-
-    const safeEl = document.createElement('div')
-    safeEl.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;padding-bottom:env(safe-area-inset-bottom);pointer-events:none;visibility:hidden;'
-    document.body.appendChild(safeEl)
-    const safeAreaBottom = getComputedStyle(safeEl).paddingBottom
-    document.body.removeChild(safeEl)
-
-    const fillerRect = fillerRef.current?.getBoundingClientRect()
-
-    setDebugInfo({
-      innerHeight: window.innerHeight,
-      clientHeight: document.documentElement.clientHeight,
-      visualViewportHeight: window.visualViewport?.height ?? null,
-      rootHeight: rootRect?.height ?? null,
-      rootBottom: rootRect?.bottom ?? null,
-      navTop: navRect?.top ?? null,
-      navBottom: navRect?.bottom ?? null,
-      navHeight: navRect?.height ?? null,
-      tabBottom: tabRect?.bottom ?? null,
-      safeAreaBottom,
-      navBgClip: navRef.current?.style.backgroundClip ?? '',
-      navOverflow: navRef.current ? getComputedStyle(navRef.current).overflow : 'n/a',
-      fillerBottom: fillerRect?.bottom ?? null,
-    })
-  }
-
-  useEffect(() => {
-    measureAll()
-    window.addEventListener('resize', measureAll)
-    window.addEventListener('orientationchange', measureAll)
-    return () => {
-      window.removeEventListener('resize', measureAll)
-      window.removeEventListener('orientationchange', measureAll)
-    }
-  }, [])
 
   const handleClose = () => {
     setIsClosing(true)
@@ -128,7 +36,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
   return (
     <div
-      ref={(el) => { containerRef.current = el; rootRef.current = el }}
+      ref={containerRef}
       className={isClosing ? 'app-close' : 'app-open'}
       style={{
         height: 'calc(100dvh + env(safe-area-inset-bottom))',
@@ -140,37 +48,11 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
       }}
     >
 
-      {/* DEBUG OVERLAY */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        zIndex: 9999,
-        background: 'black',
-        color: 'white',
-        fontSize: 9,
-        fontFamily: 'monospace',
-        padding: '4px 6px',
-        pointerEvents: 'none',
-        maxWidth: '60vw',
-      }}>
-        win.ih: {debugInfo.innerHeight}<br/>
-        doc.ch: {debugInfo.clientHeight}<br/>
-        vvp.h: {debugInfo.visualViewportHeight ?? 'n/a'}<br/>
-        root.h: {debugInfo.rootHeight} bot: {debugInfo.rootBottom}<br/>
-        nav.top: {debugInfo.navTop} bot: {debugInfo.navBottom} h: {debugInfo.navHeight}<br/>
-        tab.bot: {debugInfo.tabBottom}<br/>
-        safeBot: {debugInfo.safeAreaBottom}<br/>
-        nav.bgClip: {debugInfo.navBgClip}<br/>
-        nav.overflow: {debugInfo.navOverflow}<br/>
-        filler.bot: {debugInfo.fillerBottom ?? 'n/a'}
-      </div>
-
       {/* TOP BAR — flex-shrink 0, outer handles safe-area-inset-top */}
       <div style={{
         flexShrink: 0,
         paddingTop: 'env(safe-area-inset-top)',
-        background: '#FFA500',
+        background: '#1C1E26',
         borderBottom: '1px solid #2A2D3A',
         position: 'relative',
       }}>
@@ -225,7 +107,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
           alignItems: 'stretch',
-          background: '#00FF00',
+          background: 'transparent',
         }}
       >
         {children}
@@ -233,129 +115,142 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
 
       {/* BOTTOM NAV — in-flow flex sibling */}
       {hasSubTabs && (
-        <div
-          ref={navRef}
-          style={{
-            flexShrink: 0,
-            background: '#800080',
-            backgroundClip: 'border-box',
-            borderTop: '1px solid #2A2D3A',
-          }}
-        >
-          {longPressTab && (() => {
-            const tab = app.subTabs?.find(t => t.id === longPressTab)
-            if (!tab) return null
-            return (
-              <div
-                style={{
-                  position: 'fixed',
-                  bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
-                  left: 0,
-                  right: 0,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  zIndex: 200,
-                }}
-                onClick={() => setLongPressTab(null)}
-              >
+        <>
+          {/* ============================================================
+              ⚠️  STRUCTURAL — DO NOT MODIFY WITHOUT EXPLICIT USER APPROVAL ⚠️
+              This nav/safe-area structure took extensive debugging to get right.
+              The nav wrapper has NO paddingBottom for the safe area — that caused
+              a double-counted 34px gap when combined with the filler div below.
+              The safe-area-inset-bottom is owned SOLELY by the filler div
+              (a real in-flow child with height: env(safe-area-inset-bottom)),
+              which is what allows the nav's background to paint flush to the
+              true physical bottom of the screen with no gap and no overlap.
+              DO NOT add paddingBottom/margin for safe-area to the nav wrapper.
+              DO NOT remove the filler div.
+              DO NOT change root height off calc(100dvh + env(safe-area-inset-bottom)).
+              If this needs to change, get explicit confirmation from João first.
+              ============================================================ */}
+          <div
+            style={{
+              flexShrink: 0,
+              background: '#1C1E26',
+              backgroundClip: 'border-box',
+              borderTop: '1px solid #2A2D3A',
+            }}
+          >
+            {longPressTab && (() => {
+              const tab = app.subTabs?.find(t => t.id === longPressTab)
+              if (!tab) return null
+              return (
                 <div
                   style={{
-                    background: 'var(--bg-raised)',
-                    border: '1px solid var(--edge)',
-                    borderTop: `3px solid ${app.color}`,
-                    borderRadius: 12,
-                    padding: '12px 16px',
-                    minWidth: 200,
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                    position: 'fixed',
+                    bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
+                    left: 0,
+                    right: 0,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    zIndex: 200,
                   }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={() => setLongPressTab(null)}
                 >
-                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', marginBottom: 10 }}>
-                    {tab.label_en}
+                  <div
+                    style={{
+                      background: 'var(--bg-raised)',
+                      border: '1px solid var(--edge)',
+                      borderTop: `3px solid ${app.color}`,
+                      borderRadius: 12,
+                      padding: '12px 16px',
+                      minWidth: 200,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', marginBottom: 10 }}>
+                      {tab.label_en}
+                    </div>
+                    <button
+                      className="btn"
+                      style={{ background: app.color, color: '#fff', width: '100%', minHeight: 40 }}
+                      onClick={() => {
+                        const shortcut = {
+                          id: `${app.id}_${tab.id}`,
+                          appId: app.id,
+                          subTabId: tab.id,
+                          label_pt: tab.label_pt,
+                          label_en: tab.label_en,
+                          color: app.color,
+                          glyph: tab.glyph,
+                        }
+                        const saved = JSON.parse(localStorage.getItem('braosa-shortcuts') || '[]')
+                        if (!saved.find((s: { id: string }) => s.id === shortcut.id)) {
+                          const updated = [...saved, shortcut]
+                          localStorage.setItem('braosa-shortcuts', JSON.stringify(updated))
+                        }
+                        setLongPressTab(null)
+                      }}
+                    >
+                      + Add to Home Screen
+                    </button>
                   </div>
+                </div>
+              )
+            })()}
+
+            <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: 'transparent' }}>
+              {app.subTabs!.map(tab => {
+                const isActive = subTabId === tab.id
+                const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
+                return (
                   <button
-                    className="btn"
-                    style={{ background: app.color, color: '#fff', width: '100%', minHeight: 40 }}
-                    onClick={() => {
-                      const shortcut = {
-                        id: `${app.id}_${tab.id}`,
-                        appId: app.id,
-                        subTabId: tab.id,
-                        label_pt: tab.label_pt,
-                        label_en: tab.label_en,
-                        color: app.color,
-                        glyph: tab.glyph,
-                      }
-                      const saved = JSON.parse(localStorage.getItem('braosa-shortcuts') || '[]')
-                      if (!saved.find((s: { id: string }) => s.id === shortcut.id)) {
-                        const updated = [...saved, shortcut]
-                        localStorage.setItem('braosa-shortcuts', JSON.stringify(updated))
-                      }
-                      setLongPressTab(null)
+                    key={tab.id}
+                    onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
+                    onPointerDown={() => {
+                      if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                      longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
+                    }}
+                    onPointerUp={() => {
+                      if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                    }}
+                    onPointerLeave={() => {
+                      if (longPressTimer.current) clearTimeout(longPressTimer.current)
+                    }}
+                    style={{
+                      flex: 1,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 3,
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: isActive ? app.color : '#555968',
                     }}
                   >
-                    + Add to Home Screen
+                    <Icon name={tab.glyph as any} size={20} />
+                    <span style={{
+                      fontSize: 9,
+                      fontWeight: 500,
+                      letterSpacing: '0.03em',
+                      fontFamily: 'DM Sans, sans-serif',
+                    }}>
+                      {tabLabel}
+                    </span>
                   </button>
-                </div>
-              </div>
-            )
-          })()}
-
-          <div ref={tabRowRef} style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: 'transparent' }}>
-            {app.subTabs!.map(tab => {
-              const isActive = subTabId === tab.id
-              const tabLabel = lang === 'pt' ? tab.label_pt : tab.label_en
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => { setLongPressTab(null); onSubTabChange(tab.id) }}
-                  onPointerDown={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                    longPressTimer.current = setTimeout(() => setLongPressTab(tab.id), 500)
-                  }}
-                  onPointerUp={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  }}
-                  onPointerLeave={() => {
-                    if (longPressTimer.current) clearTimeout(longPressTimer.current)
-                  }}
-                  style={{
-                    flex: 1,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 3,
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: isActive ? app.color : '#555968',
-                  }}
-                >
-                  <Icon name={tab.glyph as any} size={20} />
-                  <span style={{
-                    fontSize: 9,
-                    fontWeight: 500,
-                    letterSpacing: '0.03em',
-                    fontFamily: 'DM Sans, sans-serif',
-                  }}>
-                    {tabLabel}
-                  </span>
-                </button>
-              )
-            })}
+                )
+              })}
+            </div>
+            <div
+              style={{
+                height: 'env(safe-area-inset-bottom)',
+                background: '#1C1E26',
+                flexShrink: 0,
+              }}
+            />
           </div>
-          {/* DIAGNOSTIC: safe-area filler — remove after debug */}
-          <div
-            ref={fillerRef}
-            style={{
-              height: 'env(safe-area-inset-bottom)',
-              background: '#00FFFF',
-              flexShrink: 0,
-            }}
-          />
-        </div>
+        </>
       )}
 
     </div>
