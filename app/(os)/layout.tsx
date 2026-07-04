@@ -268,7 +268,11 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   // ─── Lock guard ─────────────────────────────────────────────────────────────
 
   if (lockChecking) {
-    return <div style={{ position: "fixed", inset: 0, background: "var(--bg-void)" }} />
+    return (
+      <div style={{ position: "fixed", inset: 0, background: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src="/icon.png" alt="" width={80} height={80} style={{ borderRadius: 16 }} />
+      </div>
+    )
   }
 
   if (locked) {
