@@ -39,10 +39,19 @@ type Shortcut = {
 const DIAS_PT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=38.7061&longitude=-8.9747&current=temperature_2m,weather_code&timezone=Europe/Lisbon'
-// TODO: city picker — Montijo is hardcoded for now
-const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast?latitude=38.7061&longitude=-8.9747&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Lisbon&forecast_days=7'
+const DEFAULT_LOCATION = { name: 'Montijo', lat: 38.7061, lon: -8.9747 }
 const DIAS_CURTO_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+function weatherUrl(lat: number, lon: number): string {
+  return `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Europe/Lisbon`
+}
+
+function forecastUrl(lat: number, lon: number): string {
+  return `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Lisbon&forecast_days=7`
+}
+
+type GeocodingResult = { name: string; admin1?: string; country?: string; latitude: number; longitude: number; id: number }
+type FavoriteLocation = { id: string; display_name: string; latitude: number; longitude: number }
 
 function getDayName(dateStr: string): string {
   return DIAS_CURTO_PT[new Date(dateStr).getDay()]
@@ -137,16 +146,24 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     return localStorage.getItem('braosa-wip-visible') !== 'false'
   })
   const [calendarPopup, setCalendarPopup] = useState(false)
+  const [tappedDay, setTappedDay] = useState<number | null>(null)
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null)
   const [weatherStatus, setWeatherStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [forecastOpen, setForecastOpen] = useState(false)
   const [forecast, setForecast] = useState<Array<{ date: string; code: number; max: number; min: number }> | null>(null)
   const [forecastLoading, setForecastLoading] = useState(false)
+  const [activeLocation, setActiveLocation] = useState<{ name: string; lat: number; lon: number }>(DEFAULT_LOCATION)
+  const [locationSearchOpen, setLocationSearchOpen] = useState(false)
+  const [locationQuery, setLocationQuery] = useState('')
+  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([])
+  const [favorites, setFavorites] = useState<FavoriteLocation[]>([])
+  const [favoritesTab, setFavoritesTab] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLongPress = useRef(false)
   const gridRef = useRef<HTMLDivElement>(null)
+  const tappedDayTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { counts } = useContext(NotificationsContext)
 
@@ -177,7 +194,19 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   }, [])
 
   useEffect(() => {
-    fetch(WEATHER_URL)
+    fetch('/api/weather-location').then(r => r.json()).then(data => {
+      if (data?.location) {
+        setActiveLocation({ name: data.location.display_name, lat: data.location.latitude, lon: data.location.longitude })
+      }
+    }).catch(() => {})
+    fetch('/api/weather-location/favorites').then(r => r.json()).then(data => {
+      if (data?.favorites) setFavorites(data.favorites)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setWeatherStatus('loading')
+    fetch(weatherUrl(activeLocation.lat, activeLocation.lon))
       .then(res => {
         if (!res.ok) throw new Error('weather fetch failed')
         return res.json()
@@ -187,7 +216,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         setWeatherStatus('ready')
       })
       .catch(() => setWeatherStatus('error'))
-  }, [])
+  }, [activeLocation])
 
   function handleCalendarTap(e: React.MouseEvent) {
     e.stopPropagation()
@@ -203,7 +232,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     setForecastOpen(true)
     if (!forecast) {
       setForecastLoading(true)
-      fetch(FORECAST_URL)
+      fetch(forecastUrl(activeLocation.lat, activeLocation.lon))
         .then(r => r.json())
         .then(data => {
           const days = data.daily.time.map((date: string, i: number) => ({
@@ -217,6 +246,82 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         })
         .catch(() => setForecastLoading(false))
     }
+  }
+
+  function handleDotTap(e: React.MouseEvent, day: number, isToday: boolean) {
+    e.stopPropagation()
+    if (isToday) {
+      handleCalendarTap(e)
+      return
+    }
+    setTappedDay(day)
+    if (tappedDayTimer.current) clearTimeout(tappedDayTimer.current)
+    tappedDayTimer.current = setTimeout(() => setTappedDay(null), 1500)
+  }
+
+  function handleLocationTap(e: React.MouseEvent) {
+    e.stopPropagation()
+    setLocationSearchOpen(prev => !prev)
+  }
+
+  async function handleLocationSearch(query: string) {
+    setLocationQuery(query)
+    if (query.length < 2) { setLocationResults([]); return }
+    try {
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt&format=json`)
+      const data = await res.json()
+      setLocationResults(data.results || [])
+    } catch {
+      setLocationResults([])
+    }
+  }
+
+  async function handleSelectLocation(loc: GeocodingResult) {
+    const displayName = [loc.name, loc.admin1, loc.country].filter(Boolean).join(', ')
+    setActiveLocation({ name: displayName, lat: loc.latitude, lon: loc.longitude })
+    setLocationSearchOpen(false)
+    setLocationQuery('')
+    setLocationResults([])
+    setForecast(null)
+    try {
+      await fetch('/api/weather-location', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: displayName, latitude: loc.latitude, longitude: loc.longitude }),
+      })
+    } catch {}
+  }
+
+  async function handleSelectFavorite(fav: FavoriteLocation) {
+    setActiveLocation({ name: fav.display_name, lat: fav.latitude, lon: fav.longitude })
+    setLocationSearchOpen(false)
+    setForecast(null)
+    try {
+      await fetch('/api/weather-location', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: fav.display_name, latitude: fav.latitude, longitude: fav.longitude }),
+      })
+    } catch {}
+  }
+
+  async function handleAddFavorite(loc: { name: string; lat: number; lon: number }) {
+    try {
+      const res = await fetch('/api/weather-location/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: loc.name, latitude: loc.lat, longitude: loc.lon }),
+      })
+      const data = await res.json()
+      if (data?.favorite) setFavorites(prev => [...prev, data.favorite])
+    } catch {}
+  }
+
+  async function handleRemoveFavorite(id: string) {
+    setFavorites(prev => prev.filter(f => f.id !== id))
+    try {
+      await fetch(`/api/weather-location/favorites/${id}`, { method: 'DELETE' })
+    } catch {}
   }
 
   function handleContainerClick() {
@@ -355,17 +460,34 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
             {(() => {
               const todayNum = new Date().getDate()
-              return getCalendarDays().map((day, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 7 }}>
-                  {day !== null && (
-                    <div style={{
-                      width: 7, height: 7, borderRadius: '50%',
-                      background: day === todayNum ? '#FFFFFF' : day < todayNum ? '#4A4A4A' : '#2A2A2A',
-                      boxShadow: day === todayNum ? '0 0 6px 2px rgba(255,255,255,0.45)' : undefined,
-                    }} />
-                  )}
-                </div>
-              ))
+              return getCalendarDays().map((day, idx) => {
+                const isToday = day === todayNum
+                return (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 7, position: 'relative' }}>
+                    {day !== null && (
+                      <>
+                        <div
+                          onClick={(e) => handleDotTap(e, day, isToday)}
+                          style={{
+                            width: 7, height: 7, borderRadius: '50%', cursor: 'pointer',
+                            background: isToday ? '#FFFFFF' : day < todayNum ? '#4A4A4A' : '#2A2A2A',
+                            boxShadow: isToday ? '0 0 6px 2px rgba(255,255,255,0.45)' : undefined,
+                          }}
+                        />
+                        {tappedDay === day && !isToday && (
+                          <span style={{
+                            position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                            marginBottom: 2, background: 'rgba(255,255,255,0.15)', borderRadius: 4,
+                            fontSize: 9, padding: '1px 3px', color: '#fff', whiteSpace: 'nowrap', zIndex: 10,
+                          }}>
+                            {day}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })
             })()}
           </div>
           {calendarPopup && (() => {
@@ -384,9 +506,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
 
         {/* CENTER: logo divider */}
-        <div style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
-          <img src="/icon.png" width={28} height={28} style={{ borderRadius: 6, opacity: 0.85 }} alt="" />
+          <img src="/icon.png" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
         {/* RIGHT: weather */}
@@ -412,6 +534,111 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
               </>
             )
           })()}
+
+          <div
+            onClick={handleLocationTap}
+            style={{ fontSize: 9, color: 'var(--ink-faint)', marginTop: 4, cursor: 'pointer', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            📍 {activeLocation.name} ▾
+          </div>
+
+          {locationSearchOpen && (
+            <>
+              <div
+                onClick={(e) => { e.stopPropagation(); setLocationSearchOpen(false) }}
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99, background: 'transparent' }}
+              />
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: 8, zIndex: 100,
+                  background: '#1C1E26', border: '1px solid var(--edge)', borderRadius: 12,
+                  padding: 12, width: 220, maxHeight: 280, display: 'flex', flexDirection: 'column',
+                }}
+              >
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <button
+                    onClick={() => setFavoritesTab(false)}
+                    style={{
+                      flex: 1, fontSize: 11, padding: '4px 0', borderRadius: 6, cursor: 'pointer',
+                      background: !favoritesTab ? 'var(--bg-raised-2)' : 'transparent',
+                      border: '1px solid var(--edge)', color: 'var(--ink)',
+                    }}
+                  >
+                    Pesquisar
+                  </button>
+                  <button
+                    onClick={() => setFavoritesTab(true)}
+                    style={{
+                      flex: 1, fontSize: 11, padding: '4px 0', borderRadius: 6, cursor: 'pointer',
+                      background: favoritesTab ? 'var(--bg-raised-2)' : 'transparent',
+                      border: '1px solid var(--edge)', color: 'var(--ink)',
+                    }}
+                  >
+                    Favoritos
+                  </button>
+                </div>
+
+                {!favoritesTab && (
+                  <>
+                    <input
+                      type="text"
+                      value={locationQuery}
+                      onChange={(e) => handleLocationSearch(e.target.value)}
+                      placeholder="Pesquisar cidade…"
+                      style={{
+                        fontSize: 12, padding: '6px 8px', borderRadius: 6,
+                        border: '1px solid var(--edge)', background: 'var(--bg)', color: 'var(--ink)',
+                        marginBottom: 8, width: '100%',
+                      }}
+                    />
+                    <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {locationResults.map((r) => (
+                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div
+                            onClick={() => handleSelectLocation(r)}
+                            style={{ flex: 1, fontSize: 11, color: 'var(--ink)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {[r.name, r.admin1, r.country].filter(Boolean).join(', ')}
+                          </div>
+                          <button
+                            onClick={() => handleAddFavorite({ name: [r.name, r.admin1, r.country].filter(Boolean).join(', '), lat: r.latitude, lon: r.longitude })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#D4A843', flexShrink: 0 }}
+                          >
+                            ★
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {favoritesTab && (
+                  <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {favorites.length === 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>Sem favoritos</div>
+                    )}
+                    {favorites.map((f) => (
+                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div
+                          onClick={() => handleSelectFavorite(f)}
+                          style={{ flex: 1, fontSize: 11, color: 'var(--ink)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
+                          {f.display_name}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFavorite(f.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#FF6B6B', flexShrink: 0 }}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {forecastOpen && (
             <>
