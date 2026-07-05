@@ -269,8 +269,17 @@ export default function OsLayout({ children: _children }: { children: React.Reac
 
   if (lockChecking) {
     return (
-      <div style={{ position: "fixed", inset: 0, background: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src="/icon.png" alt="" width={80} height={80} style={{ borderRadius: 16 }} />
+      <div style={{ position: "fixed", inset: 0, background: "#F3EBDD", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{`
+          @keyframes braosa-launch {
+            from { transform: scale(0.85); opacity: 0.7; }
+            to   { transform: scale(1);    opacity: 1;   }
+          }
+          .braosa-launch-icon {
+            animation: braosa-launch 350ms ease-out forwards;
+          }
+        `}</style>
+        <img src="/icon.png" alt="" width={140} height={140} className="braosa-launch-icon" style={{ borderRadius: 16 }} />
       </div>
     )
   }
