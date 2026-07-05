@@ -64,6 +64,9 @@ function getBadgeContent(appId: string, counts: NotificationCounts): string | nu
   }
 }
 
+const APP_ORDER_KEY = 'braosa-app-order'
+const DEFAULT_APP_ORDER = MOBILE_APPS.map(a => a.id)
+
 const HIDDEN_APPS_KEY = 'braosa-hidden-apps'
 
 function getHiddenApps(): string[] {
@@ -89,9 +92,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const [showMore, setShowMore] = useState(false)
   const [swipeToast, setSwipeToast] = useState(false)
   const [appOrder, setAppOrder] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return MOBILE_APPS.map(a => a.id)
-    const saved = localStorage.getItem('braosa-app-order')
-    return saved ? JSON.parse(saved) : MOBILE_APPS.map(a => a.id)
+    if (typeof window === 'undefined') return DEFAULT_APP_ORDER
+    const saved = localStorage.getItem(APP_ORDER_KEY)
+    return saved ? JSON.parse(saved) : DEFAULT_APP_ORDER
   })
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -207,6 +210,11 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     setHiddenAppsState(updated)
   }
 
+  function handleResetLayout() {
+    localStorage.removeItem(APP_ORDER_KEY)
+    setAppOrder(DEFAULT_APP_ORDER)
+  }
+
   function removeShortcut(id: string) {
     const updated = shortcuts.filter(s => s.id !== id)
     setShortcuts(updated)
@@ -285,7 +293,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
             const [moved] = newOrder.splice(dragIndex, 1)
             newOrder.splice(dragOverIndex, 0, moved)
             setAppOrder(newOrder)
-            localStorage.setItem('braosa-app-order', JSON.stringify(newOrder))
+            localStorage.setItem(APP_ORDER_KEY, JSON.stringify(newOrder))
           }
           setDragIndex(null)
           setDragOverIndex(null)
@@ -559,6 +567,17 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
             }}
           >
             Done
+          </button>
+          <button
+            onClick={handleResetLayout}
+            style={{
+              marginTop: 8, width: '100%',
+              fontSize: 13, color: '#FF6B6B',
+              background: 'transparent', border: 'none',
+              padding: '4px 12px', cursor: 'pointer',
+            }}
+          >
+            Reset Layout
           </button>
         </div>
       )}
