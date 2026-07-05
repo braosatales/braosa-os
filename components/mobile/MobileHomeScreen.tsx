@@ -65,6 +65,7 @@ function getBadgeContent(appId: string, counts: NotificationCounts): string | nu
 }
 
 const APP_ORDER_KEY = 'braosa-app-order'
+const DEFAULT_LAYOUT_KEY = 'braosa-default-layout'
 const DEFAULT_APP_ORDER = MOBILE_APPS.map(a => a.id)
 
 const HIDDEN_APPS_KEY = 'braosa-hidden-apps'
@@ -91,6 +92,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const [hiddenApps, setHiddenAppsState] = useState<string[]>([])
   const [showMore, setShowMore] = useState(false)
   const [swipeToast, setSwipeToast] = useState(false)
+  const [savedConfirm, setSavedConfirm] = useState(false)
   const [appOrder, setAppOrder] = useState<string[]>(() => {
     if (typeof window === 'undefined') return DEFAULT_APP_ORDER
     const saved = localStorage.getItem(APP_ORDER_KEY)
@@ -133,6 +135,12 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
 
   useEffect(() => {
     setHiddenAppsState(getHiddenApps())
+  }, [])
+
+  useEffect(() => {
+    if (!localStorage.getItem(DEFAULT_LAYOUT_KEY)) {
+      localStorage.setItem(DEFAULT_LAYOUT_KEY, JSON.stringify(DEFAULT_APP_ORDER))
+    }
   }, [])
 
   useEffect(() => {
@@ -210,9 +218,18 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     setHiddenAppsState(updated)
   }
 
-  function handleResetLayout() {
-    localStorage.removeItem(APP_ORDER_KEY)
-    setAppOrder(DEFAULT_APP_ORDER)
+  function handleResetToDefault() {
+    const raw = localStorage.getItem(DEFAULT_LAYOUT_KEY)
+    const parsed = raw ? JSON.parse(raw) : DEFAULT_APP_ORDER
+    if (!Array.isArray(parsed) || parsed.length === 0) return
+    setAppOrder(parsed)
+    localStorage.setItem(APP_ORDER_KEY, JSON.stringify(parsed))
+  }
+
+  function handleSaveAsDefault() {
+    localStorage.setItem(DEFAULT_LAYOUT_KEY, JSON.stringify(appOrder))
+    setSavedConfirm(true)
+    setTimeout(() => setSavedConfirm(false), 1500)
   }
 
   function removeShortcut(id: string) {
@@ -568,17 +585,20 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           >
             Done
           </button>
-          <button
-            onClick={handleResetLayout}
-            style={{
-              marginTop: 8, width: '100%',
-              fontSize: 13, color: '#FF6B6B',
-              background: 'transparent', border: 'none',
-              padding: '4px 12px', cursor: 'pointer',
-            }}
-          >
-            Reset Layout
-          </button>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8 }}>
+            <button
+              onClick={handleResetToDefault}
+              style={{ fontSize: 13, color: '#FF6B6B', background: 'transparent', border: '1px solid #FF6B6B', borderRadius: 8, padding: '4px 12px', cursor: 'pointer' }}
+            >
+              Reset to Default
+            </button>
+            <button
+              onClick={handleSaveAsDefault}
+              style={{ fontSize: 13, color: '#6B9FFF', background: 'transparent', border: '1px solid #6B9FFF', borderRadius: 8, padding: '4px 12px', cursor: 'pointer' }}
+            >
+              {savedConfirm ? '✓ Saved' : 'Save as Default'}
+            </button>
+          </div>
         </div>
       )}
     </div>
