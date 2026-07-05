@@ -40,6 +40,13 @@ const DIAS_PT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Qu
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=38.7061&longitude=-8.9747&current=temperature_2m,weather_code&timezone=Europe/Lisbon'
+// TODO: city picker — Montijo is hardcoded for now
+const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast?latitude=38.7061&longitude=-8.9747&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe/Lisbon&forecast_days=7'
+const DIAS_CURTO_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+function getDayName(dateStr: string): string {
+  return DIAS_CURTO_PT[new Date(dateStr).getDay()]
+}
 
 function getCalendarDays(): (number | null)[] {
   const today = new Date()
@@ -132,6 +139,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const [calendarPopup, setCalendarPopup] = useState(false)
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null)
   const [weatherStatus, setWeatherStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [forecastOpen, setForecastOpen] = useState(false)
+  const [forecast, setForecast] = useState<Array<{ date: string; code: number; max: number; min: number }> | null>(null)
+  const [forecastLoading, setForecastLoading] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -186,6 +196,27 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       if (next) setTimeout(() => setCalendarPopup(false), 3000)
       return next
     })
+  }
+
+  function handleWeatherTap(e: React.MouseEvent) {
+    e.stopPropagation()
+    setForecastOpen(true)
+    if (!forecast) {
+      setForecastLoading(true)
+      fetch(FORECAST_URL)
+        .then(r => r.json())
+        .then(data => {
+          const days = data.daily.time.map((date: string, i: number) => ({
+            date,
+            code: data.daily.weather_code[i],
+            max: Math.round(data.daily.temperature_2m_max[i]),
+            min: Math.round(data.daily.temperature_2m_min[i]),
+          }))
+          setForecast(days)
+          setForecastLoading(false)
+        })
+        .catch(() => setForecastLoading(false))
+    }
   }
 
   function handleContainerClick() {
@@ -307,10 +338,10 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
       )}
 
-      {/* Header: dot-grid calendar + weather */}
-      <div style={{ display: 'flex', gap: 12, padding: '32px 16px 24px', alignItems: 'stretch' }}>
+      {/* Header: dot-grid calendar + logo divider + weather */}
+      <div style={{ display: 'flex', alignItems: 'stretch', padding: '32px 16px 24px', gap: 8 }}>
         {/* LEFT: dot-grid mini-calendar */}
-        <div style={{ flex: 1, position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
+        <div style={{ flex: '0 0 38%', position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
             {WEEKDAY_LETTERS.map((letter, i) => (
               <div key={i} style={{
@@ -352,9 +383,17 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           })()}
         </div>
 
+        {/* CENTER: logo divider */}
+        <div style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {/* TODO: replace with white-inverted logo when available */}
+          <img src="/icon.png" width={28} height={28} style={{ borderRadius: 6, opacity: 0.85 }} alt="" />
+        </div>
+
         {/* RIGHT: weather */}
-        <div style={{ width: 90, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          {/* TODO: tap to open week forecast chart with city picker */}
+        <div
+          style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          onClick={handleWeatherTap}
+        >
           {weatherStatus === 'loading' && (
             <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>...</div>
           )}
@@ -373,6 +412,42 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
               </>
             )
           })()}
+
+          {forecastOpen && (
+            <>
+              <div
+                onClick={(e) => { e.stopPropagation(); setForecastOpen(false) }}
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99, background: 'transparent' }}
+              />
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: 8, zIndex: 100,
+                  background: '#1C1E26', border: '1px solid var(--edge)', borderRadius: 12,
+                  padding: 12, display: 'flex', gap: 10, overflowX: 'auto',
+                  maxWidth: '80vw',
+                }}
+              >
+                {forecastLoading && (
+                  <div style={{ fontSize: 12, color: 'var(--ink-dim)', padding: '8px 4px' }}>...</div>
+                )}
+                {!forecastLoading && forecast && forecast.map((day) => {
+                  const { emoji } = getWeatherIcon(day.code)
+                  return (
+                    <div key={day.date} style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                      minWidth: 40,
+                    }}>
+                      <div style={{ fontSize: 10, color: 'var(--ink-dim)' }}>{getDayName(day.date)}</div>
+                      <div style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{day.max}°</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>{day.min}°</div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
