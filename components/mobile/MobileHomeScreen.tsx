@@ -36,13 +36,35 @@ type Shortcut = {
   glyph: string
 }
 
-function useGreeting() {
-  const [greeting, setGreeting] = useState('')
-  useEffect(() => {
-    const hour = new Date().getHours()
-    setGreeting(hour < 12 ? 'Bom dia, João! ☀️' : hour < 18 ? 'Boa tarde, João! 🌤️' : 'Boa noite, João! 🌙')
-  }, [])
-  return greeting
+const DIAS_PT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=38.7061&longitude=-8.9747&current=temperature_2m,weather_code&timezone=Europe/Lisbon'
+
+function getCalendarDays(): (number | null)[] {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7 // Monday = 0
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const days: (number | null)[] = []
+  for (let i = 0; i < firstWeekday; i++) days.push(null)
+  for (let d = 1; d <= daysInMonth; d++) days.push(d)
+  while (days.length % 7 !== 0) days.push(null)
+  return days
+}
+
+function getWeatherIcon(code: number): { emoji: string; label: string } {
+  if (code === 0) return { emoji: '☀️', label: 'Limpo' }
+  if (code <= 2) return { emoji: '🌤', label: 'Maioria limpo' }
+  if (code === 3) return { emoji: '☁️', label: 'Nublado' }
+  if (code <= 49) return { emoji: '🌫', label: 'Nevoeiro' }
+  if (code <= 59) return { emoji: '🌦', label: 'Chuvisco' }
+  if (code <= 69) return { emoji: '🌧', label: 'Chuva' }
+  if (code <= 79) return { emoji: '❄️', label: 'Neve' }
+  if (code <= 84) return { emoji: '🌧', label: 'Aguaceiro' }
+  if (code <= 99) return { emoji: '⛈', label: 'Trovoada' }
+  return { emoji: '🌡', label: 'Desconhecido' }
 }
 
 function formatBadgeText(value: number | boolean): string {
@@ -85,8 +107,6 @@ interface Props {
 
 export default function MobileHomeScreen({ onOpenApp }: Props) {
   const lang = useLang()
-  const greeting = useGreeting()
-  const [now, setNow] = useState(new Date())
   const [editMode, setEditMode] = useState(false)
   const [pressedApp, setPressedApp] = useState<string | null>(null)
   const [hiddenApps, setHiddenAppsState] = useState<string[]>([])
@@ -109,6 +129,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     if (typeof window === 'undefined') return true
     return localStorage.getItem('braosa-wip-visible') !== 'false'
   })
+  const [calendarPopup, setCalendarPopup] = useState(false)
+  const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null)
+  const [weatherStatus, setWeatherStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const rootRef = useRef<HTMLDivElement>(null)
   const swipeStartY = useRef<number | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -144,17 +167,26 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   }, [])
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
+    fetch(WEATHER_URL)
+      .then(res => {
+        if (!res.ok) throw new Error('weather fetch failed')
+        return res.json()
+      })
+      .then(data => {
+        setWeather({ temp: data.current.temperature_2m, code: data.current.weather_code })
+        setWeatherStatus('ready')
+      })
+      .catch(() => setWeatherStatus('error'))
   }, [])
 
-  const timeStr = now.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-
-  const dateStr = (() => {
-    const locale = lang === 'pt' ? 'pt-PT' : 'en-IE'
-    const raw = now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
-    return raw.charAt(0).toUpperCase() + raw.slice(1)
-  })()
+  function handleCalendarTap(e: React.MouseEvent) {
+    e.stopPropagation()
+    setCalendarPopup(prev => {
+      const next = !prev
+      if (next) setTimeout(() => setCalendarPopup(false), 3000)
+      return next
+    })
+  }
 
   function handleContainerClick() {
     if (editMode) setEditMode(false)
@@ -275,19 +307,73 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 40, paddingTop: 32 }}>
-        <div style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(48px, 12vw, 64px)',
-          fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums',
-          fontFeatureSettings: '"tnum"', lineHeight: 1, marginBottom: 8,
-        }}>
-          {timeStr}
+      {/* Header: dot-grid calendar + weather */}
+      <div style={{ display: 'flex', gap: 12, padding: '32px 16px 24px', alignItems: 'stretch' }}>
+        {/* LEFT: dot-grid mini-calendar */}
+        <div style={{ flex: 1, position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
+            {WEEKDAY_LETTERS.map((letter, i) => (
+              <div key={i} style={{
+                fontSize: 8, textAlign: 'center', color: 'var(--ink-faint)',
+                fontFamily: 'Space Mono, monospace',
+              }}>
+                {letter}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+            {(() => {
+              const todayNum = new Date().getDate()
+              return getCalendarDays().map((day, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 7 }}>
+                  {day !== null && (
+                    <div style={{
+                      width: 7, height: 7, borderRadius: '50%',
+                      background: day === todayNum ? '#FFFFFF' : day < todayNum ? '#4A4A4A' : '#2A2A2A',
+                      boxShadow: day === todayNum ? '0 0 6px 2px rgba(255,255,255,0.45)' : undefined,
+                    }} />
+                  )}
+                </div>
+              ))
+            })()}
+          </div>
+          {calendarPopup && (() => {
+            const today = new Date()
+            const popupDateStr = `${DIAS_PT[today.getDay()]}, ${today.getDate()} de ${MESES_PT[today.getMonth()]} de ${today.getFullYear()}`
+            return (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 8, zIndex: 50,
+                background: 'var(--bg-raised)', border: '1px solid var(--edge)', borderRadius: 8,
+                padding: '8px 12px', fontSize: 12, color: 'var(--ink)', whiteSpace: 'nowrap',
+              }}>
+                {popupDateStr}
+              </div>
+            )
+          })()}
         </div>
-        <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 4 }}>{dateStr}</div>
-        {greeting && (
-          <div style={{ fontSize: 14, color: 'var(--ink-dim)', marginBottom: 32 }}>{greeting}</div>
-        )}
+
+        {/* RIGHT: weather */}
+        <div style={{ width: 90, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          {/* TODO: tap to open week forecast chart with city picker */}
+          {weatherStatus === 'loading' && (
+            <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>...</div>
+          )}
+          {weatherStatus === 'error' && (
+            <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>—</div>
+          )}
+          {weatherStatus === 'ready' && weather && (() => {
+            const { emoji, label } = getWeatherIcon(weather.code)
+            return (
+              <>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>{emoji}</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>
+                  {Math.round(weather.temp)}°C
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{label}</div>
+              </>
+            )
+          })()}
+        </div>
       </div>
 
       {/* App grid */}
