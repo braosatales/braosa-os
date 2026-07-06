@@ -36,6 +36,13 @@ type Shortcut = {
   glyph: string
 }
 
+type NotificationBanner = {
+  id: string
+  icon: string
+  message: string
+  appKey: string
+}
+
 const DIAS_PT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -166,6 +173,72 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const tappedDayTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { counts } = useContext(NotificationsContext)
+  const [notifications, setNotifications] = useState<NotificationBanner[]>([])
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (!counts) return
+    let cancelled = false
+
+    async function buildNotifications() {
+      const banners: NotificationBanner[] = []
+
+      if (counts!.tasks > 0) {
+        const n = counts!.tasks
+        banners.push({
+          id: 'tasks-overdue',
+          icon: '⚠️',
+          message: `${n} tarefa${n === 1 ? '' : 's'} atrasada${n === 1 ? '' : 's'}`,
+          appKey: 'tasks',
+        })
+      }
+
+      if (counts!.mail > 0) {
+        const n = counts!.mail
+        banners.push({
+          id: 'mail-unread',
+          icon: '✉️',
+          message: `${n} email${n === 1 ? '' : 's'} por ler`,
+          appKey: 'mail',
+        })
+      }
+
+      if (counts!.calendar > 0) {
+        const n = counts!.calendar
+        let eventBanner: NotificationBanner | null = null
+        if (n === 1) {
+          try {
+            const now = new Date()
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
+            const res = await fetch(`/api/calendar/events?start=${startOfDay}&end=${endOfDay}&calendarId=primary`)
+            const data = await res.json()
+            const event = data.events?.[0]
+            if (event) {
+              const time = event.allDay ? '' : ` às ${new Date(event.start).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}`
+              eventBanner = {
+                id: `calendar-today-${event.id}`,
+                icon: '📅',
+                message: `${event.title}${time}`,
+                appKey: 'calendar',
+              }
+            }
+          } catch {}
+        }
+        banners.push(eventBanner ?? {
+          id: 'calendar-today',
+          icon: '📅',
+          message: `${n} evento${n === 1 ? '' : 's'} hoje`,
+          appKey: 'calendar',
+        })
+      }
+
+      if (!cancelled) setNotifications(banners)
+    }
+
+    buildNotifications()
+    return () => { cancelled = true }
+  }, [counts])
 
   useEffect(() => {
     const el = rootRef.current
@@ -451,8 +524,8 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
       )}
 
-      {/* Header: dot-grid calendar + logo + health + weather */}
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: '10px 14px' }}>
+      {/* Header: dot-grid calendar + logo + weather */}
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: '10px 14px', minHeight: 90 }}>
         {/* COLUMN 1: dot-grid mini-calendar */}
         <div style={{ flex: '0 0 35%', position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
@@ -516,23 +589,10 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         {/* COLUMN 2: logo */}
         <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
-          <img src="/icon.png" style={{ flex: 1, minHeight: 0, width: '100%', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
+          <img src="/icon.png" style={{ height: '100%', width: 'auto', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
-        {/* COLUMN 3: health icon */}
-        <div
-          style={{ width: 44, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
-          onClick={(e) => {
-            e.stopPropagation()
-            // TODO: wire up navigation to the Health app
-          }}
-        >
-          <AppIcon appId="health" color="#E05C3A" size={36}>
-            <IconHealth />
-          </AppIcon>
-        </div>
-
-        {/* COLUMN 4: weather */}
+        {/* COLUMN 3: weather */}
         <div
           style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
           onClick={handleWeatherTap}
@@ -829,6 +889,34 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           )
         })}
       </div>
+
+      {/* Notification banners */}
+      {notifications.filter(n => !dismissedIds.has(n.id)).map(n => (
+        <div
+          key={n.id}
+          onClick={() => onOpenApp(n.appKey)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 14px',
+            margin: '4px 14px',
+            background: 'rgba(255,255,255,0.07)',
+            borderRadius: 10,
+            cursor: 'pointer',
+            position: 'relative',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>{n.icon}</span>
+          <span style={{ flex: 1, fontSize: 13, color: '#E8E8E8' }}>{n.message}</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setDismissedIds(prev => new Set([...prev, n.id])) }}
+            style={{ background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
 
       {/* Shortcuts */}
       {shortcuts.length > 0 && (
