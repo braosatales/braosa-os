@@ -542,7 +542,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       )}
 
       {/* Header: dot-grid calendar + logo + weather */}
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', padding: '10px 14px', minHeight: 90 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: '10px 14px', minHeight: 90 }}>
         {/* COLUMN 1: dot-grid mini-calendar */}
         <div style={{ flex: 1, minWidth: 0, position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
@@ -611,7 +611,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
 
         {/* COLUMN 3: weather */}
         <div
-          style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           onClick={handleWeatherTap}
         >
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -788,7 +788,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       {/* App grid */}
       <div
         ref={gridRef}
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, padding: '0 24px' }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, padding: '0 24px', marginTop: 10 }}
         onPointerMove={(e) => {
           if (dragIndex === null || !gridRef.current) return
           const rect = gridRef.current.getBoundingClientRect()
@@ -909,32 +909,44 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       </div>
 
       {/* Notification banners */}
-      {[...TEST_NOTIFICATIONS, ...notifications].filter(n => !dismissedIds.has(n.id)).map(n => (
-        <div
-          key={n.id}
-          onClick={() => onOpenApp(n.appKey)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '10px 14px',
-            margin: '4px 14px',
-            background: 'rgba(255,255,255,0.07)',
-            borderRadius: 10,
-            cursor: 'pointer',
-            position: 'relative',
-          }}
-        >
-          <span style={{ fontSize: 20 }}>{n.icon}</span>
-          <span style={{ flex: 1, fontSize: 13, color: '#E8E8E8' }}>{n.message}</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); setDismissedIds(prev => new Set([...prev, n.id])) }}
-            style={{ background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
-          >
-            ×
-          </button>
-        </div>
-      ))}
+      <div style={{ marginTop: 10 }}>
+        {[...TEST_NOTIFICATIONS, ...notifications].filter(n => !dismissedIds.has(n.id)).map(n => {
+          const app = MOBILE_APPS.find(a => a.id === n.appKey)
+          const AppIconComp = app ? APP_ICON_MAP[app.id] : null
+          return (
+            <div
+              key={n.id}
+              onClick={() => onOpenApp(n.appKey)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 14px',
+                margin: '4px 14px',
+                background: 'rgba(255,255,255,0.07)',
+                borderRadius: 10,
+                cursor: 'pointer',
+                position: 'relative',
+              }}
+            >
+              {app && AppIconComp ? (
+                <AppIcon appId={app.id} color={app.color} size={28}>
+                  <AppIconComp />
+                </AppIcon>
+              ) : (
+                <span style={{ fontSize: 20 }}>{n.icon}</span>
+              )}
+              <span style={{ flex: 1, fontSize: 13, color: '#E8E8E8' }}>{n.message}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setDismissedIds(prev => new Set([...prev, n.id])) }}
+                style={{ background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          )
+        })}
+      </div>
 
       {/* Shortcuts */}
       {shortcuts.length > 0 && (
