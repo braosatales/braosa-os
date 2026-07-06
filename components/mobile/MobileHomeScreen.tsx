@@ -916,45 +916,47 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       </div>
 
       {/* Notification banners */}
-      <div style={{ marginTop: 10 }}>
-        {[...TEST_NOTIFICATIONS, ...notifications].filter(n => !dismissedIds.has(n.id)).map(n => {
-          const app = MOBILE_APPS.find(a => a.id === n.appKey)
-          const AppIconComp = app ? APP_ICON_MAP[app.id] : null
-          return (
-            <div
-              key={n.id}
-              onClick={() => onOpenApp(n.appKey)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 14px',
-                margin: '4px 14px',
-                background: app ? hexToRgba(app.color, 0.15) : 'rgba(255,255,255,0.07)',
-                border: app ? `1px solid ${hexToRgba(app.color, 0.6)}` : '1px solid transparent',
-                borderRadius: 10,
-                cursor: 'pointer',
-                position: 'relative',
-              }}
-            >
-              {app && AppIconComp ? (
-                <div style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <AppIconComp />
-                </div>
-              ) : (
-                <span style={{ fontSize: 20 }}>{n.icon}</span>
-              )}
-              <span style={{ flex: 1, fontSize: 13, color: '#E8E8E8' }}>{n.message}</span>
-              <button
-                onClick={(e) => { e.stopPropagation(); setDismissedIds(prev => new Set([...prev, n.id])) }}
-                style={{ background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
+      {!editMode && (
+        <div style={{ marginTop: 18 }}>
+          {[...TEST_NOTIFICATIONS, ...notifications].filter(n => !dismissedIds.has(n.id)).map(n => {
+            const app = MOBILE_APPS.find(a => a.id === n.appKey)
+            const AppIconComp = app ? APP_ICON_MAP[app.id] : null
+            return (
+              <div
+                key={n.id}
+                onClick={() => onOpenApp(n.appKey)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  margin: '4px 14px',
+                  background: app ? hexToRgba(app.color, 0.15) : 'rgba(255,255,255,0.07)',
+                  border: app ? `1px solid ${hexToRgba(app.color, 0.6)}` : '1px solid transparent',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
               >
-                ×
-              </button>
-            </div>
-          )
-        })}
-      </div>
+                {app && AppIconComp ? (
+                  <div style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <AppIconComp />
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 20 }}>{n.icon}</span>
+                )}
+                <span style={{ flex: 1, fontSize: 13, color: '#E8E8E8' }}>{n.message}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDismissedIds(prev => new Set([...prev, n.id])) }}
+                  style={{ background: 'none', border: 'none', color: '#888', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Shortcuts */}
       {shortcuts.length > 0 && (
