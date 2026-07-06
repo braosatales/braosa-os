@@ -51,7 +51,7 @@ function forecastUrl(lat: number, lon: number): string {
 }
 
 type GeocodingResult = { name: string; admin1?: string; country?: string; latitude: number; longitude: number; id: number }
-type FavoriteLocation = { id: string; display_name: string; latitude: number; longitude: number }
+type FavoriteLocation = { id: string; display_name: string; latitude: number; longitude: number; created_at?: string }
 
 function getDayName(dateStr: string): string {
   return DIAS_CURTO_PT[new Date(dateStr).getDay()]
@@ -305,23 +305,31 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     } catch {}
   }
 
-  async function handleAddFavorite(loc: { name: string; lat: number; lon: number }) {
-    try {
-      const res = await fetch('/api/weather-location/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ display_name: loc.name, latitude: loc.lat, longitude: loc.lon }),
-      })
-      const data = await res.json()
-      if (data?.favorite) setFavorites(prev => [...prev, data.favorite])
-    } catch {}
-  }
-
-  async function handleRemoveFavorite(id: string) {
-    setFavorites(prev => prev.filter(f => f.id !== id))
-    try {
-      await fetch(`/api/weather-location/favorites/${id}`, { method: 'DELETE' })
-    } catch {}
+  const handleToggleFavorite = async (loc: { name?: string; latitude?: number; longitude?: number; lat?: number; lon?: number; display_name?: string }) => {
+    const lat = loc.latitude ?? loc.lat ?? 0
+    const lon = loc.longitude ?? loc.lon ?? 0
+    const name = loc.display_name ?? loc.name ?? ''
+    const existing = favorites.find(f => Math.abs(f.latitude - lat) < 0.001 && Math.abs(f.longitude - lon) < 0.001)
+    if (existing) {
+      setFavorites(prev => prev.filter(f => f.id !== existing.id))
+      try {
+        await fetch(`/api/weather-location/favorites/${existing.id}`, { method: 'DELETE' })
+      } catch {}
+    } else {
+      const tempId = `temp-${Date.now()}`
+      setFavorites(prev => [...prev, { id: tempId, display_name: name, latitude: lat, longitude: lon, created_at: new Date().toISOString() }])
+      try {
+        const res = await fetch('/api/weather-location/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_name: name, latitude: lat, longitude: lon }),
+        })
+        const data = await res.json()
+        if (data?.favorite?.id) {
+          setFavorites(prev => prev.map(f => f.id === tempId ? { ...f, id: data.favorite.id } : f))
+        }
+      } catch {}
+    }
   }
 
   function handleContainerClick() {
@@ -443,10 +451,10 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
       )}
 
-      {/* Header: dot-grid calendar + logo divider + weather */}
-      <div style={{ display: 'flex', alignItems: 'stretch', padding: '32px 16px 24px', gap: 8 }}>
-        {/* LEFT: dot-grid mini-calendar */}
-        <div style={{ flex: '0 0 38%', position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
+      {/* Header: dot-grid calendar + logo + health + weather */}
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: '10px 14px' }}>
+        {/* COLUMN 1: dot-grid mini-calendar */}
+        <div style={{ flex: '0 0 35%', position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
             {WEEKDAY_LETTERS.map((letter, i) => (
               <div key={i} style={{
@@ -505,13 +513,26 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           })()}
         </div>
 
-        {/* CENTER: logo divider */}
-        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {/* COLUMN 2: logo */}
+        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
-          <img src="/icon.png" style={{ height: '100%', width: 'auto', maxWidth: 44, objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
+          <img src="/icon.png" style={{ flex: 1, minHeight: 0, width: '100%', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
-        {/* RIGHT: weather */}
+        {/* COLUMN 3: health icon */}
+        <div
+          style={{ width: 44, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation()
+            // TODO: wire up navigation to the Health app
+          }}
+        >
+          <AppIcon appId="health" color="#E05C3A" size={36}>
+            <IconHealth />
+          </AppIcon>
+        </div>
+
+        {/* COLUMN 4: weather */}
         <div
           style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
           onClick={handleWeatherTap}
@@ -597,22 +618,26 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                       }}
                     />
                     <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {locationResults.map((r) => (
-                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div
-                            onClick={() => handleSelectLocation(r)}
-                            style={{ flex: 1, fontSize: 11, color: 'var(--ink)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                          >
-                            {[r.name, r.admin1, r.country].filter(Boolean).join(', ')}
+                      {locationResults.map((r) => {
+                        const displayName = [r.name, r.admin1, r.country].filter(Boolean).join(', ')
+                        const isFav = favorites.some(f => Math.abs(f.latitude - r.latitude) < 0.001 && Math.abs(f.longitude - r.longitude) < 0.001)
+                        return (
+                          <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 12px' }}>
+                            <div
+                              onClick={() => handleSelectLocation(r)}
+                              style={{ flex: 1, fontSize: 11, color: 'var(--ink)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
+                              {displayName}
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleToggleFavorite({ display_name: displayName, latitude: r.latitude, longitude: r.longitude }) }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: isFav ? '#FFD700' : '#666', flexShrink: 0 }}
+                            >
+                              {isFav ? '★' : '☆'}
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleAddFavorite({ name: [r.name, r.admin1, r.country].filter(Boolean).join(', '), lat: r.latitude, lon: r.longitude })}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#D4A843', flexShrink: 0 }}
-                          >
-                            ★
-                          </button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </>
                 )}
@@ -623,7 +648,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                       <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>Sem favoritos</div>
                     )}
                     {favorites.map((f) => (
-                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 12px' }}>
                         <div
                           onClick={() => handleSelectFavorite(f)}
                           style={{ flex: 1, fontSize: 11, color: 'var(--ink)', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
@@ -631,10 +656,10 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                           {f.display_name}
                         </div>
                         <button
-                          onClick={() => handleRemoveFavorite(f.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#FF6B6B', flexShrink: 0 }}
+                          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(f) }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#FFD700', flexShrink: 0 }}
                         >
-                          🗑
+                          ★
                         </button>
                       </div>
                     ))}
