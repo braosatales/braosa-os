@@ -26,6 +26,13 @@ const APP_ICON_MAP: Record<string, React.ComponentType> = {
   verum:     IconVerum,
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 type Shortcut = {
   id: string
   appId: string
@@ -923,16 +930,17 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                 gap: 10,
                 padding: '10px 14px',
                 margin: '4px 14px',
-                background: 'rgba(255,255,255,0.07)',
+                background: app ? hexToRgba(app.color, 0.15) : 'rgba(255,255,255,0.07)',
+                border: app ? `1px solid ${hexToRgba(app.color, 0.6)}` : '1px solid transparent',
                 borderRadius: 10,
                 cursor: 'pointer',
                 position: 'relative',
               }}
             >
               {app && AppIconComp ? (
-                <AppIcon appId={app.id} color={app.color} size={28}>
+                <div style={{ width: 30, height: 30, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                   <AppIconComp />
-                </AppIcon>
+                </div>
               ) : (
                 <span style={{ fontSize: 20 }}>{n.icon}</span>
               )}
