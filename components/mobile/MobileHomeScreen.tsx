@@ -386,8 +386,12 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
     if (existing) {
       setFavorites(prev => prev.filter(f => f.id !== existing.id))
       try {
-        await fetch(`/api/weather-location/favorites/${existing.id}`, { method: 'DELETE' })
-      } catch {}
+        const res = await fetch(`/api/weather-location/favorites/${existing.id}`, { method: 'DELETE' })
+        if (!res.ok) throw new Error('delete failed')
+      } catch (err) {
+        console.error('Failed to remove favorite', err)
+        setFavorites(prev => [...prev, existing])
+      }
     } else {
       const tempId = `temp-${Date.now()}`
       setFavorites(prev => [...prev, { id: tempId, display_name: name, latitude: lat, longitude: lon, created_at: new Date().toISOString() }])
@@ -397,11 +401,15 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ display_name: name, latitude: lat, longitude: lon }),
         })
+        if (!res.ok) throw new Error('save failed')
         const data = await res.json()
         if (data?.favorite?.id) {
           setFavorites(prev => prev.map(f => f.id === tempId ? { ...f, id: data.favorite.id } : f))
         }
-      } catch {}
+      } catch (err) {
+        console.error('Failed to save favorite', err)
+        setFavorites(prev => prev.filter(f => f.id !== tempId))
+      }
     }
   }
 
@@ -587,7 +595,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
 
         {/* COLUMN 2: logo */}
-        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
           <img src="/icon.png" style={{ height: '100%', width: 'auto', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
@@ -618,13 +626,6 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                 </>
               )
             })()}
-          </div>
-
-          <div
-            onClick={handleLocationTap}
-            style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 4, cursor: 'pointer', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-          >
-            📍 {activeLocation.name} ▾
           </div>
 
           {locationSearchOpen && (
@@ -740,27 +741,35 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
                 style={{
                   position: 'absolute', top: '100%', right: 0, marginTop: 8, zIndex: 100,
                   background: '#1C1E26', border: '1px solid var(--edge)', borderRadius: 12,
-                  padding: 12, display: 'flex', gap: 10, overflowX: 'auto',
+                  padding: 12, display: 'flex', flexDirection: 'column', gap: 8,
                   maxWidth: '80vw',
                 }}
               >
-                {forecastLoading && (
-                  <div style={{ fontSize: 12, color: 'var(--ink-dim)', padding: '8px 4px' }}>...</div>
-                )}
-                {!forecastLoading && forecast && forecast.map((day) => {
-                  const { emoji } = getWeatherIcon(day.code)
-                  return (
-                    <div key={day.date} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                      minWidth: 40,
-                    }}>
-                      <div style={{ fontSize: 10, color: 'var(--ink-dim)' }}>{getDayName(day.date)}</div>
-                      <div style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{day.max}°</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>{day.min}°</div>
-                    </div>
-                  )
-                })}
+                <div
+                  onClick={(e) => { setForecastOpen(false); handleLocationTap(e) }}
+                  style={{ fontSize: 11, color: 'var(--ink-faint)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  📍 {activeLocation.name} ▾
+                </div>
+                <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }}>
+                  {forecastLoading && (
+                    <div style={{ fontSize: 12, color: 'var(--ink-dim)', padding: '8px 4px' }}>...</div>
+                  )}
+                  {!forecastLoading && forecast && forecast.map((day) => {
+                    const { emoji } = getWeatherIcon(day.code)
+                    return (
+                      <div key={day.date} style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        minWidth: 40,
+                      }}>
+                        <div style={{ fontSize: 10, color: 'var(--ink-dim)' }}>{getDayName(day.date)}</div>
+                        <div style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{day.max}°</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-dim)' }}>{day.min}°</div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </>
           )}
