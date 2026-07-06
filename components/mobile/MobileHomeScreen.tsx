@@ -508,36 +508,40 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         {/* CENTER: logo divider */}
         <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
-          <img src="/icon.png" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
+          <img src="/icon.png" style={{ height: '100%', width: 'auto', maxWidth: 44, objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
         {/* RIGHT: weather */}
         <div
-          style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
           onClick={handleWeatherTap}
         >
-          {weatherStatus === 'loading' && (
-            <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>...</div>
-          )}
-          {weatherStatus === 'error' && (
-            <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>—</div>
-          )}
-          {weatherStatus === 'ready' && weather && (() => {
-            const { emoji, label } = getWeatherIcon(weather.code)
-            return (
-              <>
-                <div style={{ fontSize: 32, lineHeight: 1 }}>{emoji}</div>
-                <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>
-                  {Math.round(weather.temp)}°C
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--ink-dim)', marginTop: 2 }}>{label}</div>
-              </>
-            )
-          })()}
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {weatherStatus === 'loading' && (
+              <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>...</div>
+            )}
+            {weatherStatus === 'error' && (
+              <div style={{ fontSize: 20, color: 'var(--ink-dim)' }}>—</div>
+            )}
+            {weatherStatus === 'ready' && weather && (() => {
+              const { emoji, label } = getWeatherIcon(weather.code)
+              return (
+                <>
+                  <div style={{ fontSize: 28, lineHeight: 1 }}>{emoji}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>
+                      {Math.round(weather.temp)}°C
+                    </div>
+                    <div style={{ fontSize: 10, color: '#888' }}>{label}</div>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
 
           <div
             onClick={handleLocationTap}
-            style={{ fontSize: 9, color: 'var(--ink-faint)', marginTop: 4, cursor: 'pointer', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 4, cursor: 'pointer', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
             📍 {activeLocation.name} ▾
           </div>
