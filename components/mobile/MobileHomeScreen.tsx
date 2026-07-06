@@ -595,9 +595,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
 
         {/* COLUMN 2: logo */}
-        <div style={{ width: 44, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {/* TODO: replace with white-inverted logo when available */}
-          <img src="/icon.png" style={{ height: '100%', width: 'auto', objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
+          <img src="/icon.png" style={{ width: 67, height: 67, objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
         {/* COLUMN 3: weather */}
