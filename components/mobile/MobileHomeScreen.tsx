@@ -176,6 +176,15 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
   const [notifications, setNotifications] = useState<NotificationBanner[]>([])
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
 
+  // TEMP: placeholder notifications for testing — remove before connecting real Supabase queries
+  const TEST_NOTIFICATIONS: NotificationBanner[] = [
+    { id: 'test-tasks-1', icon: '⚠️', message: '3 tarefas atrasadas', appKey: 'tasks' },
+    { id: 'test-mail-1', icon: '✉️', message: '5 emails por ler', appKey: 'mail' },
+    { id: 'test-calendar-1', icon: '📅', message: 'Reunião às 15:00', appKey: 'calendar' },
+    { id: 'test-tasks-2', icon: '⚠️', message: '2 tarefas atrasadas', appKey: 'tasks' },
+    { id: 'test-calendar-2', icon: '📅', message: 'Evento amanhã: Consulta médica', appKey: 'calendar' },
+  ]
+
   useEffect(() => {
     if (!counts) return
     let cancelled = false
@@ -533,9 +542,9 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       )}
 
       {/* Header: dot-grid calendar + logo + weather */}
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: '10px 14px', minHeight: 90 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', padding: '10px 14px', minHeight: 90 }}>
         {/* COLUMN 1: dot-grid mini-calendar */}
-        <div style={{ flex: '0 0 35%', position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
+        <div style={{ flex: 1, minWidth: 0, position: 'relative', cursor: 'pointer' }} onClick={handleCalendarTap}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
             {WEEKDAY_LETTERS.map((letter, i) => (
               <div key={i} style={{
@@ -595,14 +604,14 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
         </div>
 
         {/* COLUMN 2: logo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 67, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* TODO: replace with white-inverted logo when available */}
           <img src="/icon.png" style={{ width: 67, height: 67, objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
 
         {/* COLUMN 3: weather */}
         <div
-          style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', cursor: 'pointer' }}
           onClick={handleWeatherTap}
         >
           <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -616,12 +625,12 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
               const { emoji, label } = getWeatherIcon(weather.code)
               return (
                 <>
-                  <div style={{ fontSize: 28, lineHeight: 1 }}>{emoji}</div>
+                  <div style={{ fontSize: 34, lineHeight: 1 }}>{emoji}</div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>
+                    <div style={{ fontSize: 20, fontWeight: 'bold', color: 'var(--ink)' }}>
                       {Math.round(weather.temp)}°C
                     </div>
-                    <div style={{ fontSize: 10, color: '#888' }}>{label}</div>
+                    <div style={{ fontSize: 12, color: '#888' }}>{label}</div>
                   </div>
                 </>
               )
@@ -900,7 +909,7 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
       </div>
 
       {/* Notification banners */}
-      {notifications.filter(n => !dismissedIds.has(n.id)).map(n => (
+      {[...TEST_NOTIFICATIONS, ...notifications].filter(n => !dismissedIds.has(n.id)).map(n => (
         <div
           key={n.id}
           onClick={() => onOpenApp(n.appKey)}
