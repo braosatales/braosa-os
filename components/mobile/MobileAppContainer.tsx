@@ -145,7 +145,7 @@ export default function MobileAppContainer({ app, subTabId, onSubTabChange, onCl
                 <div
                   style={{
                     position: 'fixed',
-                    bottom: 'calc(56px + env(safe-area-inset-bottom) + 16px)',
+                    bottom: 'calc(140px + env(safe-area-inset-bottom))',
                     left: 0,
                     right: 0,
                     display: 'flex',

@@ -69,7 +69,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
     <div
       className={isMobile ? 'mobile-page' : undefined}
       style={isMobile ? {
-        background: '#00CED1',
+        background: 'transparent',
         width: '100%',
         minWidth: '100%',
         maxWidth: 'none',
