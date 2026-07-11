@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 
 export async function GET() {
   const serverClient = await createClient()
@@ -14,7 +15,10 @@ export async function GET() {
     .eq('supabase_uid', user.id)
     .single()
 
-  return NextResponse.json({ hasPassword: !!row?.lock_password })
+  const stored = row?.lock_password
+  const isBcryptHash = !!stored && (stored.startsWith('$2b$') || stored.startsWith('$2a$'))
+
+  return NextResponse.json({ hasPassword: isBcryptHash })
 }
 
 export async function PATCH(request: Request) {
@@ -27,10 +31,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 400 })
   }
 
+  const hash = await bcrypt.hash(body.password.trim(), 10)
+
   const supabase = createServiceClient()
   const { error } = await supabase
     .from('users')
-    .update({ lock_password: body.password.trim() })
+    .update({ lock_password: hash })
     .eq('supabase_uid', user.id)
 
   if (error) return NextResponse.json({ error: 'Update failed' }, { status: 500 })

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useLang } from "@/lib/i18n"
-import { hasLockPassword, verifyAndUnlock, unlockSession } from "@/lib/lockscreen"
+import { hasLockPassword, verifyAndUnlock, unlockSession, setLockPassword } from "@/lib/lockscreen"
 import { useIsMobile } from "@/lib/hooks/useIsMobile"
+import PinPad from "@/components/mobile/PinPad"
 
 interface Props {
   onUnlock: () => void
@@ -26,6 +27,10 @@ export default function LockScreen({ onUnlock }: Props) {
   const [exiting, setExiting] = useState(false)
   const [checking, setChecking] = useState(true)
   const [hasPw, setHasPw] = useState(false)
+  const [pinError, setPinError] = useState<string | undefined>(undefined)
+  const [setupStep, setSetupStep] = useState<1 | 2>(1)
+  const [firstPin, setFirstPin] = useState("")
+  const [setupError, setSetupError] = useState<string | undefined>(undefined)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputWrapRef = useRef<HTMLDivElement>(null)
 
@@ -86,6 +91,33 @@ export default function LockScreen({ onUnlock }: Props) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") attemptUnlock()
   }
+
+  const handlePinSubmit = useCallback(async (pin: string) => {
+    const ok = await verifyAndUnlock(pin)
+    if (ok) {
+      doExit()
+    } else {
+      setPinError(lang === "pt" ? "PIN incorreto" : "Incorrect PIN")
+    }
+  }, [doExit, lang])
+
+  const handleSetupFirst = useCallback((pin: string) => {
+    setFirstPin(pin)
+    setSetupStep(2)
+  }, [])
+
+  const handleSetupConfirm = useCallback(async (pin: string) => {
+    if (pin !== firstPin) {
+      setSetupError(lang === "pt" ? "Os PINs não coincidem" : "PINs don't match")
+      setSetupStep(1)
+      setFirstPin("")
+      return
+    }
+    await setLockPassword(pin)
+    setHasPw(true)
+    unlockSession()
+    doExit()
+  }, [firstPin, lang, doExit])
 
   const timeStr = now
     ? `${pad(now.getHours())}:${pad(now.getMinutes())}`
@@ -186,7 +218,33 @@ export default function LockScreen({ onUnlock }: Props) {
           {dateStr}
         </span>
 
-        {hasPw ? (
+        {isMobile ? (
+          hasPw ? (
+            <PinPad
+              mode="entry"
+              title={lang === "pt" ? "Introduz o PIN" : "Enter PIN"}
+              subtitle={pinError}
+              error={pinError}
+              onComplete={handlePinSubmit}
+              onClear={() => setPinError(undefined)}
+            />
+          ) : setupStep === 1 ? (
+            <PinPad
+              mode="setup"
+              title={lang === "pt" ? "Define um novo PIN" : "Set a new PIN"}
+              subtitle={setupError}
+              error={setupError}
+              onComplete={handleSetupFirst}
+              onClear={() => setSetupError(undefined)}
+            />
+          ) : (
+            <PinPad
+              mode="setup"
+              title={lang === "pt" ? "Confirma o teu PIN" : "Confirm your PIN"}
+              onComplete={handleSetupConfirm}
+            />
+          )
+        ) : hasPw ? (
           <>
             <div
               ref={inputWrapRef}
