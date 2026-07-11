@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useContext } from 'react'
 import { Icon } from '@/components/ui'
 import { MOBILE_APPS, type MobileApp } from '@/lib/mobile-apps'
 import { useLang } from '@/lib/i18n'
+import { useLock } from '@/app/(os)/layout'
+import { hasLockPassword } from '@/lib/lockscreen'
 import { AppIcon } from './AppIcon'
 import {
   IconFinances, IconTasks, IconNotes, IconHealth,
@@ -137,6 +139,8 @@ interface Props {
 
 export default function MobileHomeScreen({ onOpenApp }: Props) {
   const lang = useLang()
+  const { lock } = useLock()
+  const [hasLockPw, setHasLockPw] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [pressedApp, setPressedApp] = useState<string | null>(null)
   const [hiddenApps, setHiddenAppsState] = useState<string[]>([])
@@ -274,6 +278,10 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
 
   useEffect(() => {
     setHiddenAppsState(getHiddenApps())
+  }, [])
+
+  useEffect(() => {
+    hasLockPassword().then(setHasLockPw)
   }, [])
 
   useEffect(() => {
@@ -791,6 +799,18 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           )}
         </div>
       </div>
+
+      {hasLockPw && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 14, paddingBottom: 4 }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); lock() }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0.4, padding: 4 }}
+            aria-label="Lock screen"
+          >
+            🔒
+          </button>
+        </div>
+      )}
 
       {/* App grid */}
       <div

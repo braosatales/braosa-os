@@ -12,7 +12,7 @@ import dynamic from "next/dynamic"
 import LockScreen from "@/components/lockscreen/LockScreen"
 import TopNav from "@/components/topnav/TopNav"
 import SettingsModal from "@/components/settings/SettingsModal"
-import { isLocked, lockSession, unlockSession } from "@/lib/lockscreen"
+import { isLocked, lockSession, unlockSession, hasLockPassword, startInactivityWatcher, stopInactivityWatcher } from "@/lib/lockscreen"
 import { getUser, type OSUser } from "@/lib/user"
 import { getTweaks, saveTweaks } from "@/lib/tweaks"
 import { SYSTEMS, COMPANIES } from "@/lib/constants"
@@ -168,9 +168,12 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   }, [])
 
   useEffect(() => {
-    isLocked().then(locked => {
+    isLocked().then(async locked => {
       setLocked(locked)
       setLockChecking(false)
+      if (!locked && (await hasLockPassword())) {
+        startInactivityWatcher(doLock)
+      }
     })
     getUser().then(setUser)
     saveTweaks(getTweaks())
@@ -229,12 +232,16 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     if (contentRef.current) contentRef.current.scrollTop = 0
   }, [active])
 
-  const handleUnlock = useCallback(() => {
+  const handleUnlock = useCallback(async () => {
     unlockSession()
     setLocked(false)
+    if (await hasLockPassword()) {
+      startInactivityWatcher(doLock)
+    }
   }, [])
 
   const doLock = useCallback(() => {
+    stopInactivityWatcher()
     lockSession()
     setLocked(true)
   }, [])
