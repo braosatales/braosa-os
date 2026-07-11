@@ -106,7 +106,9 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
 
   const [hasPw, setHasPw] = useState(false)
   const [pwInput, setPwInput] = useState("")
+  const [confirmPin, setConfirmPin] = useState("")
   const [changingPw, setChangingPw] = useState(false)
+  const [pinStatus, setPinStatus] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -117,7 +119,9 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
     setLangState(getLang())
     hasLockPassword().then(setHasPw)
     setPwInput("")
+    setConfirmPin("")
     setChangingPw(false)
+    setPinStatus(null)
   }, [open])
 
   async function handleNameBlur() {
@@ -135,17 +139,29 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
   }
 
   async function handleSetPassword() {
-    if (!pwInput.trim()) return
-    await setLockPassword(pwInput.trim())
+    const pin = pwInput.trim()
+    if (!/^\d{4}$/.test(pin)) {
+      setPinStatus("PIN must be exactly 4 digits")
+      return
+    }
+    if (pin !== confirmPin.trim()) {
+      setPinStatus("PINs do not match")
+      return
+    }
+    await setLockPassword(pin)
     setHasPw(true)
     setPwInput("")
+    setConfirmPin("")
     setChangingPw(false)
+    setPinStatus("PIN updated")
+    setTimeout(() => setPinStatus(null), 2000)
   }
 
   async function handleRemovePassword() {
     await removeLockPassword()
     setHasPw(false)
     setPwInput("")
+    setConfirmPin("")
   }
 
   async function handleSignOut() {
@@ -297,50 +313,85 @@ export default function SettingsModal({ open, onClose, onLock }: Props) {
         <div style={{ padding: 20, borderTop: "1px solid var(--edge-soft)" }}>
           <div style={sectionLabel}>Security</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* Lock password */}
+            {/* Lock PIN */}
             <div>
               <label style={{ fontSize: 12, color: "var(--ink-faint)", display: "block", marginBottom: 6 }}>
-                Lock password
+                Lock PIN
               </label>
               {!hasPw || changingPw ? (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input
-                    type="password"
-                    placeholder={changingPw ? "New password" : "Set a password"}
-                    value={pwInput}
-                    onChange={(e) => setPwInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
-                    className="glow-focus"
-                    style={{
-                      flex: 1,
-                      padding: "8px 11px",
-                      background: "var(--bg-inset)",
-                      border: "1px solid var(--edge)",
-                      borderRadius: "var(--radius-sm)",
-                      color: "var(--ink)",
-                      fontSize: 14,
-                      outline: "none",
-                    }}
-                  />
-                  <button className="btn" onClick={handleSetPassword}>
-                    {changingPw ? "Save" : "Set password"}
-                  </button>
-                  {changingPw && (
-                    <button
-                      className="btn"
-                      onClick={() => { setChangingPw(false); setPwInput("") }}
-                    >
-                      Cancel
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      type="password"
+                      placeholder={changingPw ? "New PIN (4 digits)" : "Set a PIN (4 digits)"}
+                      value={pwInput}
+                      onChange={(e) => setPwInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
+                      maxLength={4}
+                      pattern="\d{4}"
+                      inputMode="numeric"
+                      className="glow-focus"
+                      style={{
+                        flex: 1,
+                        padding: "8px 11px",
+                        background: "var(--bg-inset)",
+                        border: "1px solid var(--edge)",
+                        borderRadius: "var(--radius-sm)",
+                        color: "var(--ink)",
+                        fontSize: 14,
+                        outline: "none",
+                        letterSpacing: "0.3em",
+                      }}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Confirm PIN"
+                      value={confirmPin}
+                      onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
+                      maxLength={4}
+                      pattern="\d{4}"
+                      inputMode="numeric"
+                      className="glow-focus"
+                      style={{
+                        flex: 1,
+                        padding: "8px 11px",
+                        background: "var(--bg-inset)",
+                        border: "1px solid var(--edge)",
+                        borderRadius: "var(--radius-sm)",
+                        color: "var(--ink)",
+                        fontSize: 14,
+                        outline: "none",
+                        letterSpacing: "0.3em",
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button className="btn" onClick={handleSetPassword}>
+                      {changingPw ? "Save" : "Set PIN"}
                     </button>
-                  )}
+                    {changingPw && (
+                      <button
+                        className="btn"
+                        onClick={() => { setChangingPw(false); setPwInput(""); setConfirmPin(""); setPinStatus(null) }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    {pinStatus && (
+                      <span style={{ fontSize: 12, color: pinStatus === "PIN updated" ? "var(--c-task)" : "var(--neg)" }}>
+                        {pinStatus}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, color: "var(--ink-dim)", letterSpacing: "0.2em" }}>
-                    ••••••••
+                    ••••
                   </span>
                   <button
-                    onClick={() => { setChangingPw(true); setPwInput("") }}
+                    onClick={() => { setChangingPw(true); setPwInput(""); setConfirmPin(""); setPinStatus(null) }}
                     style={{
                       background: "none",
                       border: "none",

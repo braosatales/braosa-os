@@ -618,8 +618,13 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           })()}
         </div>
 
-        {/* COLUMN 2: logo */}
-        <div style={{ width: 67, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* COLUMN 2: logo (tap to lock) */}
+        <div
+          style={{ width: 67, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: hasLockPw ? 'pointer' : 'default' }}
+          onClick={hasLockPw ? (e) => { e.stopPropagation(); lock() } : undefined}
+          role={hasLockPw ? 'button' : undefined}
+          aria-label={hasLockPw ? 'Lock screen' : undefined}
+        >
           {/* TODO: replace with white-inverted logo when available */}
           <img src="/icon.png" style={{ width: 67, height: 67, objectFit: 'contain', borderRadius: 6, opacity: 0.85 }} alt="" />
         </div>
@@ -799,18 +804,6 @@ export default function MobileHomeScreen({ onOpenApp }: Props) {
           )}
         </div>
       </div>
-
-      {hasLockPw && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 14, paddingBottom: 4 }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); lock() }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0.4, padding: 4 }}
-            aria-label="Lock screen"
-          >
-            🔒
-          </button>
-        </div>
-      )}
 
       {/* App grid */}
       <div

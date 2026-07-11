@@ -125,6 +125,13 @@ export function useLock(): LockContextValue {
   return useContext(LockContext)
 }
 
+// Desktop-only: read window width directly rather than the `isMobile` hook
+// state, since these call sites fire inside effects/callbacks whose closures
+// can run before the hook's own effect has updated React state.
+function isDesktopWidth(): boolean {
+  return typeof window !== "undefined" && window.innerWidth >= 768
+}
+
 // ─── NavigationContext ───────────────────────────────────────────────────────
 
 interface NavigationContextValue {
@@ -171,7 +178,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
     isLocked().then(async locked => {
       setLocked(locked)
       setLockChecking(false)
-      if (!locked && (await hasLockPassword())) {
+      if (!locked && (await hasLockPassword()) && isDesktopWidth()) {
         startInactivityWatcher(doLock)
       }
     })
@@ -235,7 +242,7 @@ export default function OsLayout({ children: _children }: { children: React.Reac
   const handleUnlock = useCallback(async () => {
     unlockSession()
     setLocked(false)
-    if (await hasLockPassword()) {
+    if ((await hasLockPassword()) && isDesktopWidth()) {
       startInactivityWatcher(doLock)
     }
   }, [])
