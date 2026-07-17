@@ -45,6 +45,7 @@ alter table public.tasks enable row level security;
 
 -- NOTE: users.id is an internal UUID distinct from auth.uid() (stored in users.supabase_uid).
 -- The policy must join through the users table to map auth.uid() → users.id.
+drop policy if exists "Users can manage their own tasks" on public.tasks;
 create policy "Users can manage their own tasks" on public.tasks
   for all
   using  (user_id = (select id from public.users where supabase_uid = auth.uid()::text))
