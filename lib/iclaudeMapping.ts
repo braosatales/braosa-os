@@ -1,7 +1,7 @@
 export type IClaudeTask = {
   id: string
   title: string
-  notes?: string
+  description?: string
   system?: string
   important?: boolean
   urgent?: boolean
@@ -42,12 +42,12 @@ export function mapIClaudeTaskToDB(task: IClaudeTask, userId: string): Record<st
     user_id: userId,
     external_id: task.id,
     title: task.title,
-    notes: task.notes ?? null,
+    description: task.description ?? null,
     system,
     priority,
     status,
     estimated_mins: task.estimate && task.estimate > 0 ? task.estimate : null,
-    due_date: task.due ?? null,
+    due: task.due ?? null,
     source: 'iclaude',
     updated_at: new Date().toISOString(),
   }

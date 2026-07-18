@@ -36,10 +36,10 @@ export async function POST(request: NextRequest) {
       ).catch(() => ({ items: [] })),
       supabase
         .from('tasks')
-        .select('title, due_date, priority, status')
+        .select('title, due, priority, status')
         .eq('user_id', userRow.id)
-        .in('status', ['todo', 'in_progress'])
-        .or(`due_date.lte.${now.toISOString()},priority.eq.high`)
+        .in('status', ['todo', 'doing'])
+        .or(`due.lte.${now.toISOString()},priority.eq.1`)
         .limit(20),
       supabase
         .from('planned_sessions')
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const tasks = (tasksData.data ?? []).map((t: any) => ({
       title: t.title,
-      due: t.due_date,
+      due: t.due,
       priority: t.priority,
     }))
 

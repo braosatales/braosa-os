@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
     { data: investments },
     { data: recentNotes },
   ] = await Promise.all([
-    supabase.from('tasks').select('id,external_id,title,priority,system,status,due_date,source')
-      .eq('user_id', userId).eq('status', 'todo').eq('due_date', today),
-    supabase.from('tasks').select('id,external_id,title,priority,system,status,due_date,source')
-      .eq('user_id', userId).eq('status', 'todo').lt('due_date', today).not('due_date', 'is', null),
-    supabase.from('tasks').select('id,external_id,title,priority,system,status,due_date,source')
-      .eq('user_id', userId).eq('status', 'todo').gt('due_date', today).lte('due_date', in7Days),
+    supabase.from('tasks').select('id,external_id,title,priority,system,status,due,source')
+      .eq('user_id', userId).eq('status', 'todo').eq('due', today),
+    supabase.from('tasks').select('id,external_id,title,priority,system,status,due,source')
+      .eq('user_id', userId).eq('status', 'todo').lt('due', today).not('due', 'is', null),
+    supabase.from('tasks').select('id,external_id,title,priority,system,status,due,source')
+      .eq('user_id', userId).eq('status', 'todo').gt('due', today).lte('due', in7Days),
     supabase.from('projects').select('id,name,world,status,next_action,deadline')
       .eq('user_id', userId).eq('archived', false),
     supabase.from('habits').select('id,name,color').eq('user_id', userId).eq('archived', false),
