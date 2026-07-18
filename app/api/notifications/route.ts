@@ -57,8 +57,8 @@ export async function GET() {
         .eq('user_id', uid)
         .neq('status', 'done')
         .neq('status', 'cancelled')
-        .lt('due', now.toISOString())
-        .not('due', 'is', null)
+        .lt('due_date', now.toISOString())
+        .not('due_date', 'is', null)
       return (count ?? 0) as number
     })(),
 

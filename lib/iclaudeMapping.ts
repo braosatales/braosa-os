@@ -47,7 +47,7 @@ export function mapIClaudeTaskToDB(task: IClaudeTask, userId: string): Record<st
     priority,
     status,
     estimated_mins: task.estimate && task.estimate > 0 ? task.estimate : null,
-    due: task.due ?? null,
+    due_date: task.due ?? null,
     source: 'iclaude',
     updated_at: new Date().toISOString(),
   }

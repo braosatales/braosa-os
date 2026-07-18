@@ -39,7 +39,7 @@ function TaskRow({ task, onSelect, onToggleDone, onToggleFav, isMobile }: {
   onToggleFav: (id: string) => void
   isMobile: boolean
 }) {
-  const dl = dueLabel(task.due)
+  const dl = dueLabel(task.due_date)
   const isDone = task.status === 'done'
   const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
 
@@ -78,7 +78,7 @@ function TaskRow({ task, onSelect, onToggleDone, onToggleFav, isMobile }: {
         </span>
         {dl && (
           <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>
-            {dl.text}
+            {dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}
           </span>
         )}
         <PriorityBadge p={task.priority} mobile />
@@ -112,11 +112,11 @@ function TaskRow({ task, onSelect, onToggleDone, onToggleFav, isMobile }: {
       </span>
       {dl && (
         <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: dl.over ? 'var(--neg)' : dl.now ? 'var(--c-fin)' : 'var(--ink-faint)' }}>
-          {dl.text}
+          {dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}
         </span>
       )}
       <span onClick={e => e.stopPropagation()}>
-        <FavStar on={task.fav} onClick={() => onToggleFav(task.id)} size={13} />
+        <FavStar on={task.is_favourite} onClick={() => onToggleFav(task.id)} size={13} />
       </span>
       <PriorityBadge p={task.priority} />
     </div>
@@ -160,10 +160,10 @@ export default function TodayView({ tasks, onSelect, onToggleDone, onToggleFav }
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
   const nextWeek = new Date(today); nextWeek.setDate(today.getDate() + 7)
 
-  const overdue = tasks.filter(t => t.status !== 'done' && t.due && new Date(t.due) < today)
-  const todayTasks = tasks.filter(t => t.status !== 'done' && t.due && new Date(t.due) >= today && new Date(t.due) < tomorrow)
-  const thisWeek = tasks.filter(t => t.status !== 'done' && t.due && new Date(t.due) >= tomorrow && new Date(t.due) < nextWeek)
-  const noDate = tasks.filter(t => t.status !== 'done' && !t.due && (t.fav || t.priority <= 2))
+  const overdue = tasks.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) < today)
+  const todayTasks = tasks.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) >= today && new Date(t.due_date) < tomorrow)
+  const thisWeek = tasks.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) >= tomorrow && new Date(t.due_date) < nextWeek)
+  const noDate = tasks.filter(t => t.status !== 'done' && !t.due_date && (t.is_favourite || t.priority <= 2))
 
   const hasAny = overdue.length + todayTasks.length + thisWeek.length + noDate.length > 0
 

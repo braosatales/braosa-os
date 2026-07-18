@@ -19,7 +19,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('tasks')
-    .select('id, title, priority, fav, due, system, status')
+    .select('id, title, priority, is_favourite, due_date, system, status')
     .eq('user_id', userRow.id)
     .not('status', 'in', '("done","cancelled")')
 
@@ -29,13 +29,13 @@ export async function GET() {
     id: t.id as string,
     title: t.title as string,
     priority: (t.priority as number) ?? 3,
-    fav: (t.fav as boolean) ?? false,
-    due: (t.due as string | null) ?? null,
+    is_favourite: (t.is_favourite as boolean) ?? false,
+    due_date: (t.due_date as string | null) ?? null,
     system: (t.system as string | null) ?? null,
     status: (t.status as string) ?? 'todo',
   }))
 
-  const overdueCount = tasks.filter((t) => t.due && t.due < today).length
+  const overdueCount = tasks.filter((t) => t.due_date && t.due_date < today).length
 
   return NextResponse.json({ tasks, total: tasks.length, overdueCount })
 }

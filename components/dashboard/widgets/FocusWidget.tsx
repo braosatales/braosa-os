@@ -12,8 +12,8 @@ type Task = {
   id: string
   title: string
   priority: number
-  fav: boolean
-  due: string | null
+  is_favourite: boolean
+  due_date: string | null
   system: string | null
   status: string
 }
@@ -45,13 +45,13 @@ export default function FocusWidget({ onNavigate, ...shellProps }: Props) {
   const today = new Date().toISOString().split("T")[0]
 
   const focused = [...tasks]
-    .filter((t) => t.status !== "done" && t.status !== "cancelled" && ((t.due && t.due <= today) || t.fav))
+    .filter((t) => t.status !== "done" && t.status !== "cancelled" && ((t.due_date && t.due_date <= today) || t.is_favourite))
     .sort((a, b) => {
-      const aOver = a.due && a.due < today ? 1 : 0
-      const bOver = b.due && b.due < today ? 1 : 0
+      const aOver = a.due_date && a.due_date < today ? 1 : 0
+      const bOver = b.due_date && b.due_date < today ? 1 : 0
       if (bOver !== aOver) return bOver - aOver
-      const aFav = a.fav ? 1 : 0
-      const bFav = b.fav ? 1 : 0
+      const aFav = a.is_favourite ? 1 : 0
+      const bFav = b.is_favourite ? 1 : 0
       if (bFav !== aFav) return bFav - aFav
       return a.priority - b.priority
     })
@@ -72,8 +72,8 @@ export default function FocusWidget({ onNavigate, ...shellProps }: Props) {
   }
 
   function handleFav(id: string, current: boolean) {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, fav: !current } : t))
-    patchTask(id, { fav: !current })
+    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, is_favourite: !current } : t))
+    patchTask(id, { is_favourite: !current })
   }
 
   return (
@@ -93,7 +93,7 @@ export default function FocusWidget({ onNavigate, ...shellProps }: Props) {
               const done = task.status === "done"
               const sys = SYSTEMS.find((s) => s.id === task.system)
               const dotColor = sys?.color ?? "var(--ink-faint)"
-              const dl = dueLabel(task.due)
+              const dl = dueLabel(task.due_date)
               const dueColor = dl?.over ? "var(--neg)" : dl?.now ? "var(--c-fin)" : "var(--ink-faint)"
 
               return (
@@ -120,7 +120,7 @@ export default function FocusWidget({ onNavigate, ...shellProps }: Props) {
                       {dl.text}
                     </span>
                   )}
-                  <FavStar on={task.fav} onClick={() => handleFav(task.id, task.fav)} size={13} />
+                  <FavStar on={task.is_favourite} onClick={() => handleFav(task.id, task.is_favourite)} size={13} />
                   <button
                     type="button"
                     onClick={(e) => handleCheck(e, task.id)}

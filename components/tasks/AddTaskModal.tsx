@@ -30,10 +30,11 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [due, setDue] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [dueTime, setDueTime] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>(3)
   const [system, setSystem] = useState('')
-  const [fav, setFav] = useState(false)
+  const [isFavourite, setIsFavourite] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [titleFocused, setTitleFocused] = useState(false)
@@ -46,13 +47,14 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
       await TaskStore.addTask({
         title: title.trim(),
         description: description.trim() || undefined,
-        due: due || undefined,
+        due_date: dueDate || undefined,
+        due_time: dueTime || null,
         priority,
         system: system || undefined,
-        fav,
+        is_favourite: isFavourite,
         status: initialStatus,
       })
-      setTitle(''); setDescription(''); setDue(''); setPriority(3); setSystem(''); setFav(false)
+      setTitle(''); setDescription(''); setDueDate(''); setDueTime(''); setPriority(3); setSystem(''); setIsFavourite(false)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : L('Erro ao criar tarefa', 'Failed to create task'))
@@ -191,22 +193,41 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
               <span style={{ color: '#8B909E', display: 'flex' }}><Icon name="calendar" size={16} /></span>
               <span style={{ fontSize: 14, color: '#8B909E' }}>{L("Data limite", "Due date")}</span>
             </div>
-            <input
-              type="date"
-              value={due}
-              onChange={e => setDue(e.target.value)}
-              style={{
-                background: '#252830',
-                border: 'none',
-                borderRadius: 8,
-                padding: '8px 12px',
-                color: '#F0F1F4',
-                fontSize: 14,
-                outline: 'none',
-                fontFamily: 'inherit',
-                colorScheme: 'dark',
-              }}
-            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                style={{
+                  background: '#252830',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 12px',
+                  color: '#F0F1F4',
+                  fontSize: 14,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  colorScheme: 'dark',
+                }}
+              />
+              <input
+                type="time"
+                value={dueTime}
+                onChange={e => setDueTime(e.target.value)}
+                aria-label={L("Hora (opcional)", "Time (optional)")}
+                style={{
+                  background: '#252830',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 12px',
+                  color: '#F0F1F4',
+                  fontSize: 14,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                  colorScheme: 'dark',
+                }}
+              />
+            </div>
           </div>
 
           {/* Priority row */}
@@ -335,9 +356,9 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
                   padding: '16px 0',
                 }}
               >
-                <FavStar on={fav} onClick={() => setFav(f => !f)} size={20} />
+                <FavStar on={isFavourite} onClick={() => setIsFavourite(f => !f)} size={20} />
                 <span style={{ fontSize: 13, color: '#8B909E' }}>
-                  {fav ? L("Favorito", "Favourite") : L("Adicionar aos favoritos", "Add to favourites")}
+                  {isFavourite ? L("Favorito", "Favourite") : L("Adicionar aos favoritos", "Add to favourites")}
                 </span>
               </div>
             </div>
@@ -366,16 +387,29 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
         />
 
         {/* Due date */}
-        <div>
-          <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
-            {L("DATA LIMITE", "DUE DATE")}
-          </label>
-          <input
-            type="date"
-            value={due}
-            onChange={e => setDue(e.target.value)}
-            style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
-          />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
+              {L("DATA LIMITE", "DUE DATE")}
+            </label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
+              {L("HORA (OPCIONAL)", "TIME (OPTIONAL)")}
+            </label>
+            <input
+              type="time"
+              value={dueTime}
+              onChange={e => setDueTime(e.target.value)}
+              style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
+            />
+          </div>
         </div>
 
         {/* Description */}
@@ -432,7 +466,7 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
           <div style={{ color: 'var(--neg)', fontSize: 12 }}>{error}</div>
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid var(--edge-soft)' }}>
-          <FavStar on={fav} onClick={() => setFav(f => !f)} size={18} />
+          <FavStar on={isFavourite} onClick={() => setIsFavourite(f => !f)} size={18} />
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" className="btn" onClick={onClose} style={{ fontSize: 13 }}>
               {L("Cancelar", "Cancel")}

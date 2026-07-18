@@ -52,7 +52,7 @@ export const TaskStore = {
   async toggleFav(id: string) {
     const task = _tasks.find(t => t.id === id)
     if (!task) return
-    await TaskStore.updateTask(id, { fav: !task.fav })
+    await TaskStore.updateTask(id, { is_favourite: !task.is_favourite })
   },
   async deleteTask(id: string) {
     _tasks = _tasks.filter(t => t.id !== id)

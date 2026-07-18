@@ -10,8 +10,8 @@ type Task = {
   id: string
   title: string
   priority: number
-  fav: boolean
-  due: string | null
+  is_favourite: boolean
+  due_date: string | null
   system: string | null
   status: string
 }
@@ -49,7 +49,7 @@ export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {
   const sorted = [...tasks]
     .filter((t) => t.status !== "done" && t.status !== "cancelled")
     .sort((a, b) => {
-      if (b.fav !== a.fav) return b.fav ? 1 : -1
+      if (b.is_favourite !== a.is_favourite) return b.is_favourite ? 1 : -1
       return a.priority - b.priority
     })
     .slice(0, 5)
@@ -69,8 +69,8 @@ export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {
   }
 
   function handleFav(id: string, current: boolean) {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, fav: !current } : t))
-    patchTask(id, { fav: !current })
+    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, is_favourite: !current } : t))
+    patchTask(id, { is_favourite: !current })
   }
 
   return (
@@ -127,7 +127,7 @@ export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {
                   >
                     {task.title}
                   </span>
-                  <FavStar on={task.fav} onClick={() => handleFav(task.id, task.fav)} size={13} />
+                  <FavStar on={task.is_favourite} onClick={() => handleFav(task.id, task.is_favourite)} size={13} />
                   <span
                     style={{
                       display: "inline-flex",

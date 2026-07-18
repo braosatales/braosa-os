@@ -8,7 +8,7 @@ import { Icon, FavStar, Chip } from '@/components/ui'
 import { TaskStore } from '@/lib/task-store'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
-type SortKey = 'priority' | 'due' | 'title' | 'fav' | 'created_at'
+type SortKey = 'priority' | 'due_date' | 'title' | 'is_favourite' | 'created_at'
 type SortDir = 'asc' | 'desc'
 type GroupBy = 'none' | 'project' | 'system'
 
@@ -61,9 +61,9 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
       let va: string | number | boolean, vb: string | number | boolean
       switch (sortKey) {
         case 'priority': va = a.priority; vb = b.priority; break
-        case 'due': va = a.due ?? '9999'; vb = b.due ?? '9999'; break
+        case 'due_date': va = a.due_date ?? '9999'; vb = b.due_date ?? '9999'; break
         case 'title': va = a.title.toLowerCase(); vb = b.title.toLowerCase(); break
-        case 'fav': va = a.fav ? 0 : 1; vb = b.fav ? 0 : 1; break
+        case 'is_favourite': va = a.is_favourite ? 0 : 1; vb = b.is_favourite ? 0 : 1; break
         case 'created_at': va = a.created_at; vb = b.created_at; break
       }
       if (va < vb) return sortDir === 'asc' ? -1 : 1
@@ -125,8 +125,8 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
             <SortHeader label={L("PROJETO", "PROJECT")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
             <SortHeader label={L("SISTEMA", "SYSTEM")} sortKey="priority" active={false} dir={sortDir} onClick={() => {}} />
             <SortHeader label={L("PRIORIDADE", "PRIORITY")} sortKey="priority" active={sortKey === 'priority'} dir={sortDir} onClick={() => handleSort('priority')} />
-            <SortHeader label={L("DATA", "DUE")} sortKey="due" active={sortKey === 'due'} dir={sortDir} onClick={() => handleSort('due')} />
-            <SortHeader label="★" sortKey="fav" active={sortKey === 'fav'} dir={sortDir} onClick={() => handleSort('fav')} />
+            <SortHeader label={L("DATA", "DUE")} sortKey="due_date" active={sortKey === 'due_date'} dir={sortDir} onClick={() => handleSort('due_date')} />
+            <SortHeader label="★" sortKey="is_favourite" active={sortKey === 'is_favourite'} dir={sortDir} onClick={() => handleSort('is_favourite')} />
           </div>
         </>
       )}
@@ -144,7 +144,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
               </div>
             )}
             {group.items.map(task => {
-              const dl = dueLabel(task.due)
+              const dl = dueLabel(task.due_date)
               const isDone = task.status === 'done'
               const proj = projects.find(p => p.id === task.project_id)
               const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
@@ -185,11 +185,11 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                         <span style={{ fontSize: 11, color: pColor, fontWeight: 600, background: pBg, borderRadius: 6, padding: '2px 8px' }}>P{task.priority}</span>
                         {proj && <span style={{ fontSize: 11, color: '#8B909E' }}>{proj.name}</span>}
-                        {dl && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>{dl.text}</span>}
+                        {dl && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>{dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}</span>}
                       </div>
                     </div>
                     <span onClick={e => e.stopPropagation()}>
-                      <FavStar on={task.fav} onClick={() => onToggleFav(task.id)} size={13} />
+                      <FavStar on={task.is_favourite} onClick={() => onToggleFav(task.id)} size={13} />
                     </span>
                   </div>
                 )
@@ -242,12 +242,12 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
 
                   {dl ? (
                     <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: dl.over ? 'var(--neg)' : dl.now ? 'var(--c-fin)' : 'var(--ink-faint)' }}>
-                      {dl.text}
+                      {dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}
                     </span>
                   ) : <span />}
 
                   <span onClick={e => e.stopPropagation()}>
-                    <FavStar on={task.fav} onClick={() => onToggleFav(task.id)} size={13} />
+                    <FavStar on={task.is_favourite} onClick={() => onToggleFav(task.id)} size={13} />
                   </span>
                 </div>
               )

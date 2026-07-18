@@ -37,7 +37,7 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
     supabase.from('users').select('name, email').eq('id', userId).single(),
     supabase.from('workout_profiles').select('goal, experience_level, equipment').eq('user_id', userId).maybeSingle(),
     supabase.from('training_plans').select('week_start, planned_sessions(status, session_name)').eq('user_id', userId).order('week_start', { ascending: false }).limit(1).maybeSingle(),
-    supabase.from('tasks').select('id, title, fav, due').eq('user_id', userId).not('status', 'in', '("done","cancelled")'),
+    supabase.from('tasks').select('id, title, is_favourite, due_date').eq('user_id', userId).not('status', 'in', '("done","cancelled")'),
     supabase.from('finance_accounts').select('balance').eq('user_id', userId),
     supabase.from('finance_debts').select('balance').eq('user_id', userId),
     supabase.from('finance_investments').select('current_value').eq('user_id', userId),
@@ -61,8 +61,8 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
   const netWorth = totalCash + totalInvest - totalDebt
 
   const pendingCount = tasks.length
-  const overdueCount = tasks.filter(t => t.due && (t.due as string) < todayStr).length
-  const favTasks = tasks.filter(t => t.fav).slice(0, 3).map(t => t.title as string)
+  const overdueCount = tasks.filter(t => t.due_date && (t.due_date as string) < todayStr).length
+  const favTasks = tasks.filter(t => t.is_favourite).slice(0, 3).map(t => t.title as string)
   const top3 = favTasks.length > 0 ? favTasks : tasks.slice(0, 3).map(t => t.title as string)
 
   const plannedSessions = (plan?.planned_sessions as { status: string }[] | null)?.length ?? 0

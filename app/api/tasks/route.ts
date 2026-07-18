@@ -20,9 +20,9 @@ export async function GET() {
     .select('*')
     .eq('user_id', userRow.id)
     .neq('status', 'cancelled')
-    .order('fav', { ascending: false })
+    .order('is_favourite', { ascending: false })
     .order('priority', { ascending: true })
-    .order('due', { ascending: true, nullsFirst: false })
+    .order('due_date', { ascending: true, nullsFirst: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ tasks: data ?? [] })
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   console.log('POST /api/tasks BODY:', body)
-  const { title, description, priority, due, system, project_id, tags, fav } = body
+  const { title, description, priority, due_date, due_time, system, project_id, tags, is_favourite } = body
 
   const { data, error } = await supabase
     .from('tasks')
@@ -44,11 +44,12 @@ export async function POST(request: NextRequest) {
       title,
       description: description ?? null,
       priority: priority ?? 3,
-      due: due ?? null,
+      due_date: due_date ?? null,
+      due_time: due_time ?? null,
       system: system ?? null,
       project_id: project_id ?? null,
       tags: tags ?? [],
-      fav: fav ?? false,
+      is_favourite: is_favourite ?? false,
       status: body.status ?? 'todo',
     })
     .select()

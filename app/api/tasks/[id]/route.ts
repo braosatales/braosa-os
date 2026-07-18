@@ -41,7 +41,7 @@ export async function PATCH(
 
   const body = await request.json()
   console.log('PATCH /api/tasks/:id BODY:', body)
-  const allowed = ['title', 'description', 'status', 'priority', 'fav', 'due', 'system', 'project_id', 'tags', 'external_id', 'source']
+  const allowed = ['title', 'description', 'status', 'priority', 'is_favourite', 'due_date', 'due_time', 'system', 'project_id', 'tags', 'external_id', 'source']
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]

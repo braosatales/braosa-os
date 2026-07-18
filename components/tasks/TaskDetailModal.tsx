@@ -39,10 +39,11 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   const [description, setDescription] = useState(live.description ?? '')
   const [status, setStatus] = useState<TaskStatus>(live.status)
   const [priority, setPriority] = useState<TaskPriority>(live.priority)
-  const [due, setDue] = useState(live.due ?? '')
+  const [dueDate, setDueDate] = useState(live.due_date ?? '')
+  const [dueTime, setDueTime] = useState(live.due_time ?? '')
   const [system, setSystem] = useState(live.system ?? '')
   const [projectId, setProjectId] = useState(live.project_id ?? '')
-  const [fav, setFav] = useState(live.fav)
+  const [isFavourite, setIsFavourite] = useState(live.is_favourite)
   const [tags, setTags] = useState<string[]>(live.tags ?? [])
   const [tagInput, setTagInput] = useState('')
 
@@ -53,10 +54,11 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
     setDescription(live.description ?? '')
     setStatus(live.status)
     setPriority(live.priority)
-    setDue(live.due ?? '')
+    setDueDate(live.due_date ?? '')
+    setDueTime(live.due_time ?? '')
     setSystem(live.system ?? '')
     setProjectId(live.project_id ?? '')
-    setFav(live.fav)
+    setIsFavourite(live.is_favourite)
     setTags(live.tags ?? [])
   }, [live.id])
 
@@ -174,16 +176,30 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
 
         {/* Fields grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {/* Due */}
+          {/* Due date */}
           <div>
             <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
               {L("DATA LIMITE", "DUE DATE")}
             </label>
             <input
               type="date"
-              value={due}
-              onChange={e => setDue(e.target.value)}
-              onBlur={() => { if ((due || null) !== live.due) save({ due: due || null }) }}
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              onBlur={() => { if ((dueDate || null) !== live.due_date) save({ due_date: dueDate || null }) }}
+              style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
+            />
+          </div>
+
+          {/* Due time */}
+          <div>
+            <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 5 }}>
+              {L("HORA (OPCIONAL)", "TIME (OPTIONAL)")}
+            </label>
+            <input
+              type="time"
+              value={dueTime}
+              onChange={e => setDueTime(e.target.value)}
+              onBlur={() => { if ((dueTime || null) !== live.due_time) save({ due_time: dueTime || null }) }}
               style={{ width: '100%', fontSize: 12, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--edge)', background: 'var(--bg-raised-2)', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' }}
             />
           </div>
@@ -220,9 +236,9 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
 
           {/* Fav */}
           <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 4 }}>
-            <FavStar on={fav} onClick={() => { setFav(f => !f); save({ fav: !fav }) }} size={20} />
+            <FavStar on={isFavourite} onClick={() => { setIsFavourite(f => !f); save({ is_favourite: !isFavourite }) }} size={20} />
             <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--ink-faint)' }}>
-              {fav ? L("Favorito", "Favourite") : L("Adicionar aos favoritos", "Add to favourites")}
+              {isFavourite ? L("Favorito", "Favourite") : L("Adicionar aos favoritos", "Add to favourites")}
             </span>
           </div>
         </div>

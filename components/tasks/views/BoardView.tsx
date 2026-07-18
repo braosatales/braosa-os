@@ -182,7 +182,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
               transition: 'background .15s',
             }}>
               {colTasks.map(task => {
-                const dl = dueLabel(task.due)
+                const dl = dueLabel(task.due_date)
                 const systemColor = SYSTEM_COLORS[task.system ?? 'default'] ?? SYSTEM_COLORS.default
                 const isBeingDragged = draggingId === task.id
 
@@ -209,7 +209,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
                             •••
                           </button>
                           <span onClick={e => e.stopPropagation()}>
-                            <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
+                            <FavStar on={task.is_favourite} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
                           </span>
                         </div>
                       </div>
@@ -218,7 +218,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
                       </div>
                       {dl && (
                         <div style={{ marginTop: 8, fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>
-                          {dl.text}
+                          {dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}
                         </div>
                       )}
                     </div>
@@ -261,7 +261,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <PriorityBadge p={task.priority} />
                       <span onClick={e => e.stopPropagation()}>
-                        <FavStar on={task.fav} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
+                        <FavStar on={task.is_favourite} onClick={() => TaskStore.toggleFav(task.id)} size={13} />
                       </span>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4, marginTop: 6 }}>
@@ -271,7 +271,7 @@ export default function BoardView({ tasks, onSelect }: Props) {
                       <span style={{ width: 6, height: 6, borderRadius: 99, background: systemColor, flexShrink: 0 }} />
                       {dl && (
                         <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: dl.over ? 'var(--neg)' : dl.now ? 'var(--c-fin)' : 'var(--ink-faint)' }}>
-                          {dl.text}
+                          {dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}
                         </span>
                       )}
                     </div>
