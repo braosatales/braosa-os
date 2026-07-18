@@ -1,46 +1,64 @@
 -- Retroactive baseline migration: tasks table
--- Schema inferred from codebase (live DB unreachable from migration environment).
--- Captured 2026-07-17. Includes description column added manually on this date.
+-- Live-introspected via the project's PostgREST OpenAPI schema (GET /rest/v1/,
+-- service role key) since neither psql nor the supabase CLI were available in
+-- this environment and no direct Postgres connection string exists in
+-- .env.local. Captured 2026-07-17.
 -- DO NOT run against production — table already exists.
--- Use only for fresh project rebuilds.
+-- Use only for fresh project rebuilds / disaster recovery.
 --
--- CONFIDENCE NOTE: columns below are split into two groups. The first group is
--- corroborated by the UI (AddTaskModal.tsx, TaskDetailModal.tsx) AND the main
--- CRUD routes (app/api/tasks/route.ts, app/api/tasks/[id]/route.ts) agreeing
--- with each other. The second group (notes, due_date, estimated_mins) only
--- appears in lib/iclaudeMapping.ts + app/api/iclaude/task/route.ts (write) and
--- app/api/iclaude/state/route.ts + app/api/calendar/ai-suggest/route.ts (read),
--- which also use status 'in_progress' and priority 'high' — values that don't
--- exist anywhere else in the codebase (canonical status set is
--- todo/doing/done/cancelled, canonical priority is integer 1/2/3). This could
--- mean these are real extra columns the main UI just doesn't surface, OR it
--- could mean those four files are broken/stale and would error against the
--- real table. This was not verified against the live DB — flag for manual
--- confirmation before relying on it.
+-- VERIFIED (live introspection): all column names, types, defaults, and
+-- NOT NULL/nullable status below come directly from the live schema via the
+-- OpenAPI endpoint.
+-- NOT VERIFIED: that endpoint does not expose indexes, RLS policy
+-- definitions, unique constraints, or FK ON DELETE behavior (it only flags
+-- PK/FK relationships, without delete rule). ON DELETE clauses are therefore
+-- omitted rather than guessed. The RLS policy and indexes below are carried
+-- over from an earlier code-inferred version of this file and are NOT
+-- confirmed against the live catalog — verify with psql before relying on
+-- them for disaster recovery.
+--
+-- Corrections vs. the previous (code-inferred) version of this file:
+--   - "fav" did not exist; the real column is "is_favourite" (boolean, default false)
+--   - "due" (timestamptz) did not exist; real columns are "due_date" (date) and
+--     "due_time" (time without time zone)
+--   - "tags text[]" did not exist — removed
+--   - "system" and "source" are NOT NULL with defaults ('personal', 'manual'),
+--     not freely nullable as previously written
+--   - "priority" is integer, not smallint
+--   - "external_id" uniqueness could not be confirmed — UNIQUE dropped rather than guessed
+--   - id default is extensions.uuid_generate_v4(), not gen_random_uuid()
+--   - added missing columns: parent_task_id, is_someday, signal_score,
+--     best_time_of_day, due_time, completed_at, telegram_msg_id, source_detail
 
 create table if not exists public.tasks (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references public.users(id) on delete cascade not null,
+  id uuid primary key default extensions.uuid_generate_v4(),
+  user_id uuid not null references public.users(id),
+  project_id uuid references public.projects(id),
+  parent_task_id uuid references public.tasks(id),
   title text not null,
-  description text,
-  status text not null default 'todo',
-  priority smallint not null default 3,
-  fav boolean not null default false,
-  due timestamptz,
-  system text,
-  project_id uuid references public.projects(id) on delete set null,
-  tags text[] not null default '{}',
-  external_id text unique,
-  source text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-
-  -- Unverified columns, see confidence note above.
   notes text,
-  due_date timestamptz,
-  estimated_mins integer
+  priority integer not null default 3,
+  status text not null default 'todo',
+  system text not null default 'personal',
+  is_favourite boolean not null default false,
+  is_someday boolean not null default false,
+  signal_score integer,
+  estimated_mins integer,
+  best_time_of_day text,
+  due_date date,
+  due_time time without time zone,
+  completed_at timestamptz,
+  source text not null default 'manual',
+  telegram_msg_id bigint,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  external_id text,
+  source_detail text,
+  description text
 );
 
+-- NOT VERIFIED against the live catalog (see note above) — carried over
+-- from the previous inference-based migration.
 alter table public.tasks enable row level security;
 
 -- NOTE: users.id is an internal UUID distinct from auth.uid() (stored in users.supabase_uid).
