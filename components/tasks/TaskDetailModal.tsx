@@ -120,7 +120,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
 
   return (
     <Modal open={true} onClose={onClose} width={560} fullScreenMobile>
-      <div style={isMobile ? { display: 'flex', flexDirection: 'column', height: '100%' } : undefined}>
+      <div style={isMobile ? { display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 } : undefined}>
         {isMobile && (
           <div
             style={{
@@ -129,12 +129,30 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
               paddingTop: 'env(safe-area-inset-top)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-end',
+              justifyContent: 'space-between',
+              gap: 12,
               paddingLeft: 16,
               paddingRight: 16,
               borderBottom: '1px solid var(--edge-soft)',
             }}
           >
+            <input
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onBlur={() => { if (title.trim() !== live.title) save({ title: title.trim() }) }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: 16.5,
+                fontFamily: 'var(--font-display)',
+                fontWeight: 600,
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--ink)',
+                outline: 'none',
+                padding: 0,
+              }}
+            />
             <button
               type="button"
               onClick={onClose}
@@ -184,13 +202,15 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
             <Icon name="close" size={18} />
           </button>
         )}
-        {/* Title */}
-        <input
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          onBlur={() => { if (title.trim() !== live.title) save({ title: title.trim() }) }}
-          style={{ width: '100%', fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 600, border: 'none', borderBottom: '1px solid var(--edge)', background: 'transparent', color: 'var(--ink)', padding: '8px 0', outline: 'none' }}
-        />
+        {/* Title (desktop only — on mobile it lives in the header row) */}
+        {!isMobile && (
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onBlur={() => { if (title.trim() !== live.title) save({ title: title.trim() }) }}
+            style={{ width: '100%', fontSize: 18, fontFamily: 'var(--font-display)', fontWeight: 600, border: 'none', borderBottom: '1px solid var(--edge)', background: 'transparent', color: 'var(--ink)', padding: '8px 0', outline: 'none' }}
+          />
+        )}
 
         {/* Description */}
         <textarea
