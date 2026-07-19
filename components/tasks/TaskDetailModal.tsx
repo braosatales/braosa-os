@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { Clock, Play } from 'lucide-react'
 import { Modal, Icon, FavStar, Chip } from '@/components/ui'
 import { L, useLang } from '@/lib/i18n'
 import { relativeTime } from '@/lib/date'
@@ -25,10 +26,19 @@ const STATUS_OPTIONS: { id: TaskStatus; labelPt: string; labelEn: string; color:
   { id: 'cancelled', labelPt: 'Cancelado', labelEn: 'Cancelled', color: 'var(--ink-faint)' },
 ]
 
-const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string }[] = [
-  { v: 1, color: 'var(--p1)', label: 'Alta' },
-  { v: 2, color: 'var(--p2)', label: 'Média' },
-  { v: 3, color: 'var(--p3)', label: 'Baixa' },
+// Colors reused from BoardView's status dots (todo/doing/done) and this file's own
+// delete-action red (cancelled), used for the mobile icon-only status pills.
+const STATUS_MOBILE_COLOR: Record<TaskStatus, string> = {
+  todo: '#8B909E',
+  doing: '#F59E0B',
+  done: '#22C55E',
+  cancelled: 'var(--neg)',
+}
+
+const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string; icon: 'flame' | 'bolt' | 'spark' }[] = [
+  { v: 1, color: 'var(--p1)', label: 'Alta', icon: 'flame' },
+  { v: 2, color: 'var(--p2)', label: 'Média', icon: 'bolt' },
+  { v: 3, color: 'var(--p3)', label: 'Baixa', icon: 'spark' },
 ]
 
 export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
@@ -101,8 +111,63 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   }
 
   return (
-    <Modal open={true} onClose={onClose} width={560} fullScreenMobile title={live.title || L("Tarefa", "Task")}>
-      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Modal open={true} onClose={onClose} width={560} fullScreenMobile>
+      <div style={isMobile ? { display: 'flex', flexDirection: 'column', height: '100%' } : undefined}>
+        {isMobile && (
+          <div
+            style={{
+              flexShrink: 0,
+              height: 'calc(52px + env(safe-area-inset-top))',
+              paddingTop: 'env(safe-area-inset-top)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingLeft: 16,
+              paddingRight: 16,
+              borderBottom: '1px solid var(--edge-soft)',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 16,
+                fontWeight: 600,
+                color: 'var(--ink)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {live.title || L("Tarefa", "Task")}
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--ink-faint)',
+              }}
+            >
+              <Icon name="close" size={18} />
+            </button>
+          </div>
+        )}
+
+        <div
+          style={
+            isMobile
+              ? { flex: 1, minHeight: 0, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }
+              : { padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }
+          }
+        >
         {!isMobile && (
           <button
             type="button"
@@ -141,6 +206,78 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
           style={{ width: '100%', fontSize: 14, color: 'var(--ink-dim)', border: 'none', borderBottom: '1px solid var(--edge-soft)', background: 'transparent', resize: 'none', minHeight: 60, outline: 'none', fontFamily: 'inherit', padding: '4px 0' }}
         />
 
+        {/* Status + Priority */}
+        {isMobile ? (
+          <div style={{ display: 'flex', gap: 12 }}>
+            {/* Estado */}
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 7 }}>
+                {L("ESTADO", "STATUS")}
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {STATUS_OPTIONS.map(opt => {
+                  const active = status === opt.id
+                  const color = STATUS_MOBILE_COLOR[opt.id]
+                  const label = L(opt.labelPt, opt.labelEn)
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      title={label}
+                      aria-label={label}
+                      onClick={() => { setStatus(opt.id); save({ status: opt.id }) }}
+                      style={{
+                        width: 40, height: 36,
+                        borderRadius: 8, border: `1px solid ${active ? color : 'var(--edge)'}`,
+                        background: active ? `color-mix(in oklab, ${color} 16%, transparent)` : 'transparent',
+                        color: active ? color : 'var(--ink-faint)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all .12s',
+                      }}
+                    >
+                      {opt.id === 'todo' && <Clock size={17} strokeWidth={2} />}
+                      {opt.id === 'doing' && <Play size={17} strokeWidth={2} />}
+                      {opt.id === 'done' && <Icon name="check-circle" size={17} />}
+                      {opt.id === 'cancelled' && <Icon name="x-circle" size={17} />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Prioridade */}
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 7 }}>
+                {L("PRIORIDADE", "PRIORITY")}
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {PRIORITY_OPTIONS.map(opt => {
+                  const active = priority === opt.v
+                  return (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      title={opt.label}
+                      aria-label={opt.label}
+                      onClick={() => { setPriority(opt.v); save({ priority: opt.v }) }}
+                      style={{
+                        width: 40, height: 36,
+                        borderRadius: 8, border: `1px solid ${active ? opt.color : 'var(--edge)'}`,
+                        background: active ? `color-mix(in oklab, ${opt.color} 16%, transparent)` : 'transparent',
+                        color: active ? opt.color : 'var(--ink-faint)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all .12s',
+                      }}
+                    >
+                      <Icon name={opt.icon} size={17} />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Status */}
         <div>
           <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 7 }}>
@@ -196,6 +333,8 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
             })}
           </div>
         </div>
+        </>
+        )}
 
         {/* Fields grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -292,6 +431,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--ink-faint)' }}>
             {L("Criado", "Created")} {relativeTime(live.created_at)} · {L("Atualizado", "Updated")} {relativeTime(live.updated_at)}
           </span>
+        </div>
         </div>
       </div>
     </Modal>
