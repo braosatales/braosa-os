@@ -19,9 +19,9 @@ const ALL_SYSTEMS = [
 ]
 
 const PRIORITY_OPTS = [
-  { v: 1 as TaskPriority, label: '▲ P1', border: '#EF4444', activeBg: '#EF444420', color: '#EF4444' },
-  { v: 2 as TaskPriority, label: '● P2', border: '#F59E0B', activeBg: '#F59E0B20', color: '#F59E0B' },
-  { v: 3 as TaskPriority, label: '▽ P3', border: '#8B5CF6', activeBg: '#8B5CF620', color: '#8B5CF6' },
+  { v: 1 as TaskPriority, label: '▲ Alta', border: '#EF4444', activeBg: '#EF444420', color: '#EF4444' },
+  { v: 2 as TaskPriority, label: '● Média', border: '#F59E0B', activeBg: '#F59E0B20', color: '#F59E0B' },
+  { v: 3 as TaskPriority, label: '▽ Baixa', border: '#8B5CF6', activeBg: '#8B5CF620', color: '#8B5CF6' },
 ]
 
 export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: Props) {
@@ -69,9 +69,9 @@ export default function AddTaskModal({ open, onClose, initialStatus = 'todo' }: 
   }
 
   const pOptions: { v: TaskPriority; color: string; label: string }[] = [
-    { v: 1, color: 'var(--p1)', label: 'P1' },
-    { v: 2, color: 'var(--p2)', label: 'P2' },
-    { v: 3, color: 'var(--p3)', label: 'P3' },
+    { v: 1, color: 'var(--p1)', label: 'Alta' },
+    { v: 2, color: 'var(--p2)', label: 'Média' },
+    { v: 3, color: 'var(--p3)', label: 'Baixa' },
   ]
 
   if (isMobile) {

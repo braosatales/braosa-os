@@ -24,10 +24,10 @@ const STATUS_OPTIONS: { id: TaskStatus; labelPt: string; labelEn: string; color:
   { id: 'cancelled', labelPt: 'Cancelado', labelEn: 'Cancelled', color: 'var(--ink-faint)' },
 ]
 
-const PRIORITY_OPTIONS: { v: TaskPriority; color: string }[] = [
-  { v: 1, color: 'var(--p1)' },
-  { v: 2, color: 'var(--p2)' },
-  { v: 3, color: 'var(--p3)' },
+const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string }[] = [
+  { v: 1, color: 'var(--p1)', label: 'Alta' },
+  { v: 2, color: 'var(--p2)', label: 'Média' },
+  { v: 3, color: 'var(--p3)', label: 'Baixa' },
 ]
 
 export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
@@ -167,7 +167,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
                     cursor: 'pointer', transition: 'all .12s',
                   }}
                 >
-                  P{opt.v}
+                  {opt.label}
                 </button>
               )
             })}

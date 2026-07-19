@@ -20,14 +20,16 @@ type Props = {
   onSelect: (task: Task) => void
 }
 
+const PRIORITY_LABEL = (p: number) => p === 1 ? 'Alta' : p === 2 ? 'Média' : 'Baixa'
+
 function PriorityBadge({ p, mobile }: { p: number; mobile?: boolean }) {
   if (mobile) {
     const bg = p === 1 ? '#EF444415' : p === 2 ? '#F59E0B15' : '#8B5CF615'
     const color = p === 1 ? '#EF4444' : p === 2 ? '#F59E0B' : '#8B5CF6'
-    return <span style={{ fontSize: 11, color, fontWeight: 600, background: bg, borderRadius: 6, padding: '2px 8px' }}>P{p}</span>
+    return <span style={{ fontSize: 11, color, fontWeight: 600, background: bg, borderRadius: 6, padding: '2px 8px' }}>{PRIORITY_LABEL(p)}</span>
   }
   const color = p === 1 ? 'var(--p1)' : p === 2 ? 'var(--p2)' : 'var(--p3)'
-  return <span style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>P{p}</span>
+  return <span style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{PRIORITY_LABEL(p)}</span>
 }
 
 export default function BoardView({ tasks, onSelect }: Props) {

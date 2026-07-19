@@ -19,9 +19,11 @@ type Props = {
   onToggleFav: (id: string) => void
 }
 
+const PRIORITY_LABEL = (p: number) => p === 1 ? 'Alta' : p === 2 ? 'Média' : 'Baixa'
+
 function PriorityBadge({ p }: { p: number }) {
   const color = p === 1 ? 'var(--p1)' : p === 2 ? 'var(--p2)' : 'var(--p3)'
-  return <span style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>P{p}</span>
+  return <span style={{ fontSize: 10, color, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{PRIORITY_LABEL(p)}</span>
 }
 
 const COL = '28px 1fr 120px 80px 70px 80px 28px'
@@ -183,7 +185,7 @@ export default function ListView({ tasks, onSelect, onToggleDone, onToggleFav }:
                         {task.title}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                        <span style={{ fontSize: 11, color: pColor, fontWeight: 600, background: pBg, borderRadius: 6, padding: '2px 8px' }}>P{task.priority}</span>
+                        <span style={{ fontSize: 11, color: pColor, fontWeight: 600, background: pBg, borderRadius: 6, padding: '2px 8px' }}>{PRIORITY_LABEL(task.priority)}</span>
                         {proj && <span style={{ fontSize: 11, color: '#8B909E' }}>{proj.name}</span>}
                         {dl && <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: dl.over ? '#EF4444' : '#8B909E' }}>{dl.text}{task.due_time ? `, ${task.due_time.slice(0, 5)}` : ''}</span>}
                       </div>

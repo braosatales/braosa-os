@@ -27,10 +27,10 @@ type ShellProps = {
 
 type Props = ShellProps & { onNavigate: (id: string) => void }
 
-const PRIORITY_STYLES: Record<number, { color: string; bg: string; icon: "flame" | "bolt" | "spark" }> = {
-  1: { color: "var(--p1)", bg: "color-mix(in oklch, var(--p1) 16%, transparent)", icon: "flame" },
-  2: { color: "var(--p2)", bg: "color-mix(in oklch, var(--p2) 16%, transparent)", icon: "bolt" },
-  3: { color: "var(--p3)", bg: "color-mix(in oklch, var(--p3) 16%, transparent)", icon: "spark" },
+const PRIORITY_STYLES: Record<number, { color: string; bg: string; icon: "flame" | "bolt" | "spark"; label: string }> = {
+  1: { color: "var(--p1)", bg: "color-mix(in oklch, var(--p1) 16%, transparent)", icon: "flame", label: "Alta" },
+  2: { color: "var(--p2)", bg: "color-mix(in oklch, var(--p2) 16%, transparent)", icon: "bolt", label: "Média" },
+  3: { color: "var(--p3)", bg: "color-mix(in oklch, var(--p3) 16%, transparent)", icon: "spark", label: "Baixa" },
 }
 
 export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {
@@ -142,7 +142,7 @@ export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {
                     }}
                   >
                     <Icon name={ps.icon} size={10} />
-                    {task.priority}
+                    {ps.label}
                   </span>
                 </div>
               )
