@@ -27,10 +27,10 @@ type ShellProps = {
 
 type Props = ShellProps & { onNavigate: (id: string) => void }
 
-const PRIORITY_STYLES: Record<number, { color: string; bg: string; icon: "flame" | "bolt" | "spark"; label: string }> = {
-  1: { color: "var(--p1)", bg: "color-mix(in oklch, var(--p1) 16%, transparent)", icon: "flame", label: "Alta" },
-  2: { color: "var(--p2)", bg: "color-mix(in oklch, var(--p2) 16%, transparent)", icon: "bolt", label: "Média" },
-  3: { color: "var(--p3)", bg: "color-mix(in oklch, var(--p3) 16%, transparent)", icon: "spark", label: "Baixa" },
+const PRIORITY_STYLES: Record<number, { color: string; bg: string; icon: "arrow-up" | "minus" | "arrow-down"; label: string }> = {
+  1: { color: "#EF4444", bg: "color-mix(in oklch, #EF4444 16%, transparent)", icon: "arrow-up", label: "Alta" },
+  2: { color: "#EAB308", bg: "color-mix(in oklch, #EAB308 16%, transparent)", icon: "minus", label: "Média" },
+  3: { color: "#22C55E", bg: "color-mix(in oklch, #22C55E 16%, transparent)", icon: "arrow-down", label: "Baixa" },
 }
 
 export default function TopTasksWidget({ onNavigate, ...shellProps }: Props) {

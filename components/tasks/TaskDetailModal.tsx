@@ -35,11 +35,19 @@ const STATUS_MOBILE_COLOR: Record<TaskStatus, string> = {
   cancelled: 'var(--neg)',
 }
 
-const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string; icon: 'flame' | 'bolt' | 'spark' }[] = [
-  { v: 1, color: 'var(--p1)', label: 'Alta', icon: 'flame' },
-  { v: 2, color: 'var(--p2)', label: 'Média', icon: 'bolt' },
-  { v: 3, color: 'var(--p3)', label: 'Baixa', icon: 'spark' },
+const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string; icon: 'arrow-up' | 'minus' | 'arrow-down' }[] = [
+  { v: 1, color: 'var(--p1)', label: 'Alta', icon: 'arrow-up' },
+  { v: 2, color: 'var(--p2)', label: 'Média', icon: 'minus' },
+  { v: 3, color: 'var(--p3)', label: 'Baixa', icon: 'arrow-down' },
 ]
+
+// Mobile icon-only priority pills use fixed red/yellow/green regardless of theme,
+// matching the mobile status pill pattern (STATUS_MOBILE_COLOR) above.
+const PRIORITY_MOBILE_COLOR: Record<TaskPriority, string> = {
+  1: '#EF4444',
+  2: '#EAB308',
+  3: '#22C55E',
+}
 
 export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   useLang()
@@ -121,25 +129,12 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
               paddingTop: 'env(safe-area-inset-top)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
               paddingLeft: 16,
               paddingRight: 16,
               borderBottom: '1px solid var(--edge-soft)',
             }}
           >
-            <span
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 16,
-                fontWeight: 600,
-                color: 'var(--ink)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {live.title || L("Tarefa", "Task")}
-            </span>
             <button
               type="button"
               onClick={onClose}
@@ -214,7 +209,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
               <label style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', color: 'var(--ink-faint)', letterSpacing: '0.1em', display: 'block', marginBottom: 7 }}>
                 {L("ESTADO", "STATUS")}
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4 }}>
                 {STATUS_OPTIONS.map(opt => {
                   const active = status === opt.id
                   const color = STATUS_MOBILE_COLOR[opt.id]
@@ -227,7 +222,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
                       aria-label={label}
                       onClick={() => { setStatus(opt.id); save({ status: opt.id }) }}
                       style={{
-                        width: 40, height: 36,
+                        width: 32, height: 32, flexShrink: 0,
                         borderRadius: 8, border: `1px solid ${active ? color : 'var(--edge)'}`,
                         background: active ? `color-mix(in oklab, ${color} 16%, transparent)` : 'transparent',
                         color: active ? color : 'var(--ink-faint)',
@@ -235,10 +230,10 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
                         cursor: 'pointer', transition: 'all .12s',
                       }}
                     >
-                      {opt.id === 'todo' && <Clock size={17} strokeWidth={2} />}
-                      {opt.id === 'doing' && <Play size={17} strokeWidth={2} />}
-                      {opt.id === 'done' && <Icon name="check-circle" size={17} />}
-                      {opt.id === 'cancelled' && <Icon name="x-circle" size={17} />}
+                      {opt.id === 'todo' && <Clock size={16} strokeWidth={2} />}
+                      {opt.id === 'doing' && <Play size={16} strokeWidth={2} />}
+                      {opt.id === 'done' && <Icon name="check-circle" size={16} />}
+                      {opt.id === 'cancelled' && <Icon name="x-circle" size={16} />}
                     </button>
                   )
                 })}
@@ -253,6 +248,7 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {PRIORITY_OPTIONS.map(opt => {
                   const active = priority === opt.v
+                  const color = PRIORITY_MOBILE_COLOR[opt.v]
                   return (
                     <button
                       key={opt.v}
@@ -262,9 +258,9 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
                       onClick={() => { setPriority(opt.v); save({ priority: opt.v }) }}
                       style={{
                         width: 40, height: 36,
-                        borderRadius: 8, border: `1px solid ${active ? opt.color : 'var(--edge)'}`,
-                        background: active ? `color-mix(in oklab, ${opt.color} 16%, transparent)` : 'transparent',
-                        color: active ? opt.color : 'var(--ink-faint)',
+                        borderRadius: 8, border: `1px solid ${active ? color : 'var(--edge)'}`,
+                        background: active ? `color-mix(in oklab, ${color} 16%, transparent)` : 'transparent',
+                        color: active ? color : 'var(--ink-faint)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer', transition: 'all .12s',
                       }}
