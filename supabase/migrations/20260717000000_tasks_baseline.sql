@@ -21,7 +21,9 @@
 --   - "fav" did not exist; the real column is "is_favourite" (boolean, default false)
 --   - "due" (timestamptz) did not exist; real columns are "due_date" (date) and
 --     "due_time" (time without time zone)
---   - "tags text[]" did not exist — removed
+--   - "tags text[]" was missing from this file as of 2026-07-17; added back
+--     2026-07-19 after the column was added live via
+--     ALTER TABLE tasks ADD COLUMN tags TEXT[] NOT NULL DEFAULT '{}'
 --   - "system" and "source" are NOT NULL with defaults ('personal', 'manual'),
 --     not freely nullable as previously written
 --   - "priority" is integer, not smallint
@@ -54,7 +56,8 @@ create table if not exists public.tasks (
   updated_at timestamptz not null default now(),
   external_id text,
   source_detail text,
-  description text
+  description text,
+  tags text[] not null default '{}'
 );
 
 -- NOT VERIFIED against the live catalog (see note above) — carried over
