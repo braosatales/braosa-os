@@ -10,7 +10,7 @@ import AddTaskModal from '@/components/tasks/AddTaskModal'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 const COLUMNS: { id: TaskStatus; dot: string; labelPt: string; labelEn: string }[] = [
-  { id: 'todo',  dot: '#8B909E', labelPt: 'A Fazer',      labelEn: 'To Do'       },
+  { id: 'todo',  dot: '#8B909E', labelPt: 'Em Espera',    labelEn: 'To Do'       },
   { id: 'doing', dot: '#F59E0B', labelPt: 'Em Progresso', labelEn: 'In Progress' },
   { id: 'done',  dot: '#22C55E', labelPt: 'Concluído',    labelEn: 'Done'        },
 ]

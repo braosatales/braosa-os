@@ -6,6 +6,7 @@ import { relativeTime } from '@/lib/date'
 import { TaskStore } from '@/lib/task-store'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/tasks'
 import { SYSTEMS, COMPANIES } from '@/lib/constants'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 type Props = {
   task: Task
@@ -18,8 +19,8 @@ const ALL_SYSTEMS = [
 ]
 
 const STATUS_OPTIONS: { id: TaskStatus; labelPt: string; labelEn: string; color: string }[] = [
-  { id: 'todo',      labelPt: 'A Fazer',   labelEn: 'To Do',     color: 'var(--c-task)' },
-  { id: 'doing',     labelPt: 'A Fazer',   labelEn: 'Doing',     color: 'var(--c-fin)'  },
+  { id: 'todo',      labelPt: 'Em Espera',    labelEn: 'To Do',     color: 'var(--c-task)' },
+  { id: 'doing',     labelPt: 'Em Progresso', labelEn: 'Doing',     color: 'var(--c-fin)'  },
   { id: 'done',      labelPt: 'Concluído', labelEn: 'Done',      color: 'var(--pos)'    },
   { id: 'cancelled', labelPt: 'Cancelado', labelEn: 'Cancelled', color: 'var(--ink-faint)' },
 ]
@@ -32,6 +33,7 @@ const PRIORITY_OPTIONS: { v: TaskPriority; color: string; label: string }[] = [
 
 export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   useLang()
+  const isMobile = useIsMobile()
   const projects = TaskStore.getProjects()
   const live = TaskStore.getTasks().find(t => t.id === initialTask.id) ?? initialTask
 
@@ -101,6 +103,27 @@ export default function TaskDetailModal({ task: initialTask, onClose }: Props) {
   return (
     <Modal open={true} onClose={onClose} width={560} fullScreenMobile title={live.title || L("Tarefa", "Task")}>
       <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {!isMobile && (
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              alignSelf: 'flex-start',
+              width: 32,
+              height: 32,
+              margin: '-8px 0 -8px -8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--ink-faint)',
+            }}
+          >
+            <Icon name="close" size={18} />
+          </button>
+        )}
         {/* Title */}
         <input
           value={title}
